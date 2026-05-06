@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GYN Clinical Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C0143C;
+    --red-soft: #F5E6EA;
+    --red-mid: #E8B4C0;
+    --bg: #F7F6F4;
+    --surface: #FFFFFF;
+    --surface2: #F0EEEB;
+    --border: #E2DED9;
+    --text: #1A1714;
+    --text2: #6B6460;
+    --text3: #9E9894;
+    --tag-bg: #EDEAE6;
+    --tag-text: #4A4642;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
+    --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.1);
+    --radius: 12px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 64px;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--red);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 16px; height: 16px; fill: white; }
+  .header-title { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-left: 32px;
+    height: 100%;
+  }
+  .tab-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 0 18px;
+    border: none;
+    background: transparent;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text2); }
+  .tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
+  .tab-icon { font-size: 14px; }
+
+  .header-right { display: flex; align-items: center; }
+  .count-badge {
+    background: var(--red-soft); color: var(--red);
+    font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 20px;
+    font-family: var(--mono);
+  }
+
+  /* ── PAGE ── */
+  .page { display: none; }
+  .page.active { display: flex; min-height: calc(100vh - 64px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    position: sticky; top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+  .filter-section { margin-bottom: 24px; }
+  .filter-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 8px;
+  }
+  .filter-btn {
+    display: block; width: 100%; text-align: left;
+    padding: 6px 10px; border-radius: 7px; border: none;
+    background: transparent; font-family: var(--font);
+    font-size: 13px; color: var(--text2);
+    cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+  }
+  .filter-btn:hover { background: var(--surface2); color: var(--text); }
+  .filter-btn.active { background: var(--red-soft); color: var(--red); font-weight: 500; }
+  .filter-btn .btn-count {
+    float: right; font-family: var(--mono); font-size: 11px;
+    color: var(--text3); background: var(--tag-bg);
+    padding: 1px 6px; border-radius: 10px;
+  }
+  .filter-btn.active .btn-count { background: var(--red-mid); color: var(--red); }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; margin-bottom: 20px;
+  }
+  .search-box svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--text3); }
+  .search-box input {
+    border: none; background: transparent; font-family: var(--font);
+    font-size: 13px; color: var(--text); width: 100%; outline: none;
+  }
+  .search-box input::placeholder { color: var(--text3); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; padding: 24px 28px; }
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .active-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .active-tag {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--red-soft); color: var(--red);
+    font-size: 12px; font-weight: 500;
+    padding: 3px 10px; border-radius: 20px;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .active-tag:hover { opacity: 0.7; }
+  .result-count { font-size: 12px; color: var(--text3); }
+  .result-count span { color: var(--text); font-weight: 500; }
+
+  /* ── VIDEO GRID ── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+    box-shadow: var(--shadow); animation: fadeUp 0.3s ease both;
+  }
+  .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--red-mid); }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .thumb-wrap { position: relative; aspect-ratio: 16/9; background: #1a1714; overflow: hidden; }
+  .thumb-wrap img { width:100%; height:100%; object-fit:cover; transition: transform 0.3s; display:block; }
+  .card:hover .thumb-wrap img { transform: scale(1.04); }
+  .play-overlay {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.15); opacity:0; transition:opacity 0.2s;
+  }
+  .card:hover .play-overlay { opacity:1; }
+  .play-btn {
+    width:44px; height:44px; background:rgba(255,255,255,0.95);
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 12px rgba(0,0,0,0.3);
+  }
+  .play-btn svg { width:16px; height:16px; fill:var(--red); margin-left:2px; }
+  .sys-badge-thumb {
+    position:absolute; top:8px; left:8px;
+    font-size:10px; font-weight:600; padding:2px 7px; border-radius:5px;
+    font-family:var(--mono); backdrop-filter:blur(4px);
+  }
+  .sys-Xi { background:rgba(39,80,10,0.85); color:#C6E89A; }
+  .sys-DV5 { background:rgba(60,52,137,0.85); color:#C4BFFF; }
+  .sys-SP { background:rgba(12,68,124,0.85); color:#A8CEEF; }
+  .card-body { padding: 12px 14px 14px; }
+  .card-op { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--red); margin-bottom:4px; font-family:var(--mono); }
+  .card-title { font-size:13px; font-weight:500; color:var(--text); line-height:1.4; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .card-meta { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .card-tags { display:flex; gap:4px; flex-wrap:wrap; }
+  .tag { font-size:10px; padding:2px 7px; border-radius:6px; background:var(--tag-bg); color:var(--tag-text); font-weight:500; }
+  .tag.adv { background:#FEF3E2; color:#92510A; }
+  .card-channel { font-size:11px; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100px; flex-shrink:0; text-align:right; }
+
+  /* ── KOL TABLE ── */
+  .kol-page { flex-direction: row; }
+  .kol-main { flex:1; padding:24px 28px; }
+  .kol-search-row {
+    display:flex; align-items:center; gap:12px; margin-bottom:20px;
+  }
+  .kol-search {
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:8px 14px; flex:1; max-width:360px;
+  }
+  .kol-search svg { width:14px; height:14px; color:var(--text3); flex-shrink:0; }
+  .kol-search input { border:none; background:transparent; font-family:var(--font); font-size:13px; color:var(--text); width:100%; outline:none; }
+  .kol-search input::placeholder { color:var(--text3); }
+  .kol-count { font-size:12px; color:var(--text3); }
+  .kol-count span { color:var(--text); font-weight:500; }
+
+  .kol-table-wrap {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  table { width:100%; border-collapse:collapse; }
+  thead tr { background:var(--red); }
+  thead th {
+    padding:12px 16px; text-align:left;
+    font-size:11px; font-weight:600;
+    letter-spacing:0.07em; text-transform:uppercase;
+    color:white; font-family:var(--mono);
+  }
+  tbody tr {
+    border-bottom:1px solid var(--border);
+    transition:background 0.12s;
+    animation:fadeUp 0.25s ease both;
+  }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:var(--red-soft); }
+  tbody td { padding:13px 16px; font-size:13px; color:var(--text); vertical-align:middle; }
+  .td-hospital { font-weight:500; }
+  .td-surgeon { color:var(--text2); }
+  .td-link { }
+  .link-btn {
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:12px; font-weight:500;
+    color:var(--red); text-decoration:none;
+    padding:4px 10px; border-radius:6px;
+    background:var(--red-soft);
+    transition:all 0.15s; white-space:nowrap;
+  }
+  .link-btn:hover { background:var(--red); color:white; }
+  .link-btn svg { width:11px; height:11px; }
+  .no-link { font-size:12px; color:var(--text3); }
+  .empty-state { text-align:center; padding:60px 20px; color:var(--text3); font-size:14px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.6); z-index:200;
+    align-items:center; justify-content:center;
+    padding:20px; backdrop-filter:blur(4px);
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--surface); border-radius:16px;
+    width:100%; max-width:660px; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    animation:modalIn 0.22s ease;
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(10px);} to{opacity:1;transform:scale(1) translateY(0);} }
+  .modal-video { aspect-ratio:16/9; background:#000; width:100%; }
+  .modal-video iframe { width:100%; height:100%; border:none; display:block; }
+  .modal-info { padding:18px 22px 22px; }
+  .modal-op { font-size:11px; font-weight:600; color:var(--red); letter-spacing:0.08em; text-transform:uppercase; font-family:var(--mono); margin-bottom:5px; }
+  .modal-title { font-size:15px; font-weight:600; color:var(--text); line-height:1.4; margin-bottom:10px; }
+  .modal-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .modal-tag { font-size:11px; padding:3px 10px; border-radius:8px; background:var(--tag-bg); color:var(--tag-text); font-weight:500; }
+  .modal-tag.adv { background:#FEF3E2; color:#92510A; }
+  .modal-tag.sys-xi { background:#EAF3DE; color:#27500A; }
+  .modal-tag.sys-dv5 { background:#EEEDFE; color:#3C3489; }
+  .modal-tag.sys-sp { background:#E6F1FB; color:#0C447C; }
+  .modal-footer { display:flex; align-items:center; justify-content:space-between; }
+  .modal-channel { font-size:12px; color:var(--text3); }
+  .modal-btns { display:flex; gap:8px; }
+  .btn-link {
+    display:flex; align-items:center; gap:6px;
+    font-family:var(--font); font-size:13px; font-weight:500;
+    padding:7px 13px; border-radius:8px; border:none; cursor:pointer;
+    text-decoration:none; transition:all 0.15s;
+  }
+  .btn-link.primary { background:var(--red); color:white; }
+  .btn-link.primary:hover { background:#A01030; }
+  .btn-link.secondary { background:var(--surface2); color:var(--text2); border:1px solid var(--border); }
+  .btn-link.secondary:hover { background:var(--border); }
+  .modal-wrap { position:relative; }
+  .btn-close {
+    position:absolute; top:12px; right:12px;
+    width:30px; height:30px; background:rgba(255,255,255,0.9);
+    border:none; border-radius:50%; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; color:var(--text);
+    box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:background 0.15s;
+  }
+  .btn-close:hover { background:white; }
+
+
+  /* ── PROFESSIONAL REFINEMENT / DARK MODE / MOBILE ── */
+  body.dark {
+    --bg:#111111; --surface:#1A1A1A; --surface2:#242424; --border:#353535;
+    --text:#F4F1ED; --text2:#C8C1BA; --text3:#8F8881; --tag-bg:#2F2F2F; --tag-text:#DED8D2;
+    --shadow:0 1px 4px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.25);
+    --shadow-hover:0 2px 10px rgba(0,0,0,.45),0 16px 40px rgba(0,0,0,.35);
+  }
+  body.dark .logo-mark { background:linear-gradient(135deg,#C0143C,#8B0020); }
+  body.dark .search-box, body.dark .kol-search { background:#202020; }
+  body.dark .card, body.dark .kol-table-wrap, body.dark .modal, body.dark .insight-card { background:var(--surface); }
+  .brand-wordmark { display:flex; flex-direction:column; gap:1px; }
+  .brand-eyebrow { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--red); font-weight:700; font-family:var(--mono); }
+  .icon-btn {
+    border:1px solid var(--border); background:var(--surface2); color:var(--text2);
+    border-radius:9px; padding:8px 10px; font-size:12px; font-weight:600; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; transition:all .15s; font-family:var(--font);
+  }
+  .icon-btn:hover { border-color:var(--red-mid); color:var(--red); }
+  .metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+  .insight-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
+  .metric-label { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); font-family:var(--mono); font-weight:700; }
+  .metric-value { font-size:28px; font-weight:700; letter-spacing:-.04em; margin-top:6px; color:var(--text); }
+  .metric-sub { font-size:12px; color:var(--text2); margin-top:4px; }
+  .case-row { display:grid; grid-template-columns:140px 1fr 110px 110px; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); align-items:center; }
+  .case-row:last-child { border-bottom:0; }
+  .force-bar { height:8px; border-radius:99px; background:var(--surface2); overflow:hidden; }
+  .force-bar > span { display:block; height:100%; background:linear-gradient(90deg,#E8B4C0,#C0143C); border-radius:99px; }
+  .detail-panel { display:none; position:fixed; inset:0; z-index:260; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:18px; }
+  .detail-panel.open { display:flex; }
+  .detail-card { width:100%; max-width:760px; background:var(--surface); border-radius:18px; box-shadow:0 24px 70px rgba(0,0,0,.35); overflow:hidden; border:1px solid var(--border); }
+  .detail-head { padding:20px 24px; background:linear-gradient(135deg,var(--red),#8B0020); color:white; display:flex; justify-content:space-between; gap:18px; }
+  .detail-title { font-size:20px; font-weight:700; letter-spacing:-.03em; }
+  .detail-sub { font-size:12px; opacity:.82; margin-top:4px; }
+  .detail-body { padding:20px 24px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .detail-section { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  .detail-section h4 { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--red); font-family:var(--mono); margin-bottom:8px; }
+  .detail-section p, .detail-section li { font-size:12px; line-height:1.65; color:var(--text2); }
+  .pdf-pill { display:inline-flex; align-items:center; gap:5px; margin-top:8px; font-size:11px; color:var(--red); background:var(--red-soft); padding:4px 9px; border-radius:999px; font-weight:700; }
+  @media (max-width: 900px) {
+    .dashboard-grid { grid-template-columns:1fr !important; }
+    .header { height:auto; min-height:64px; padding:12px 16px; flex-direction:column; align-items:flex-start; gap:12px; position:relative; }
+    .header-left { width:100%; flex-wrap:wrap; align-items:flex-start; }
+    .tabs { order:3; width:100%; margin-left:0; overflow-x:auto; height:42px; }
+    .tab-btn { padding:0 12px; font-size:12px; }
+    .header-right { position:absolute; right:16px; top:14px; gap:6px; }
+    .page.active { flex-direction:column; min-height:auto; }
+    .sidebar { width:100%; height:auto; position:relative; top:0; border-right:0; border-bottom:1px solid var(--border); padding:14px 16px; }
+    .filter-section { margin-bottom:12px; }
+    .main, .kol-main, #page-paper > div, #page-dashboard > div { padding:16px !important; }
+    .grid, #paperGrid { grid-template-columns:1fr !important; }
+    .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .case-row { grid-template-columns:1fr; gap:6px; }
+    .detail-body { grid-template-columns:1fr; }
+  }
+  @media (max-width: 520px) {
+    .metric-grid { grid-template-columns:1fr; }
+    .modal-info, .detail-body { padding:16px; }
+    .detail-head { padding:16px; }
+    .card-title { font-size:12px; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M5 4h14v3H5zM5 10.5h14v3H5zM5 17h14v3H5z"/></svg>
+    </div>
+    <div class="brand-wordmark">
+      <div class="brand-eyebrow"></div>
+      <div class="header-title">GYN Clinical Hub</div>
+      <div class="header-sub">GYN Clinical Hub</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('video', this)">
+        <span class="tab-icon">🎬</span> 수술 영상 라이브러리
+      </button>
+      <button class="tab-btn" onclick="switchTab('kol', this)">
+        <span class="tab-icon">📰</span> 기사 라이브러리
+      </button>
+      <button class="tab-btn" onclick="switchTab('paper', this)">
+        <span class="tab-icon">📄</span> 논문 라이브러리
+      </button>
+      
+    </div>
+  </div>
+  <div class="header-right" style="gap:8px">
+    <button class="icon-btn" onclick="toggleTheme()" title="Dark mode">◐ Theme</button>
+    <div class="count-badge" id="headerCount">0</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!--  PAGE 1 — VIDEO LIBRARY           -->
+<!-- ══════════════════════════════════ -->
+<div class="page active" id="page-video">
+  <aside class="sidebar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="videoSearch" placeholder="검색..." oninput="renderVideos()">
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">수술 종류</div>
+      <div id="opFilters"></div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">시스템</div>
+      <div id="sysFilters"></div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">ADV. Tech</div>
+      <div id="advFilters"></div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="toolbar">
+      <div class="active-filters" id="activeTags"></div>
+      <div class="result-count"><span id="resultCount">0</span>개 영상</div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!--  PAGE 2 — KOL LIST                -->
+<!-- ══════════════════════════════════ -->
+<div class="page kol-page" id="page-kol">
+  <!-- KOL 사이드바: 병원 필터 -->
+  <aside class="sidebar" id="kolSidebar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="kolSearch" placeholder="병원명, 술자 검색..." oninput="renderKOL()">
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">병원 필터</div>
+      <div id="kolHospitalFilters"></div>
+    </div>
+  </aside>
+
+  <div class="kol-main" style="padding:24px 28px;flex:1;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div class="active-filters" id="kolActiveTags"></div>
+      <div class="kol-count"><span id="kolCount">0</span>개 기관</div>
+    </div>
+    <div id="kolCards" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!--  PAGE 3 — PAPER LIBRARY           -->
+<!-- ══════════════════════════════════ -->
+<div class="page" id="page-paper" style="min-height:calc(100vh - 64px)">
+  <!-- 논문 사이드바: 수술기법 필터 -->
+  <aside class="sidebar" style="top:64px;height:calc(100vh - 64px)">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="paperSearch" placeholder="제목, 저자 검색..." oninput="renderPapers()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">수술 기법</div>
+      <div id="paperTechFilters"></div>
+    </div>
+  </aside>
+  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div class="active-filters" id="paperActiveTags"></div>
+      <div style="font-size:12px;color:var(--text3)"><span id="paperCount">0</span>편</div>
+    </div>
+    <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px"></div>
+  </div>
+</div>
+
+
+
+<!-- ══════════════════════════════════ -->
+<!-- ══════════════════════════════════ -->
+<!-- SURGEON / ARTICLE DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel" onclick="closeDetail(event)">
+  <div class="detail-card">
+    <div class="detail-head">
+      <div>
+        <div class="detail-title" id="detailTitle">Surgeon Detail</div>
+        <div class="detail-sub" id="detailSub"></div>
+      </div>
+      <button class="btn-close" style="position:static" onclick="closeDetailBtn()">✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section"><h4>Clinical Signal</h4><p id="detailDesc"></p></div>
+      <div class="detail-section"><h4>Marketing Use Case</h4><ul><li>KoL mapping 및 society engagement 참고</li><li>vNOTES / SP / dV5 관련 content source 관리</li><li>Surgeon별 article, paper, video linkage 확장 가능</li></ul></div>
+      <div class="detail-section"><h4>Links</h4><div id="detailLinks"></div></div>
+      <div class="detail-section"><h4>Next Action</h4><p>SFDC case volume, academic activity, specialty fit를 추가하면 Delphi/KoL shortlist 판단용 detail page로 확장 가능합니다.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-wrap">
+      <button class="btn-close" onclick="closeModalBtn()">✕</button>
+      <div class="modal-video"><iframe id="modalIframe" allowfullscreen></iframe></div>
+    </div>
+    <div class="modal-info">
+      <div class="modal-op" id="modalOp"></div>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-tags" id="modalTags"></div>
+      <div class="modal-footer">
+        <div class="modal-channel" id="modalChannel"></div>
+        <div class="modal-btns">
+          <button class="btn-link secondary" id="copyBtn" onclick="copyLink()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            링크 복사
+          </button>
+          <a class="btn-link primary" id="modalLink" href="#" target="_blank">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            바로 열기
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════ DATA ══════════════════════ */
+
+const VIDEOS = [
+  { op:"Adrenal Cyst",       sys:"Xi",  adv:"VSE & TilePro",    subs:109000, title:"Robotic Excision of Hemorrhagic Left Adrenal Cyst in a pregnant woman",                       url:"https://www.youtube.com/watch?v=n8T8onA3brQ",                                              channel:"SAGES - Minimally Invasive Surgery Videos" },
+  { op:"Endometriosis",      sys:"Xi",  adv:"ATM",              subs:3770,   title:"Safe excision of endometriosis, LUNA, Enterolysis and uterine suspension @meenakshijainm.d.com", url:"https://www.youtube.com/watch?v=EAbEqbWW8i4",                                           channel:"A WOMAN.S POINT OF VIEW." },
+  { op:"BSO",                sys:"Xi",  adv:"Long Bipolar",     subs:3770,   title:"Benign ovarian Cystadenomas, Robotic TLH BSO by jain technique, check the statistics",          url:"https://www.youtube.com/watch?v=JEF-yAnsrRk",                                           channel:"A WOMAN.S POINT OF VIEW." },
+  { op:"Hysterectomy",       sys:"Xi",  adv:"Force Bipolar",    subs:2470,   title:"Robotic hysterectomy",                                                                            url:"https://www.youtube.com/watch?v=Qsa4IqtFcJ0",                                           channel:"Dr. Nagendra Sardeshpande" },
+  { op:"Hysterectomy",       sys:"Xi",  adv:"Force Bipolar",    subs:2470,   title:"Robotic hysterectomy in severe endometriosis",                                                   url:"", channel:"Dr. Nagendra Sardeshpande", linkMissing:true },
+  { op:"Endometriosis(DIE)", sys:"Xi",  adv:"VSE",              subs:1240,   title:"로봇수술기기를 이용한 심부자궁내막증 수술사례들",                                                         url:"https://www.youtube.com/watch?v=BEV9rZa-PwE",                                           channel:"kim dogyun" },
+  { op:"Hysterectomy",       sys:"Xi",  adv:"VSE",              subs:542,    title:"Robotic Radical Hysterectomy + Pelvic Nodal Dissection | Large Uterine Sarcoma",                url:"https://www.youtube.com/watch?v=pJCAoNoUed0",                                           channel:"Dr. S. K. BALA" },
+  { op:"Hysterectomy",       sys:"DV5", adv:"VSE",              subs:60,     title:"Robotic Hysterectomy for Stage 4 Endometriosis: Narrated",                                      url:"https://www.youtube.com/watch?v=n5TwNfM3lpo",                                           channel:"Marshall Bovelsky, MD" },
+  { op:"Hysterectomy",       sys:"Xi",  adv:"Suction & Irrigator", subs:0,  title:"Robotic hysterectomy for multifibroid uterus, ovarian cystectomy and oophropexy",               url:"https://www.youtube.com/watch?v=dQQ8lm4XNWw",                                           channel:"Dr John Ibrahim" },
+  { op:"Ovarian Cystectomy", sys:"Xi",  adv:"",                 subs:0,      title:"Robotic Left para ovarian cystectomy, Excision of deep left broad ligament endometriosis",      url:"https://www.youtube.com/watch?v=vDTkFoGeZgo",                                           channel:"" },
+  { op:"Hysterectomy",       sys:"DV5", adv:"VSE",              subs:0,      title:"DV5 Single Site RTLH BS - CONSOLE TIME 37mins",                                                 url:"https://www.youtube.com/watch?v=WhO9fxY2Gcs",                                           channel:"Lanalee Araba Sam, MD" },
+  { op:"Hysterectomy",       sys:"Xi",  adv:"VSE",              subs:0,      title:"Robotic VNOTES hysterectomy with uterosacral ligament suspension",                              url:"https://share.surgeonapp.com/public/share/352e43c0-fc90-11f0-9b47-8f1e95e56e0d",       channel:"Surgeon ON" },
+];
+
+const KOLS = [
+  { hospital:"의정부성모병원",  surgeon:"김진휘", vnotes:true, links:[{ label:"블로그 기사", url:"https://blog.naver.com/cmc_story/224213835577" }] },
+  { hospital:"중앙대광명병원",  surgeon:"김명선", vnotes:true, links:[{ label:"프로필",    url:"https://gh.cauhs.or.kr/home/medical/profView.do?deptNo=102&profNo=1182&empNo=01766" }] },
+  { hospital:"순천향서울병원",  surgeon:"조재현", vnotes:true, links:[{ label:"뉴스", url:"https://www.schmc.ac.kr/seoul/selectBbsNttView.do?key=427&bbsNo=124&nttNo=261114" }, { label:"TV", url:"https://tv.naver.com/h/61718967" }] },
+  { hospital:"고대안암병원",    surgeon:"류기진", vnotes:true, links:[{ label:"기사",      url:"https://www.medisobizanews.com/news/articleView.html?idxno=111424" }] },
+  { hospital:"파란시티병원",    surgeon:"박성환", vnotes:true, links:[{ label:"공지",      url:"http://www.choonhae.or.kr/board/%EA%B3%A0%EA%B0%9D%EC%84%9C%EB%B9%84%EC%8A%A4/%EC%B6%98%ED%95%B4%EB%89%B4%EC%8A%A4%EA%B3%B5%EC%A7%80?command=view&id=6484" }] },
+  { hospital:"인하대병원",      surgeon:"추성필", vnotes:true, links:[{ label:"기사",      url:"https://www.bosa.co.kr/news/articleView.html?idxno=2199649" }] },
+  { hospital:"대전을지병원",    surgeon:"양윤석", vnotes:true, links:[{ label:"기사",      url:"https://www.fnnews.com/news/202007071117128654" }] },
+  { hospital:"삼성서울병원",    surgeon:"김태중", vnotes:true, links:[{ label:"프로필",    url:"https://www.samsunghospital.com/m/smc/reservation/common/doctorProfile.do?DR_NO=379" }] },
+  { hospital:"서울성모병원",    surgeon:"이근호", vnotes:true, links:[] },
+  { hospital:"대구가톨릭대병원", surgeon:"유정민", vnotes:true, links:[] },
+  { hospital:"영남대병원",      surgeon:"구유진", vnotes:true, links:[] },
+];
+
+/* ══════════════════════ TAB SWITCH ══════════════════════ */
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  if(tab === 'video') renderVideos();
+  else if(tab === 'kol') renderKOL();
+  else if(tab === 'paper') renderPapers();
+  else if(tab === 'dashboard') renderDashboard();
+}
+
+/* ══════════════════════ VIDEO ══════════════════════ */
+const vFilters = { op:'all', sys:'all', adv:'all' };
+let currentUrl = '';
+
+function getYtId(url) { const m = url.match(/[?&]v=([^&]+)/); return m ? m[1] : null; }
+function getThumb(url) { const id = getYtId(url); return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : ''; }
+function getEmbedUrl(url) { const id = getYtId(url); return id ? `https://www.youtube.com/embed/${id}?autoplay=1` : url; }
+
+function uniq(arr) {
+  const procedurePriority = {
+    "Hysterectomy": 1,
+    "Myomectomy": 2,
+    "Endometriosis": 3,
+    "Endometriosis(DIE)": 4,
+    "Ovarian Cystectomy": 5,
+    "BSO": 6,
+    "Adrenal Cyst": 7
+  };
+
+  const systemPriority = {
+    "DV5": 1,
+    "SP": 2,
+    "Xi": 3
+  };
+
+  const unique = [...new Set(arr.filter(Boolean))];
+
+  // 시스템 필터 정렬
+  if(unique.some(v => ["DV5","SP","Xi"].includes(v))) {
+    return unique.sort((a,b)=>{
+      const pa = systemPriority[a] || 999;
+      const pb = systemPriority[b] || 999;
+      if(pa !== pb) return pa - pb;
+      return a.localeCompare(b);
+    });
+  }
+
+  // 수술 필터 정렬
+  return unique.sort((a,b)=>{
+    const pa = procedurePriority[a] || 999;
+    const pb = procedurePriority[b] || 999;
+    if(pa !== pb) return pa - pb;
+    return a.localeCompare(b);
+  });
+}
+
+
+function countVideo(key, val) {
+  return VIDEOS.filter(v => {
+    const fo = key==='op'  ? v.op===val  : (vFilters.op==='all'  || v.op===vFilters.op);
+    const fs = key==='sys' ? v.sys===val : (vFilters.sys==='all' || v.sys===vFilters.sys);
+    const fa = key==='adv' ? v.adv===val : (vFilters.adv==='all' || v.adv===vFilters.adv);
+    return fo && fs && fa;
+  }).length;
+}
+
+function buildVideoFilters() {
+  const make = (id, key, vals) => {
+    const el = document.getElementById(id); el.innerHTML='';
+    const all = document.createElement('button');
+    all.className='filter-btn'+(vFilters[key]==='all'?' active':'');
+    all.innerHTML=`전체 <span class="btn-count">${VIDEOS.length}</span>`;
+    all.onclick=()=>{ vFilters[key]='all'; renderVideos(); };
+    el.appendChild(all);
+    vals.forEach(v => {
+      const btn = document.createElement('button');
+      btn.className='filter-btn'+(vFilters[key]===v?' active':'');
+      btn.innerHTML=`${v} <span class="btn-count">${countVideo(key,v)}</span>`;
+      btn.onclick=()=>{ vFilters[key]=v; renderVideos(); };
+      el.appendChild(btn);
+    });
+  };
+  make('opFilters','op', uniq(VIDEOS.map(v=>v.op)));
+  make('sysFilters','sys', uniq(VIDEOS.map(v=>v.sys)));
+  make('advFilters','adv', uniq(VIDEOS.map(v=>v.adv)).filter(Boolean));
+}
+
+function sysClass(s){ return s==='Xi'?'sys-Xi':s==='DV5'?'sys-DV5':'sys-SP'; }
+
+function renderVideos() {
+  buildVideoFilters();
+  const q = document.getElementById('videoSearch').value.toLowerCase();
+  const items = VIDEOS.filter(v => {
+    if(vFilters.op!=='all' && v.op!==vFilters.op) return false;
+    if(vFilters.sys!=='all' && v.sys!==vFilters.sys) return false;
+    if(vFilters.adv!=='all' && v.adv!==vFilters.adv) return false;
+    if(q && !v.title.toLowerCase().includes(q) && !v.op.toLowerCase().includes(q) && !v.channel.toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b) => {
+    const systemPriority = { "DV5": 1, "SP": 2, "Xi": 3 };
+
+    const pa = systemPriority[a.sys] || 999;
+    const pb = systemPriority[b.sys] || 999;
+
+    // 전체 상태에서는 시스템 우선
+    if(vFilters.sys === 'all' && pa !== pb){
+      return pa - pb;
+    }
+
+    // 같은 시스템 내에서는 구독자순
+    return (b.subs||0) - (a.subs||0);
+  });
+
+  document.getElementById('resultCount').textContent = items.length;
+  document.getElementById('headerCount').textContent = items.length + ' videos';
+
+  const tags = document.getElementById('activeTags'); tags.innerHTML='';
+  [['op','수술'],['sys','시스템'],['adv','Tech']].forEach(([k,l])=>{
+    if(vFilters[k]!=='all'){
+      const t=document.createElement('div'); t.className='active-tag';
+      t.innerHTML=`${l}: ${vFilters[k]} <span style="margin-left:4px">×</span>`;
+      t.onclick=()=>{ vFilters[k]='all'; renderVideos(); };
+      tags.appendChild(t);
+    }
+  });
+
+  const grid = document.getElementById('grid'); grid.innerHTML='';
+  if(!items.length){ grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1">🔍 검색 결과가 없습니다</div>`; return; }
+  items.forEach((v,i) => {
+    const thumb = getThumb(v.url);
+    const card = document.createElement('div');
+    card.className='card'; card.style.animationDelay=(i*0.03)+'s';
+    const missingBadge = v.linkMissing ? `<span style="position:absolute;top:8px;right:8px;background:rgba(180,60,0,0.88);color:#FFD9B0;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;font-family:var(--mono)">⚠ 링크없음</span>` : '';
+    const subsText = v.subs >= 1000
+      ? (v.subs >= 10000 ? (v.subs/10000).toFixed(1)+'만명' : (v.subs/1000).toFixed(1)+'천명')
+      : v.subs > 0 ? v.subs+'명' : '';
+    const channelHtml = `<div class="card-channel">${v.channel}${subsText ? `<br><span style="font-size:10px;color:var(--text3)">구독자 ${subsText}</span>` : ''}</div>`;
+    card.innerHTML=`
+      <div class="thumb-wrap">
+        ${thumb?`<img src="${thumb}" alt="${v.title}" loading="lazy" onerror="this.style.display='none'">`: ''}
+        <span class="sys-badge-thumb ${sysClass(v.sys)}">${v.sys}</span>
+        ${missingBadge}
+        ${!v.linkMissing?`<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`:''}
+      </div>
+      <div class="card-body">
+        <div class="card-op">${v.op}</div>
+        <div class="card-title">${v.title}</div>
+        <div class="card-meta">
+          <div class="card-tags">${v.adv?`<span class="tag adv">${v.adv}</span>`:''}</div>
+          ${channelHtml}
+        </div>
+      </div>`;
+    if(!v.linkMissing) card.onclick=()=>openModal(v);
+    else card.style.cursor='default';
+    grid.appendChild(card);
+  });
+}
+
+function openModal(v) {
+  currentUrl = v.url;
+  document.getElementById('modalOp').textContent = v.op;
+  document.getElementById('modalTitle').textContent = v.title;
+  document.getElementById('modalLink').href = v.url;
+  document.getElementById('modalChannel').textContent = v.channel ? '📺 '+v.channel : '';
+  const sc = v.sys==='Xi'?'sys-xi':v.sys==='DV5'?'sys-dv5':'sys-sp';
+  document.getElementById('modalTags').innerHTML =
+    `<span class="modal-tag ${sc}">${v.sys}</span>${v.adv?`<span class="modal-tag adv">${v.adv}</span>`:''}`;
+  const id = getYtId(v.url);
+  if(id){ document.getElementById('modalIframe').src=getEmbedUrl(v.url); document.querySelector('.modal-video').style.display=''; }
+  else { document.querySelector('.modal-video').style.display='none'; }
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(e){ if(e.target===document.getElementById('modalOverlay')) closeModalBtn(); }
+function closeModalBtn(){ document.getElementById('modalOverlay').classList.remove('open'); document.getElementById('modalIframe').src=''; document.body.style.overflow=''; }
+function copyLink(){
+  const fb=()=>{const t=document.createElement('textarea');t.value=currentUrl;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(t)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(currentUrl).catch(fb)}else{fb()}
+  const btn=document.getElementById('copyBtn'); btn.textContent='복사됨 ✓';
+  setTimeout(()=>{ btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 링크 복사`; }, 1600);
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModalBtn(); });
+
+/* ══════════════════════ KOL ══════════════════════ */
+const ARTICLES = [
+  // ── vNOTES ──
+  {
+    hospital:"의정부성모병원", surgeon:"김진휘", date:"2026-03-10",
+    tag:"vnotes",
+    title:"의정부성모병원 산부인과, 피부 절개 없는 '로봇 vNOTES' 확대",
+    desc:"복부 절개 없이 질을 통해 수술기구를 삽입하는 로봇 vNOTES를 자궁 및 난소 질환에 확대 적용. 3,400례 이상의 로봇수술 노하우 축적 기반.",
+    links:[{label:"라포르시안 기사", url:"https://www.rapportian.com/news/articleView.html?idxno=233332"}]
+  },
+  {
+    hospital:"순천향서울병원", surgeon:"조재현", date:"2024-06-01",
+    tag:"vnotes",
+    title:"순천향서울병원 조재현 교수, 로봇 vNOTES 수술 도입 및 임상성과",
+    desc:"로봇 vNOTES 질식 자궁절제술 도입 및 초기 임상 결과 발표. 흉터 없는 최소침습 수술로 환자 만족도 향상.",
+    links:[
+      {label:"병원 뉴스", url:"https://www.schmc.ac.kr/seoul/selectBbsNttView.do?key=427&bbsNo=124&nttNo=261114"},
+      {label:"네이버 TV", url:"https://tv.naver.com/h/61718967"}
+    ]
+  },
+  {
+    hospital:"중앙대광명병원", surgeon:"김명선", date:"2024-01-01",
+    tag:"vnotes",
+    title:"중앙대광명병원 김명선 교수 — 로봇 vNOTES 산부인과 수술",
+    desc:"중앙대광명병원 산부인과 로봇 vNOTES 수술 시행 및 술기 소개.",
+    links:[{label:"교수 프로필", url:"https://gh.cauhs.or.kr/home/medical/profView.do?deptNo=102&profNo=1182&empNo=01766"}]
+  },
+  {
+    hospital:"고대안암병원", surgeon:"류기진", date:"2023-05-01",
+    tag:"vnotes",
+    title:"고대안암병원 류기진 교수, 로봇 vNOTES 수술 도입",
+    desc:"고려대 안암병원 산부인과 로봇 vNOTES 자궁절제술 및 부속기 수술 시행 소개.",
+    links:[{label:"기사", url:"https://www.medisobizanews.com/news/articleView.html?idxno=111424"}]
+  },
+  {
+    hospital:"인하대병원", surgeon:"추성필", date:"2023-03-01",
+    tag:"vnotes",
+    title:"인하대병원 추성필 교수, 로봇 vNOTES 수술 도입",
+    desc:"인하대학교병원 산부인과 로봇 보조 vNOTES 수술 도입 및 임상 적용 현황.",
+    links:[{label:"기사", url:"https://www.bosa.co.kr/news/articleView.html?idxno=2199649"}]
+  },
+  {
+    hospital:"대전을지병원", surgeon:"양윤석", date:"2020-07-07",
+    tag:"vnotes",
+    title:"대전을지병원 양윤석 교수, 로봇 vNOTES 자궁절제술",
+    desc:"대전을지병원 산부인과 양윤석 교수의 로봇 vNOTES 자궁절제술 도입 및 수술 성과 소개.",
+    links:[{label:"기사", url:"https://www.fnnews.com/news/202007071117128654"}]
+  },
+  {
+    hospital:"파란시티병원", surgeon:"박성환", date:"2023-01-01",
+    tag:"vnotes",
+    title:"파란시티병원 박성환 원장, 로봇 vNOTES 수술 도입",
+    desc:"로봇 vNOTES 산부인과 수술 도입 안내 및 환자 대상 수술 정보 공지.",
+    links:[{label:"병원 공지", url:"http://www.choonhae.or.kr/board/%EA%B3%A0%EA%B0%9D%EC%84%9C%EB%B9%84%EC%8A%A4/%EC%B6%98%ED%95%B4%EB%89%B4%EC%8A%A4%EA%B3%B5%EC%A7%80?command=view&id=6484"}]
+  },
+  // ── 달성 기념 ──
+  {
+    hospital:"분당서울대병원", surgeon:"산부인과팀", date:"2025-08-25",
+    tag:"milestone",
+    title:"분당서울대병원 산부인과 다빈치 로봇수술 누적 3000례 달성",
+    desc:"2007년 도입 후 2021년 1000례, 2023년 2000례에 이어 2025년 6월 3000례 돌파. 연간 500건 이상 꾸준한 성장세. 자궁근종·자궁내막증·부인암까지 적용 범위 확대.",
+    links:[{label:"한국NGO신문 기사", url:"https://www.ngonews.kr/news/articleView.html?idxno=212572"}]
+  },
+  {
+    hospital:"한림대강남성심병원", surgeon:"박성호", date:"2025-12-03",
+    tag:"milestone",
+    title:"한림대강남성심병원 박성호 교수 로봇수술 개인 통산 1000례 달성",
+    desc:"국내 산부인과 분야에서 다빈치 Si·Xi·SP 전 세대 시스템을 아우르며 개인 로봇수술 1000례 돌파. H-CORE 센터장으로서 최소침습 수술 선도.",
+    links:[{label:"이데일리 기사", url:"https://www.edaily.co.kr/News/Read?newsId=02997926642394912&mediaCodeNo=257"}]
+  },
+  {
+    hospital:"건국대병원", surgeon:"산부인과팀", date:"2024-10-30",
+    tag:"milestone",
+    title:"건국대병원 산부인과 로봇수술 2000례 달성 기념식 개최",
+    desc:"2017년 다빈치 Xi 도입 후 2022년 1000례, 2024년 2000례 달성. 2023년 다빈치 SP 추가 도입으로 단일공 수술 역량 강화.",
+    links:[{label:"이데일리 기사", url:"https://www.edaily.co.kr/News/Read?newsId=03440726639058168&mediaCodeNo=257"}]
+  },
+  {
+    hospital:"부산대병원", surgeon:"김기형·주종길", date:"2024-12-30",
+    tag:"milestone",
+    title:"부산대병원 산부인과 로봇수술 1000례 달성 — 부산 지역 최초",
+    desc:"2014년 시작 후 부산 지역 최초 1000례. 자궁내막암 26.2%, 자궁근종 23.2% 비중. 다빈치 SP 단일공 로봇수술 주력 시행.",
+    links:[{label:"청년의사 기사", url:"http://www.docdocdoc.co.kr/news/articleView.html?idxno=3024573"}]
+  },
+  {
+    hospital:"강남세브란스병원", surgeon:"산부인과팀", date:"2022-02-09",
+    tag:"milestone",
+    title:"강남세브란스병원 산부인과 다빈치 로봇수술 1000례 달성",
+    desc:"2007년 산부인과 다빈치 로봇수술 시작 이후 꾸준한 성장세를 이어와 1000례 달성.",
+    links:[{label:"의협신문 기사", url:"https://www.doctorsnews.co.kr/news/articleView.html?idxno=143221"}]
+  },
+  // ── 링크 없음 ──
+  {hospital:"서울성모병원", surgeon:"이근호", date:"2024-01-01", tag:"vnotes", title:"서울성모병원 이근호 교수 — 로봇 vNOTES 수술", desc:"서울성모병원 산부인과 로봇 vNOTES 관련 활동.", links:[]},
+  {hospital:"대구가톨릭대병원", surgeon:"유정민", date:"2024-01-01", tag:"vnotes", title:"대구가톨릭대병원 유정민 교수 — 로봇 vNOTES 수술", desc:"대구가톨릭대병원 산부인과 로봇 vNOTES 관련 활동.", links:[]},
+  {hospital:"영남대병원", surgeon:"구유진", date:"2024-01-01", tag:"vnotes", title:"영남대병원 구유진 교수 — 로봇 vNOTES 수술", desc:"영남대병원 산부인과 로봇 vNOTES 관련 활동.", links:[]},
+  {hospital:"삼성서울병원", surgeon:"김태중", date:"2024-01-01", tag:"vnotes", title:"삼성서울병원 김태중 교수 — 로봇수술 임상 활동", desc:"삼성서울병원 산부인과 로봇수술 관련 활동.", links:[{label:"교수 프로필", url:"https://www.samsunghospital.com/m/smc/reservation/common/doctorProfile.do?DR_NO=379"}]},
+,
+
+  // ── Local / Private Hospital Robot Surgery Articles ──
+  {
+    hospital:"민트병원", surgeon:"김하정", date:"2022-12-05", tag:"local_robot",
+    title:"민트병원 — 자궁 뒤 숨은 근종까지 로봇 팔로 정밀 제거·봉합",
+    desc:"4세대 다빈치X 로봇수술을 활용한 자궁·난소 질환 치료와 자궁근종 수술의 정밀성 소개.",
+    links:[{label:"중앙일보 헬스미디어", url:"https://jhealthmedia.joins.com/news/articleView.html?idxno=26091"}]
+  },
+  {
+    hospital:"민트병원", surgeon:"김하정", date:"2024-05-11", tag:"local_robot",
+    title:"민트병원 — 산부인과 로봇수술 치료범위 및 적합 케이스 소개",
+    desc:"산부인과 로봇수술의 치료범위, 특장점, 적합 케이스 및 병원 선택 기준을 설명한 병원 자체 콘텐츠.",
+    links:[{label:"민트병원TV", url:"https://www.mintir.com/bbs/board.php?bo_table=tv&device_view=pc&page=10&wr_id=474"}]
+  },
+  {
+    hospital:"기쁨병원", surgeon:"윤여울", date:"2024-12-04", tag:"local_robot",
+    title:"기쁨병원 — 다빈치SP 첫 자궁근종절제술 성공",
+    desc:"다빈치SP 도입 후 첫 자궁근종절제술 성공. 기존 Xi에 이어 SP까지 운영하며 자궁근종 등으로 로봇수술 영역 확대.",
+    links:[{label:"의협신문", url:"https://www.doctorsnews.co.kr/news/articleView.html?idxno=157531"}]
+  },
+  {
+    hospital:"최상산부인과의원", surgeon:"최진영", date:"2026-04-28", tag:"local_robot",
+    title:"최상산부인과 — 삼성서울병원 협력 단일공 로봇수술 컨퍼런스 개최",
+    desc:"다빈치SP 단일공 로봇수술 노하우를 주제로 삼성서울병원 김태중 교수와 학술 교류 진행.",
+    links:[{label:"스포츠경향", url:"https://sports.khan.co.kr/article/202604281627003"}]
+  },
+  {
+    hospital:"최상산부인과의원", surgeon:"최진영", date:"2026-03-27", tag:"local_robot",
+    title:"최상산부인과 — 다빈치SP·다빈치X 도입",
+    desc:"4세대 로봇수술 시스템 다빈치SP와 다빈치X 도입으로 부인과 수술의 정밀성과 환자 맞춤 치료 환경 강화.",
+    links:[{label:"바이오타임즈", url:"https://www.biotimes.co.kr/news/articleView.html?idxno=30705"}]
+  },
+  {
+    hospital:"쉬즈메디병원", surgeon:"박성재", date:"2026-04-17", tag:"local_robot",
+    title:"쉬즈메디병원 — 다빈치SP 로봇수술 시스템 도입",
+    desc:"단일공 로봇수술 시스템 다빈치SP를 도입하며 부인과 수술 정밀도를 높일 수 있는 진료 환경 구축.",
+    links:[{label:"메디컬투데이", url:"https://mdtoday.co.kr/news/view/1065594426009871"}]
+  },
+  {
+    hospital:"동탄제일병원", surgeon:"산부인과팀", date:"2025-04-30", tag:"local_robot",
+    title:"동탄제일병원 — 첨단 다빈치SP 로봇수술 도입",
+    desc:"경기 남부 지역 여성병원 중 다빈치SP를 도입해 자궁근종, 자궁선근증, 자궁내막증 등 부인과 질환에 적용.",
+    links:[{label:"경향신문", url:"https://www.khan.co.kr/article/202504300955018"}]
+  },
+  {
+    hospital:"삼성미래여성병원", surgeon:"산부인과팀", date:"2025-10-24", tag:"local_robot",
+    title:"삼성미래여성병원 — 4세대 수술 로봇 다빈치X 도입",
+    desc:"다빈치X 도입으로 자궁근종, 자궁선근종, 난소낭종, 자궁내막증, 골반탈출증 치료 가능성을 소개.",
+    links:[{label:"전자신문", url:"https://www.etnews.com/20251024000134"}]
+  },
+  {
+    hospital:"아인병원", surgeon:"로봇수술팀", date:"2026-04-28", tag:"local_robot",
+    title:"아인병원 — 다빈치 로봇수술 1,000례 돌파",
+    desc:"2023년 11월 첫 부인과 로봇수술 이후 자궁근종, 골반장기탈출증 등 산부인과·외과 분야로 로봇수술 확대.",
+    links:[{label:"인천in", url:"https://www.incheonin.com/news/articleView.html?idxno=117515"}]
+  },
+  {
+    hospital:"연제일신병원", surgeon:"산부인과팀", date:"2024-07-31", tag:"local_robot",
+    title:"연제일신병원 — 레보아이 로봇수술 100례 달성",
+    desc:"레보아이 도입 후 1년 만에 로봇수술 100례 달성. 자궁근종절제술, 자궁전절제술, 난소낭종 등 산부인과 수술 포함.",
+    links:[{label:"로봇신문", url:"https://www.irobotnews.com/news/articleView.html?idxno=35658"}]
+  },
+  {
+    hospital:"연제일신병원", surgeon:"산부인과팀", date:"2023-06-08", tag:"local_robot",
+    title:"연제일신병원 — 복강경 수술로봇 레보아이 도입",
+    desc:"여성 질환 치료 경험을 바탕으로 산부인과 질환에 로봇수술을 적극 활용할 계획 발표.",
+    links:[{label:"데일리메디", url:"https://www.dailymedi.com/news/news_view.php?wr_id=898550"}]
+  },
+  {
+    hospital:"서울미즈병원", surgeon:"로봇복강경센터", date:"2026-03-16", tag:"local_robot",
+    title:"서울미즈병원 — 로봇수술 누적 800건 달성",
+    desc:"로봇 복강경 수술 누적 800례 돌파. 자궁근종, 부인암 예방 등 다양한 여성 질환 치료 체계 강화.",
+    links:[{label:"서울미즈병원", url:"https://seoulmiz.com/press/%EC%84%9C%EC%9A%B8%EB%AF%B8%EC%A6%88%EB%B3%91%EC%9B%90-%EB%A1%9C%EB%B4%87%EC%88%98%EC%88%A0-%EB%88%84%EC%A0%81-800%EA%B1%B4-%EB%8B%AC%EC%84%B1%ED%95%98%EB%A9%B0-%EC%B9%98%EB%A3%8C-%EC%B2%B4%EA%B3%84-%EA%B0%95%ED%99%94/"}]
+  },
+  {
+    hospital:"서울미즈병원", surgeon:"로봇복강경센터", date:"2025-09-18", tag:"local_robot",
+    title:"서울미즈병원 — 부인과 질환 로봇수술 500례 달성",
+    desc:"다빈치 로봇을 활용한 부인과 로봇수술 500례 달성. 로봇복강경센터 운영 성과 소개.",
+    links:[{label:"서울미즈병원", url:"https://seoulmiz.com/press/%EC%84%9C%EC%9A%B8%EB%AF%B8%EC%A6%88%EB%B3%91%EC%9B%90-%EB%A1%9C%EB%B4%87%EB%B3%B5%EA%B0%95%EA%B2%BD%EC%84%BC%ED%84%B0-%EB%B6%80%EC%9D%B8%EA%B3%BC-%EC%A7%88%ED%99%98-%EB%A1%9C%EB%B4%87%EC%88%98%EC%88%A0-500%EB%A1%80-%EB%8B%AC%EC%84%B1/"}]
+  },
+  {
+    hospital:"청담산부인과의원", surgeon:"로봇수술센터", date:"2025-08-28", tag:"local_robot",
+    title:"청담산부인과 — 자궁근종 로봇수술 900례 돌파",
+    desc:"의원급 로봇수술센터에서 다빈치 로봇수술기 도입 2년 만에 부인과 자궁근종 로봇수술 900례 돌파.",
+    links:[{label:"메디소비자뉴스", url:"https://www.medisobizanews.com/news/articleView.html?idxno=128404"}]
+  },
+  {
+    hospital:"린여성병원", surgeon:"", date:"", tag:"local_robot",
+    title:"린여성병원 — 로봇수술 관련 공개 기사 확인 필요",
+    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
+    links:[]
+  },
+  {
+    hospital:"서울송도병원", surgeon:"", date:"", tag:"local_robot",
+    title:"서울송도병원 — 로봇수술 관련 공개 기사 확인 필요",
+    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
+    links:[]
+  },
+  {
+    hospital:"그레이스병원", surgeon:"", date:"", tag:"local_robot",
+    title:"그레이스병원 — 로봇수술 관련 공개 기사 확인 필요",
+    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
+    links:[]
+  },
+  {
+    hospital:"한솔병원", surgeon:"", date:"", tag:"local_robot",
+    title:"한솔병원 — 로봇수술 관련 공개 기사 확인 필요",
+    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
+    links:[]
+  },
+  {
+    hospital:"아름제일병원", surgeon:"", date:"", tag:"local_robot",
+    title:"아름제일병원 — 로봇수술 관련 공개 기사 확인 필요",
+    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
+    links:[]
+  },
+  {
+    hospital:"민병원", surgeon:"", date:"", tag:"local_robot",
+    title:"민병원 — 로봇수술 관련 공개 기사 확인 필요",
+    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
+    links:[]
+  }
+
+];
+
+let kolTagFilter = 'all';
+
+function buildKolFilters() {
+  const el = document.getElementById('kolHospitalFilters'); el.innerHTML = '';
+  const defs = [
+    {key:'all',   label:'전체',      count: ARTICLES.length},
+    {key:'vnotes',label:'vNOTES 관련', count: ARTICLES.filter(a=>a.tag==='vnotes').length},
+    {key:'milestone',label:'달성 기념', count: ARTICLES.filter(a=>a.tag==='milestone').length},
+    {key:'local_robot',label:'로컬/전문병원 로봇수술', count: ARTICLES.filter(a=>a.tag==='local_robot').length},
+  ];
+  defs.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (kolTagFilter===d.key?' active':'');
+    btn.innerHTML = `${d.label} <span class="btn-count">${d.count}</span>`;
+    btn.onclick = () => { kolTagFilter = d.key; renderKOL(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderKOL() {
+  const q = document.getElementById('kolSearch').value.toLowerCase();
+  let items = ARTICLES
+    .filter(a =>
+      (kolTagFilter==='all' || a.tag===kolTagFilter) &&
+      (!q || a.hospital.toLowerCase().includes(q) || a.surgeon.toLowerCase().includes(q) || a.title.toLowerCase().includes(q))
+    )
+    .sort((a,b) => (b.date || '0000-00-00').localeCompare(a.date || '0000-00-00'));
+
+  document.getElementById('kolCount').textContent = items.length;
+  document.getElementById('headerCount').textContent = items.length + ' 기사';
+  buildKolFilters();
+
+  const tagsEl = document.getElementById('kolActiveTags'); tagsEl.innerHTML='';
+  if(kolTagFilter!=='all'){
+    const label = kolTagFilter==='vnotes' ? 'vNOTES 관련' : (kolTagFilter==='milestone' ? '달성 기념' : '로컬/전문병원 로봇수술');
+    const t=document.createElement('div'); t.className='active-tag';
+    t.innerHTML=`${label} <span style="margin-left:4px">×</span>`;
+    t.onclick=()=>{ kolTagFilter='all'; renderKOL(); };
+    tagsEl.appendChild(t);
+  }
+
+  const container = document.getElementById('kolCards'); container.innerHTML='';
+  if(!items.length){ container.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`; return; }
+
+  // 연도별 그룹핑
+  const years = [...new Set(items.map(a => a.date.slice(0,4)))].sort((a,b)=>b-a);
+
+  years.forEach(yr => {
+    const grp = items.filter(a => a.date.startsWith(yr));
+
+    // 연도 헤더
+    const yrHeader = document.createElement('div');
+    yrHeader.style.cssText=`display:flex;align-items:center;gap:10px;margin:12px 0 6px`;
+    yrHeader.innerHTML=`
+      <span style="font-size:13px;font-weight:600;color:var(--red);font-family:var(--mono)">${yr}</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>`;
+    container.appendChild(yrHeader);
+
+    grp.forEach((a,i) => {
+      const row = document.createElement('div');
+      row.style.cssText=`background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 14px;display:flex;align-items:center;gap:10px;animation:fadeUp 0.2s ease both;animation-delay:${i*0.02}s;transition:border-color 0.15s,background 0.15s;cursor:default`;
+      row.onmouseenter=()=>{row.style.borderColor='var(--red-mid)';row.style.background='var(--red-soft)'};
+      row.onmouseleave=()=>{row.style.borderColor='var(--border)';row.style.background='var(--surface)'};
+      row.onclick=()=>openDetail(a);
+
+      const tagColor = a.tag==='vnotes' ? 'background:#E6F1FB;color:#0C447C' : (a.tag==='milestone' ? 'background:#FAEEDA;color:#633806' : 'background:#EDEAE6;color:#4A4642');
+      const tagLabel = a.tag==='vnotes' ? 'vNOTES' : (a.tag==='milestone' ? '🏆' : 'Robot');
+      const dateStr = a.date ? a.date.slice(5,10) : '확인필요'; // MM-DD
+      const linkHtml = a.links.length
+        ? a.links.map(l=>`<a href="${l.url}" target="_blank" rel="noopener"
+            style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--red);text-decoration:none;padding:2px 8px;border-radius:5px;background:var(--red-soft);white-space:nowrap;transition:all 0.15s"
+            onmouseover="this.style.background='var(--red)';this.style.color='white'"
+            onmouseout="this.style.background='var(--red-soft)';this.style.color='var(--red)'">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            ${l.label}</a>`).join('')
+        : `<span style="font-size:11px;color:var(--text3)">—</span>`;
+
+      row.innerHTML=`
+        <span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap;${tagColor}">${tagLabel}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;min-width:90px">${a.hospital}</span>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap">${a.surgeon}</span>
+        <span style="font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.title}">${a.title}</span>
+        <span style="display:flex;gap:5px;flex-shrink:0;align-items:center">${linkHtml}</span>
+        <span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">${dateStr}</span>`;
+      container.appendChild(row);
+    });
+  });
+}
+
+/* ══════════════════════ PAPERS ══════════════════════ */
+const PAPERS = [
+  {
+    id:1, tech:"vnotes",
+    title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery",
+    authors:"Yun Seok Yang", affiliation:"Eulji University Hospital, Korea",
+    journal:"Surgical Endoscopy", year:2020,
+    url:"https://doi.org/10.1007/s00464-019-07115-z",
+    tags:["NOTES","Gasless","Hysterectomy","vNOTES"],
+    summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES 자궁절제술 최초 보고. 이소바릭(가스리스) 질식 접근법으로 흉터 없이 수술 가능함을 입증. 합병증 없음.",
+    chart:{
+      type:"bar",
+      title:"수술 결과 주요 지표",
+      labels:["Console Time (min)","Docking Time (min)","EBL (mL)","입원기간 (일)"],
+      values:[135,15,50,3],
+      colors:["#C0143C","#E8B4C0","#C0143C","#E8B4C0"],
+      note:"n=13, 중앙값 기준"
+    }
+  },
+  {
+    id:2, tech:"vnotes",
+    title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery",
+    authors:"Yun Seok Yang", affiliation:"Eulji University Hospital, Korea",
+    journal:"Journal of Robotic Surgery", year:2020,
+    url:"https://doi.org/10.1007/s11701-020-01093-4",
+    tags:["RGPT","Single-Site","vNOTES","Myomectomy"],
+    summary:"35명 대상 Robotic Glove Port Technique(RGPT) 도입 — 근종절제술 12예, 선근종절제 3예, 자궁내막증 낭종절제 6예, vNOTES 자궁절제 14예. 합병증 없음.",
+    chart:{
+      type:"donut",
+      title:"수술 종류 분포 (n=35)",
+      labels:["Myomectomy","Adenomyo-myomectomy","ES Cystectomy","vNOTES Hyst."],
+      values:[12,3,6,14],
+      colors:["#C0143C","#E8856A","#F5B942","#6B8FD4"]
+    }
+  },
+  {
+    id:3, tech:"vnotes",
+    title:"Robot-assisted transvaginal natural orifice transluminal endoscopic surgery for management of endometriosis: a pilot study of 33 cases",
+    authors:"Yiming Zhang, Stephanie Delgado, Juan Liu, Zhenkun Guan, Xiaoming Guan",
+    affiliation:"Baylor College of Medicine, Houston TX, USA",
+    journal:"Journal of Minimally Invasive Gynecology (JMIG)", year:2021,
+    url:"https://doi.org/10.1016/j.jmig.2021.06.004",
+    tags:["RvNOTES","Endometriosis","Xi","Hysterectomy"],
+    summary:"자궁내막증 33예 RvNOTES TLH 첫 케이스 시리즈. 평균 수술 시간 141.9분, 평균 출혈 52.3mL. 수술 3주 후 VAS 통증 점수 유의미한 감소.",
+    chart:{
+      type:"line",
+      title:"수술 후 VAS 통증 점수 변화 (n=26)",
+      labels:["수술 전","1주 후","2주 후","3주 후"],
+      values:[8.08,6.73,4.81,2.63],
+      colors:["#C0143C"],
+      note:"p<.001 (2·3주차)"
+    }
+  },
+  {
+    id:4, tech:"vnotes",
+    title:"The comparison of gasless and traditional robot-assisted transvaginal natural orifice transluminal endoscopic surgery in hysterectomy",
+    authors:"Youwen Mei, Li He, Qiang Zhang, Ying Chen, Jiafeng Zheng, Xinyu Xiao, Yonghong Lin",
+    affiliation:"Chengdu Women's and Children's Central Hospital, China",
+    journal:"Frontiers in Medicine", year:2023,
+    url:"https://doi.org/10.3389/fmed.2023.1117158",
+    tags:["Gasless","vNOTES","GR-vNOTES","Hysterectomy"],
+    summary:"GR-vNOTES(가스리스) 5예 vs TR-vNOTES(기존) 9예 비교. 수술 시간·출혈량·입원기간 모두 유의미한 차이 없음. 가스리스 방식은 CO₂ 기복증 위험 회피.",
+    chart:{
+      type:"grouped",
+      title:"GR-vNOTES vs TR-vNOTES 비교",
+      labels:["수술시간 (min)","출혈량 (mL)","입원기간 (일)"],
+      groupA:{label:"GR-vNOTES", values:[125,50,3.2], color:"#C0143C"},
+      groupB:{label:"TR-vNOTES", values:[115,50,3.1], color:"#6B8FD4"},
+      note:"n=5 vs 9, p=NS"
+    }
+  },
+  {
+    id:5, tech:"vnotes",
+    title:"Indocyanine green–assisted retrograde ureterolysis in robotic transvaginal NOTES for the management of stage IV endometriosis with obliterated cul-de-sac",
+    authors:"Xiaoming Guan, Zhenkun Guan, Sowmya Sunkara, Brooke Thigpen",
+    affiliation:"Baylor College of Medicine, Houston TX, USA",
+    journal:"Journal of Minimally Invasive Gynecology (JMIG)", year:2023,
+    url:"https://doi.org/10.1016/j.jmig.2023.02.005",
+    tags:["ICG","Firefly","Stage IV","Endometriosis","vNOTES"],
+    summary:"Douglas와 폐쇄된 Stage IV 자궁내막증 대상 RvNOTES 자궁절제술. ICG + Firefly 모드로 요관 실시간 시각화. 당일 퇴원, 통증 최소.",
+    chart:{
+      type:"bar",
+      title:"수술 단계별 소요 시간",
+      labels:["질식 준비","로봇 도킹","콘솔 수술","Total"],
+      values:[30,7,105,142],
+      colors:["#E8B4C0","#C0143C","#C0143C","#8B0020"],
+      note:"추정치 (Video Article 기준)"
+    }
+  },
+];
+
+// 수술기법 정의
+const PAPER_TECHS = [
+  {key:'all',    label:'전체'},
+  {key:'vnotes', label:'vNOTES'},
+];
+
+let paperTechFilter = 'all';
+
+function buildPaperFilters() {
+  const el = document.getElementById('paperTechFilters'); el.innerHTML='';
+  PAPER_TECHS.forEach(t => {
+    const count = t.key==='all' ? PAPERS.length : PAPERS.filter(p=>p.tech===t.key).length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn'+(paperTechFilter===t.key?' active':'');
+    btn.innerHTML = `${t.label} <span class="btn-count">${count}</span>`;
+    btn.onclick = ()=>{ paperTechFilter=t.key; renderPapers(); };
+    el.appendChild(btn);
+  });
+}
+
+function drawChart(p, canvasId) {
+  const c = document.getElementById(canvasId);
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0,0,W,H);
+
+  if(p.chart.type==='bar') {
+    const vals = p.chart.values, labs = p.chart.labels, cols = p.chart.colors;
+    const max = Math.max(...vals)*1.2;
+    const pad={t:10,r:10,b:36,l:38}, bw=Math.floor((W-pad.l-pad.r)/vals.length*0.55), gap=Math.floor((W-pad.l-pad.r)/vals.length);
+    // grid
+    ctx.strokeStyle='#E2DED9'; ctx.lineWidth=0.5;
+    for(let i=0;i<=4;i++){
+      const y=pad.t+(H-pad.t-pad.b)*i/4;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle='#9E9894';ctx.font='9px DM Sans';ctx.textAlign='right';
+      ctx.fillText(Math.round(max*(4-i)/4),pad.l-3,y+3);
+    }
+    vals.forEach((v,i)=>{
+      const x=pad.l+i*gap+gap/2-bw/2;
+      const bh=(v/max)*(H-pad.t-pad.b);
+      const y=H-pad.b-bh;
+      ctx.fillStyle=cols[i%cols.length];
+      ctx.beginPath();ctx.roundRect(x,y,bw,bh,3);ctx.fill();
+      ctx.fillStyle='#1A1714';ctx.font='bold 9px DM Sans';ctx.textAlign='center';
+      ctx.fillText(v,x+bw/2,y-4);
+      ctx.fillStyle='#6B6460';ctx.font='9px DM Sans';
+      const lb=labs[i]; const lines=lb.split(' ');
+      lines.forEach((ln,li)=>ctx.fillText(ln,x+bw/2,H-pad.b+10+li*10));
+    });
+
+  } else if(p.chart.type==='line') {
+    const vals=p.chart.values, labs=p.chart.labels;
+    const max=Math.max(...vals)*1.15, min=0;
+    const pad={t:10,r:16,b:32,l:36};
+    const xStep=(W-pad.l-pad.r)/(vals.length-1);
+    // grid
+    ctx.strokeStyle='#E2DED9';ctx.lineWidth=0.5;
+    for(let i=0;i<=4;i++){
+      const y=pad.t+(H-pad.t-pad.b)*i/4;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle='#9E9894';ctx.font='9px DM Sans';ctx.textAlign='right';
+      ctx.fillText((max*(4-i)/4).toFixed(1),pad.l-3,y+3);
+    }
+    // area
+    ctx.beginPath();
+    ctx.moveTo(pad.l,H-pad.b-(vals[0]-min)/(max-min)*(H-pad.t-pad.b));
+    vals.forEach((v,i)=>ctx.lineTo(pad.l+i*xStep,H-pad.b-(v-min)/(max-min)*(H-pad.t-pad.b)));
+    ctx.lineTo(pad.l+(vals.length-1)*xStep,H-pad.b);ctx.lineTo(pad.l,H-pad.b);ctx.closePath();
+    ctx.fillStyle='rgba(192,20,60,0.1)';ctx.fill();
+    // line
+    ctx.beginPath();ctx.strokeStyle='#C0143C';ctx.lineWidth=2;
+    vals.forEach((v,i)=>{
+      const x=pad.l+i*xStep, y=H-pad.b-(v-min)/(max-min)*(H-pad.t-pad.b);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });ctx.stroke();
+    // dots + labels
+    vals.forEach((v,i)=>{
+      const x=pad.l+i*xStep, y=H-pad.b-(v-min)/(max-min)*(H-pad.t-pad.b);
+      ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fillStyle='#C0143C';ctx.fill();
+      ctx.fillStyle='#1A1714';ctx.font='bold 9px DM Sans';ctx.textAlign='center';ctx.fillText(v.toFixed(1),x,y-7);
+      ctx.fillStyle='#6B6460';ctx.font='9px DM Sans';ctx.fillText(labs[i],x,H-pad.b+11);
+    });
+
+  } else if(p.chart.type==='donut') {
+    const vals=p.chart.values, labs=p.chart.labels, cols=p.chart.colors;
+    const total=vals.reduce((a,b)=>a+b,0);
+    const cx=W/2-20, cy=H/2+4, r=Math.min(cx,cy)*0.72, ir=r*0.52;
+    let angle=-Math.PI/2;
+    vals.forEach((v,i)=>{
+      const slice=v/total*Math.PI*2;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,angle,angle+slice);ctx.closePath();
+      ctx.fillStyle=cols[i];ctx.fill();
+      ctx.beginPath();ctx.arc(cx,cy,ir,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();
+      angle+=slice;
+    });
+    // center
+    ctx.fillStyle='#1A1714';ctx.font='bold 13px DM Sans';ctx.textAlign='center';
+    ctx.fillText('n='+total,cx,cy-2);ctx.font='9px DM Sans';ctx.fillStyle='#6B6460';ctx.fillText('total',cx,cy+11);
+    // legend
+    const lx=W-78, ly=18;
+    vals.forEach((v,i)=>{
+      const pct=Math.round(v/total*100);
+      ctx.fillStyle=cols[i];ctx.fillRect(lx,ly+i*18,10,10);
+      ctx.fillStyle='#1A1714';ctx.font='9px DM Sans';ctx.textAlign='left';
+      ctx.fillText(`${labs[i]} (${pct}%)`,lx+13,ly+i*18+9);
+    });
+
+  } else if(p.chart.type==='grouped') {
+    const labs=p.chart.labels, A=p.chart.groupA, B=p.chart.groupB;
+    const max=Math.max(...A.values,...B.values)*1.25;
+    const pad={t:10,r:10,b:42,l:38};
+    const slotW=(W-pad.l-pad.r)/labs.length, bw=Math.floor(slotW*0.28);
+    // grid
+    ctx.strokeStyle='#E2DED9';ctx.lineWidth=0.5;
+    for(let i=0;i<=4;i++){
+      const y=pad.t+(H-pad.t-pad.b)*i/4;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle='#9E9894';ctx.font='9px DM Sans';ctx.textAlign='right';
+      ctx.fillText(Math.round(max*(4-i)/4),pad.l-3,y+3);
+    }
+    labs.forEach((lb,i)=>{
+      const cx=pad.l+i*slotW+slotW/2;
+      [[A,0],[B,1]].forEach(([g,gi])=>{
+        const x=cx+(gi===0?-bw-1:1), bh=(g.values[i]/max)*(H-pad.t-pad.b), y=H-pad.b-bh;
+        ctx.fillStyle=g.color;ctx.beginPath();ctx.roundRect(x,y,bw,bh,2);ctx.fill();
+        ctx.fillStyle='#1A1714';ctx.font='bold 8px DM Sans';ctx.textAlign='center';ctx.fillText(g.values[i],x+bw/2,y-3);
+      });
+      ctx.fillStyle='#6B6460';ctx.font='9px DM Sans';ctx.textAlign='center';
+      lb.split(' ').forEach((ln,li)=>ctx.fillText(ln,cx,H-pad.b+11+li*10));
+    });
+    // legend
+    [[A,0],[B,1]].forEach(([g,gi])=>{
+      const lx=pad.l+gi*90+4, ly=H-8;
+      ctx.fillStyle=g.color;ctx.fillRect(lx,ly-7,8,8);
+      ctx.fillStyle='#1A1714';ctx.font='9px DM Sans';ctx.textAlign='left';ctx.fillText(g.label,lx+10,ly);
+    });
+  }
+
+  // note
+  if(p.chart.note){
+    ctx.fillStyle='#9E9894';ctx.font='8px DM Sans';ctx.textAlign='right';
+    ctx.fillText(p.chart.note,W-6,H-2);
+  }
+}
+
+function renderPapers() {
+  buildPaperFilters();
+  const q = document.getElementById('paperSearch').value.toLowerCase();
+  const items = PAPERS.filter(p =>
+    (paperTechFilter==='all' || p.tech===paperTechFilter) &&
+    (!q || p.title.toLowerCase().includes(q) || p.authors.toLowerCase().includes(q) || p.summary.toLowerCase().includes(q) || p.tags.some(t=>t.toLowerCase().includes(q)))
+  );
+  document.getElementById('paperCount').textContent = items.length;
+  document.getElementById('headerCount').textContent = items.length + ' papers';
+
+  const tagsEl = document.getElementById('paperActiveTags'); tagsEl.innerHTML='';
+  if(paperTechFilter!=='all'){
+    const label = PAPER_TECHS.find(t=>t.key===paperTechFilter)?.label || paperTechFilter;
+    const t=document.createElement('div'); t.className='active-tag';
+    t.innerHTML=`${label} <span style="margin-left:4px">×</span>`;
+    t.onclick=()=>{ paperTechFilter='all'; renderPapers(); };
+    tagsEl.appendChild(t);
+  }
+
+  const grid = document.getElementById('paperGrid'); grid.innerHTML = '';
+  if(!items.length){ grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`; return; }
+
+  items.forEach((p, i) => {
+    const tagHtml = p.tags.map(t => {
+      const isVnotes = t.toLowerCase().includes('vnotes')||t.toLowerCase().includes('notes');
+      return `<span style="font-size:10px;padding:2px 7px;border-radius:6px;background:${isVnotes?'#E6F1FB':'#EAF3DE'};color:${isVnotes?'#0C447C':'#27500A'};font-weight:600;font-family:var(--mono)">${t}</span>`;
+    }).join('');
+    const techLabel = PAPER_TECHS.find(t=>t.key===p.tech)?.label||p.tech;
+    const cid = `chart_${p.id}`;
+
+    const card = document.createElement('div');
+    card.style.cssText=`background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:${i*0.04}s;transition:border-color 0.15s,box-shadow 0.15s`;
+    card.onmouseenter=()=>{card.style.borderColor='var(--red-mid)';card.style.boxShadow='var(--shadow-hover)'};
+    card.onmouseleave=()=>{card.style.borderColor='var(--border)';card.style.boxShadow='var(--shadow)'};
+
+    card.innerHTML=`
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--red);font-family:var(--mono)">${p.journal} · ${p.year}</span>
+          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:#E6F1FB;color:#0C447C;font-family:var(--mono)">${techLabel}</span>
+        </div>
+        <a href="${p.url}" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--red);color:white;text-decoration:none" onmouseover="this.style.background='#A01030'" onmouseout="this.style.background='var(--red)'">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF
+        </a>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45">${p.title}</div>
+      <div style="font-size:11px;color:var(--text2)">${p.authors}</div>
+      <div style="font-size:11px;color:var(--text3)">${p.affiliation}</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--red-mid)">${p.summary}</div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:0.04em">${p.chart.title}</div>
+        <canvas id="${cid}" width="320" height="140" style="width:100%;height:auto;display:block"></canvas>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">${tagHtml}</div>`;
+    grid.appendChild(card);
+    requestAnimationFrame(()=>drawChart(p, cid));
+  });
+}
+
+
+
+/* ══════════════════════ ENHANCED UX ══════════════════════ */
+function toggleTheme(){
+  document.body.classList.toggle('dark');
+  localStorage.setItem('gynHubTheme', document.body.classList.contains('dark') ? 'dark' : 'light');
+}
+if(localStorage.getItem('gynHubTheme') === 'dark') document.body.classList.add('dark');
+
+function openDetail(a){
+  document.getElementById('detailTitle').textContent = `${a.surgeon} · ${a.hospital}`;
+  document.getElementById('detailSub').textContent = `${a.date} · ${a.tag === 'vnotes' ? 'vNOTES / Robotic signal' : 'Milestone / Institutional signal'}`;
+  document.getElementById('detailDesc').textContent = a.desc;
+  const links = document.getElementById('detailLinks');
+  if(a.links && a.links.length){
+    links.innerHTML = a.links.map(l => `<a class="link-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>`).join(' ');
+  } else {
+    links.innerHTML = '<span class="no-link">연결된 public link 없음</span>';
+  }
+  document.getElementById('detailPanel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDetail(e){ if(e.target===document.getElementById('detailPanel')) closeDetailBtn(); }
+function closeDetailBtn(){ document.getElementById('detailPanel').classList.remove('open'); document.body.style.overflow=''; }
+
+function renderDashboard(){
+  document.getElementById('headerCount').textContent = 'dashboard';
+  document.getElementById('dashVideos').textContent = VIDEOS.length;
+  document.getElementById('dashArticles').textContent = ARTICLES.length;
+  document.getElementById('dashPapers').textContent = PAPERS.length;
+  document.getElementById('dashPlatforms').textContent = VIDEOS.filter(v => v.sys==='DV5' || v.sys==='SP').length;
+}
+
+/* ══════════════════════ INIT ══════════════════════ */
+renderVideos();
+buildKolFilters();
+</script>
+</body>
+</html>
