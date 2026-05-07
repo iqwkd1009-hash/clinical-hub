@@ -52,57 +52,7 @@
   body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
   /* ── HEADER ── */
-  .header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 40px;
-    display: flex;
-    align-items: stretch;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    height: 64px;
-  }
-  .header-left { display: flex; align-items: center; gap: 14px; }
-  .logo-mark {
-    width: 32px; height: 32px;
-    background: var(--primary);
-    border-radius: 7px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .logo-mark svg { width: 16px; height: 16px; fill: white; }
-  .header-title { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
-  .header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
-
-  /* ── TABS ── */
-  .tabs {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    margin-left: 32px;
-    height: 100%;
-  }
-  .tab-btn {
-    display: flex; align-items: center; gap: 7px;
-    padding: 0 18px;
-    border: none;
-    background: transparent;
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text3);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .tab-btn:hover { color: var(--text2); }
-  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-  .tab-icon { font-size: 14px; }
-
-  .header-right { display: flex; align-items: center; }
+  /* ── COUNT BADGE ── */
   .count-badge {
     background: var(--primary-soft); color: var(--primary);
     font-size: 11px; font-weight: 600;
@@ -112,7 +62,7 @@
 
   /* ── PAGE ── */
   .page { display: none; }
-  .page.active { display: flex; min-height: calc(100vh - 64px); }
+  .page.active { display: flex; min-height: calc(100vh - 94px); }
 
   /* ── SIDEBAR ── */
   .sidebar {
@@ -120,8 +70,8 @@
     background: var(--surface);
     border-right: 1px solid var(--border);
     padding: 24px 16px;
-    position: sticky; top: 64px;
-    height: calc(100vh - 64px);
+    position: sticky; top: 94px;
+    height: calc(100vh - 94px);
     overflow-y: auto;
   }
   .filter-section { margin-bottom: 24px; }
@@ -333,9 +283,62 @@
   body.dark .logo-mark { background:linear-gradient(135deg,#4254D0,#2F3EA8); }
   body.dark .search-box, body.dark .kol-search { background:#202020; }
   body.dark .card, body.dark .kol-table-wrap, body.dark .modal, body.dark .insight-card { background:var(--surface); }
-  .brand-wordmark { display:flex; flex-direction:column; gap:1px; }
-  .brand-eyebrow { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--primary); font-weight:700; font-family:var(--mono); }
-  .icon-btn {
+  /* ── 2-TIER NAV ── */
+  .nav-top {
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:0 32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    height:52px;
+    position:sticky;
+    top:0;
+    z-index:110;
+  }
+  .nav-top-left { display:flex;align-items:center;gap:16px; }
+  .logo-mark {
+    width:30px;height:30px;background:var(--primary);
+    border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .logo-mark svg { width:15px;height:15px;fill:white; }
+  .brand-name { font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.02em; }
+  .brand-name span { color:var(--primary); }
+  .specialty-tabs { display:flex;align-items:center;gap:2px;margin-left:8px; }
+  .spec-btn {
+    display:flex;align-items:center;gap:6px;
+    padding:5px 14px;border-radius:7px;border:1px solid transparent;
+    background:transparent;font-family:var(--font);font-size:13px;font-weight:500;
+    color:var(--text3);cursor:pointer;transition:all 0.15s;white-space:nowrap;
+  }
+  .spec-btn:hover { background:var(--surface2);color:var(--text); }
+  .spec-btn.active { background:var(--primary-soft);color:var(--primary);border-color:var(--primary-mid);font-weight:600; }
+  .spec-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+
+  .nav-sub {
+    background:var(--surface);
+    border-bottom:2px solid var(--border);
+    padding:0 32px;
+    display:flex;
+    align-items:stretch;
+    height:42px;
+    position:sticky;
+    top:52px;
+    z-index:109;
+    gap:0;
+  }
+  .sub-btn {
+    display:flex;align-items:center;gap:6px;
+    padding:0 16px;border:none;background:transparent;
+    font-family:var(--font);font-size:12px;font-weight:500;
+    color:var(--text3);cursor:pointer;
+    border-bottom:2px solid transparent;margin-bottom:-2px;
+    transition:all 0.15s;white-space:nowrap;
+  }
+  .sub-btn:hover { color:var(--text2); }
+  .sub-btn.active { color:var(--primary);border-bottom-color:var(--primary);font-weight:600; }
+  .nav-right { display:flex;align-items:center;gap:8px; }
+
     border:1px solid var(--border); background:var(--surface2); color:var(--text2);
     border-radius:9px; padding:8px 10px; font-size:12px; font-weight:600; cursor:pointer;
     display:inline-flex; align-items:center; gap:6px; transition:all .15s; font-family:var(--font);
@@ -390,35 +393,35 @@
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">
+<!-- NAV TOP: Brand + Specialty -->
+<div class="nav-top">
+  <div class="nav-top-left">
     <div class="logo-mark">
       <svg viewBox="0 0 24 24"><path d="M5 4h14v3H5zM5 10.5h14v3H5zM5 17h14v3H5z"/></svg>
     </div>
-    <div class="brand-wordmark">
-      <div class="brand-eyebrow"></div>
-      <div class="header-title">GYN Clinical Hub</div>
-      <div class="header-sub">GYN Clinical Hub</div>
-    </div>
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('video', this)">
-        <span class="tab-icon">🎬</span> Surgical Video Library
+    <div class="brand-name">Clinical <span>Hub</span></div>
+    <div class="specialty-tabs">
+      <button class="spec-btn active" id="spec-gyn" onclick="switchSpec('gyn',this)">
+        <span class="spec-dot" style="background:#C0143C"></span> GYN
       </button>
-      <button class="tab-btn" onclick="switchTab('kol', this)">
-        <span class="tab-icon">📰</span> Article Library
+      <button class="spec-btn" id="spec-cardiac" onclick="switchSpec('cardiac',this)">
+        <span class="spec-dot" style="background:#1A56DB"></span> Cardiac
       </button>
-      <button class="tab-btn" onclick="switchTab('paper', this)">
-        <span class="tab-icon">📄</span> Paper Library
-      </button>
-      
     </div>
   </div>
-  <div class="header-right" style="gap:8px">
+  <div class="nav-right">
     <button class="icon-btn" onclick="toggleTheme()" title="Dark mode">◐ Theme</button>
     <div class="count-badge" id="headerCount">0</div>
   </div>
 </div>
+
+<!-- NAV SUB: Section tabs (per specialty) -->
+<div class="nav-sub" id="navSub">
+  <button class="sub-btn active" id="sub-video" onclick="switchTab('video',this)">🎬 Surgical Video Library</button>
+  <button class="sub-btn" id="sub-kol" onclick="switchTab('kol',this)">📰 Article Library</button>
+  <button class="sub-btn" id="sub-paper" onclick="switchTab('paper',this)">📄 Paper Library</button>
+</div>
+
 
 <!-- ══════════════════════════════════ -->
 <!--  PAGE 1 — VIDEO LIBRARY           -->
@@ -479,9 +482,9 @@
 <!-- ══════════════════════════════════ -->
 <!--  PAGE 3 — PAPER LIBRARY           -->
 <!-- ══════════════════════════════════ -->
-<div class="page" id="page-paper" style="min-height:calc(100vh - 64px)">
+<div class="page" id="page-paper" style="min-height:calc(100vh - 94px)">
   <!-- 논문 사이드바: 수술기법 필터 -->
-  <aside class="sidebar" style="top:64px;height:calc(100vh - 64px)">
+  <aside class="sidebar" style="top:94px;height:calc(100vh - 94px)">
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="paperSearch" placeholder="Search title, author..." oninput="renderPapers()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
@@ -522,6 +525,66 @@
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════ -->
+<!--  CARDIAC PAGE — Coming Soon           -->
+<!-- ══════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════ -->
+<!--  CARDIAC — Surgical Video Library         -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-cardiac-video" style="min-height:calc(100vh - 94px)">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
+    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">🫀</div>
+    <div>
+      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · Surgical Video Library</div>
+      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 로봇수술 영상 라이브러리를 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Mitral Valve Repair</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">CABG</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">AF Ablation</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Tricuspid Valve</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">TECAB</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  CARDIAC — Article Library                -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-cardiac-kol" style="min-height:calc(100vh - 94px)">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
+    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">📰</div>
+    <div>
+      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · Article Library</div>
+      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 관련 기사 및 KOL 활동 자료를 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">로봇 심장수술 달성 기념</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">KOL 활동</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">임상 결과 보도</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  CARDIAC — Paper Library                  -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-cardiac-paper" style="min-height:calc(100vh - 94px)">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
+    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">📄</div>
+    <div>
+      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · Paper Library</div>
+      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 관련 임상 논문 라이브러리를 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Robotic CABG</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Mitral Valve</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">AF Ablation</span>
+    </div>
+  </div>
+</div>
+
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
@@ -584,16 +647,42 @@ const KOLS = [
 ];
 
 /* ══════════════════════ TAB SWITCH ══════════════════════ */
-function switchTab(tab, el) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+let currentSpec = 'gyn';
+
+function switchSpec(spec, el) {
+  currentSpec = spec;
+  document.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + tab).classList.add('active');
-  if(tab === 'video') renderVideos();
-  else if(tab === 'kol') renderKOL();
-  else if(tab === 'paper') renderPapers();
-  else if(tab === 'dashboard') renderDashboard();
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sub-video').classList.add('active');
+
+  if(spec === 'cardiac') {
+    document.getElementById('page-cardiac-video').classList.add('active');
+    document.getElementById('headerCount').textContent = 'Cardiac';
+  } else {
+    document.getElementById('page-video').classList.add('active');
+    renderVideos();
+  }
 }
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  if(currentSpec === 'cardiac') {
+    document.getElementById('page-cardiac-' + tab).classList.add('active');
+    document.getElementById('headerCount').textContent = 'Cardiac';
+  } else {
+    document.getElementById('page-' + tab).classList.add('active');
+    if(tab === 'video') renderVideos();
+    else if(tab === 'kol') renderKOL();
+    else if(tab === 'paper') renderPapers();
+    else if(tab === 'dashboard') renderDashboard();
+  }
+}
+
 
 /* ══════════════════════ VIDEO ══════════════════════ */
 const vFilters = { op:'all', sys:'all', adv:'all' };
