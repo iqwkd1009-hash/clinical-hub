@@ -486,7 +486,7 @@
     <div class="sidebar-inner">
       <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?usp=sharing" target="_blank" style="text-decoration:none;width:100%;display:flex">
         <button style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
-        📄 영상 추가하기 (Google Sheet)
+        📄 영상 추가하기
         </button>
       </a>
       <div class="filter-section">
@@ -1189,8 +1189,8 @@ function renderVideos() {
         ${!v.linkMissing?`<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`:''}
       </div>
       <div class="card-body">
-        <div class="card-op">${v.op}</div>
-        <div class="card-title">${v.title}</div>
+        <div class="card-op" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">📌 ${v.op}</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px">TOPIC</div><div class="card-title">${v.title}</div>
         <div class="card-meta">
           <div class="card-tags">${v.adv?`<span class="tag adv">${v.adv}</span>`:''}</div>
           ${channelHtml}
@@ -1975,7 +1975,7 @@ function submitVideo() {
 }
 
 /* ══════════════════════ CALENDAR ══════════════════════ */
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=468200524&single=true&output=csv";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=0&single=true&output=csv";
 
 let CONFERENCES = [];
 let sheetLoaded = false;
