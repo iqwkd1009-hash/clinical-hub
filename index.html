@@ -1906,18 +1906,98 @@ function submitVideo() {
 }
 
 /* ══════════════════════ CALENDAR ══════════════════════ */
-const CONFERENCES = [
-  // ── 2026 ──
-  { name:"KSGO Workshop", start:"2026-04-02", end:"2026-04-02", loc:"상암트레이닝센터", tag:"workshop", url:"https://www.ksgo.or.kr", note:"" },
-  { name:"KSGO Conference", start:"2026-04-03", end:"2026-04-03", loc:"코엑스 마곡", tag:"conference", url:"https://www.ksgo.or.kr", note:"" },
-  { name:"KSSP 대한단일공학회 Workshop", start:"2026-04-05", end:"2026-04-05", loc:"삼성서울병원", tag:"workshop", url:"", note:"" },
-  { name:"KSOG Conference", start:"2026-04-25", end:"2026-04-25", loc:"부산 롯데호텔", tag:"conference", url:"https://www.ksog.org", note:"" },
-  { name:"KSGE", start:"2026-05-09", end:"2026-05-09", loc:"스카이베이 경포", tag:"conference", url:"https://www.ksge.or.kr", note:"" },
-  { name:"SKRGS", start:"2026-05-16", end:"2026-05-16", loc:"세종대학교", tag:"conference", url:"", note:"" },
-  { name:"대한비뇨부인과학회", start:"2026-07-05", end:"2026-07-05", loc:"세종대학교 대양AI센터", tag:"conference", url:"", note:"" },
-  { name:"대한단일공수술학회", start:"2026-07-11", end:"2026-07-11", loc:"", tag:"conference", url:"", note:"" },
-  { name:"다툭 심포지엄", start:"2026-07-29", end:"2026-07-29", loc:"강남", tag:"symposium", url:"", note:"" },
-];
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/gviz/tq?tqx=out:csv&sheet=calendar";
+
+let CONFERENCES = [];
+let sheetLoaded = false;
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      cell += '"';
+      i++;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      row.push(cell.trim());
+      cell = '';
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && next === '\n') i++;
+      row.push(cell.trim());
+      if (row.some(v => v !== '')) rows.push(row);
+      row = [];
+      cell = '';
+    } else {
+      cell += char;
+    }
+  }
+
+  row.push(cell.trim());
+  if (row.some(v => v !== '')) rows.push(row);
+  return rows;
+}
+
+function normalizeCalendarRow(row, headers) {
+  const get = (...keys) => {
+    for (const key of keys) {
+      const idx = headers.indexOf(key);
+      if (idx >= 0 && row[idx] !== undefined) return row[idx].trim();
+    }
+    return '';
+  };
+
+  const start = get('start', '시작일', 'date', '날짜');
+
+  return {
+    name: get('name', '학회명', '이벤트명', 'event', 'title'),
+    start,
+    end: get('end', '종료일') || start,
+    loc: get('location', 'loc', '장소'),
+    tag: get('tag', 'type', '분류', '필터') || 'conference',
+    url: get('url', 'link', '링크'),
+    note: get('note', 'memo', '메모', '비고'),
+    agendaData: get('agendaData', 'agenda'),
+    agendaName: get('agendaName')
+  };
+}
+
+async function loadConferencesFromSheet() {
+  try {
+    const res = await fetch(SHEET_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) throw new Error('Sheet에 데이터가 없습니다.');
+
+    const headers = rows[0].map(h => h.trim());
+    CONFERENCES = rows
+      .slice(1)
+      .map(row => normalizeCalendarRow(row, headers))
+      .filter(item => item.name && item.start)
+      .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    sheetLoaded = true;
+    renderCal();
+  } catch (err) {
+    console.error('Google Sheet loading failed:', err);
+    sheetLoaded = false;
+    CONFERENCES = [];
+    renderCal();
+    const calGrid = document.getElementById('calGrid');
+    if (calGrid) {
+      calGrid.innerHTML = `<div class="empty-state">Google Sheet 데이터를 불러오지 못했습니다.<br><span style="font-size:12px;color:var(--text3)">${err.message}</span></div>`;
+    }
+  }
+}
 
 let calTagFilter = 'all';
 let expandedCal = null;
@@ -2257,6 +2337,7 @@ function submitCal() {
 /* ══════════════════════ INIT ══════════════════════ */
 renderVideos();
 buildKolFilters();
+loadConferencesFromSheet();
 </script>
 </body>
 </html>
