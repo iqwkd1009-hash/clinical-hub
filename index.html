@@ -453,10 +453,6 @@
     </div>
   </div>
   <div class="nav-right">
-    <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?usp=sharing" target="_blank" rel="noopener noreferrer"
-       style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;border:1px solid var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">
-      ✏️ Sheet 수정
-    </a>
     <button class="icon-btn" onclick="toggleTheme()" title="Dark mode">◐ Theme</button>
     <div class="count-badge" id="headerCount">0</div>
   </div>
@@ -744,7 +740,7 @@
       <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
     </div>
     <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 추가</span>
+      <span>🔽 필터 / 일정 수정</span>
       <span class="mfb-arrow">›</span>
     </button>
     <div class="sidebar-inner">
@@ -753,10 +749,10 @@
         <div id="calFilters"></div>
       </div>
       <div class="filter-section" style="margin-top:8px">
-        <button onclick="openCalUpload()" style="width:100%;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          일정 추가하기
-        </button>
+        <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="width:100%;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          일정 수정하기
+        </a>
       </div>
     </div>
   </aside>
@@ -1950,26 +1946,31 @@ function parseCSV(text) {
 }
 
 function normalizeCalendarRow(row, headers) {
+  const normalizedHeaders = headers.map(h => String(h || '').trim().toLowerCase());
   const get = (...keys) => {
     for (const key of keys) {
-      const idx = headers.indexOf(key);
-      if (idx >= 0 && row[idx] !== undefined) return row[idx].trim();
+      const idx = normalizedHeaders.indexOf(String(key).trim().toLowerCase());
+      if (idx >= 0 && row[idx] !== undefined) return String(row[idx] || '').trim();
     }
     return '';
   };
 
   const start = get('start', '시작일', 'date', '날짜');
+  const end = get('end', '종료일') || start;
 
   return {
     name: get('name', '학회명', '이벤트명', 'event', 'title'),
     start,
-    end: get('end', '종료일') || start,
+    end,
     loc: get('location', 'loc', '장소'),
     tag: get('tag', 'type', '분류', '필터') || 'conference',
+    organizer: get('주최', 'organizer', 'host', 'society'),
+    system: get('system', '시스템', 'platform'),
     url: get('url', 'link', '링크'),
+    duty: get('duty', '담당', '담당자'),
     note: get('note', 'memo', '메모', '비고'),
-    agendaData: get('agendaData', 'agenda'),
-    agendaName: get('agendaName')
+    agendaData: get('agendaData', 'agenda', 'agenda_pdf', 'agenda pdf', '아젠다'),
+    agendaName: get('agendaName', 'agenda_name')
   };
 }
 
@@ -2046,14 +2047,54 @@ function calAgendaHtml(c) {
   return '<div style="margin-top:6px"><div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:6px;letter-spacing:0.05em">📎 아젠다</div>' + inner + '</div>';
 }
 
+
+function calTimeValue(dateStr) {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return 9999999999999;
+  d.setHours(0,0,0,0);
+  return d.getTime();
+}
+
+function effectiveEndTime(c) {
+  // Sheet 입력 실수로 종료일이 시작일보다 빠른 경우, 시작일을 종료 기준으로 사용합니다.
+  const start = calTimeValue(c.start);
+  const end = calTimeValue(c.end || c.start);
+  return Math.max(start, end);
+}
+
+function sortCalendarByDday(a, b) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayTime = today.getTime();
+  const aEnd = effectiveEndTime(a);
+  const bEnd = effectiveEndTime(b);
+  const aStart = calTimeValue(a.start);
+  const bStart = calTimeValue(b.start);
+  const aPast = aEnd < todayTime;
+  const bPast = bEnd < todayTime;
+
+  if (aPast !== bPast) return aPast ? 1 : -1;
+
+  // 진행 중인 일정은 D-0으로 보고 최상단에 배치합니다.
+  const aDday = aStart <= todayTime && !aPast ? 0 : Math.ceil((aStart - todayTime) / (1000*60*60*24));
+  const bDday = bStart <= todayTime && !bPast ? 0 : Math.ceil((bStart - todayTime) / (1000*60*60*24));
+
+  if (!aPast && !bPast) return aDday - bDday || aStart - bStart;
+
+  // 종료된 일정은 하단에 두되, 최근 종료 일정이 먼저 보이게 합니다.
+  return bEnd - aEnd || bStart - aStart;
+}
+
 function renderCal() {
   buildCalFilters();
   const q=document.getElementById('calSearch').value.toLowerCase();
   const today=new Date(); today.setHours(0,0,0,0);
 
   let items=CONFERENCES
-    .filter(c=>(calTagFilter==='all'||c.tag===calTagFilter)&&(!q||c.name.toLowerCase().includes(q)||c.loc.toLowerCase().includes(q)||c.note.toLowerCase().includes(q)))
-    .sort((a,b)=>b.start.localeCompare(a.start)); // 최신순
+    .filter(c=>{
+      const haystack = [c.name, c.loc, c.note, c.organizer, c.system, c.duty, c.url].join(' ').toLowerCase();
+      return (calTagFilter==='all'||c.tag===calTagFilter)&&(!q||haystack.includes(q));
+    })
+    .sort(sortCalendarByDday); // D-day 가까운 순, 종료 일정은 하단
 
   document.getElementById('calCount').textContent=items.length;
   document.getElementById('headerCount').textContent=items.length+' events';
@@ -2062,7 +2103,7 @@ function renderCal() {
   if(!items.length){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';return;}
 
   // 연도별 그룹
-  const years=[...new Set(items.map(c=>c.start.slice(0,4)))].sort((a,b)=>b-a);
+  const years=[...new Set(items.map(c=>c.start.slice(0,4)))];
   const collapsedYears=new Set();
 
   function makeYearSection(yr) {
@@ -2089,13 +2130,18 @@ function renderCal() {
     section.style.cssText='overflow:hidden;transition:max-height 0.3s ease';
 
     grp.forEach((c,i)=>{
-      const isPast=new Date(c.end||c.start)<today;
+      const isPast=effectiveEndTime(c)<today.getTime();
       const du=daysUntil(c.start);
       const duLabel=isPast?'종료':du===0?'오늘!':du>0?`D-${du}`:`D+${Math.abs(du)}`;
       const duColor=isPast?'var(--text3)':du<=7?'#C0143C':du<=30?'#E8856A':'var(--primary)';
       const tc=CAL_TAG_COLOR[c.tag]||'background:#F1EFE8;color:#444441';
       const tl=CAL_TAG_LABEL[c.tag]||c.tag;
       const dateRange=c.end&&c.end!==c.start?`${c.start} ~ ${c.end.slice(5)}`:c.start;
+      const metaParts = [];
+      if (c.loc) metaParts.push(`📍 ${c.loc}`);
+      if (c.organizer) metaParts.push(`주최: ${c.organizer}`);
+      if (c.system) metaParts.push(`System: ${c.system}`);
+      const dutyHtml = c.duty ? `<div style="font-size:10px;color:var(--text2);margin-top:3px;white-space:pre-line">👥 ${c.duty}</div>` : '';
       const rid=`cal_${yr}_${i}`;
 
       const linkBtn=c.url
@@ -2121,7 +2167,8 @@ function renderCal() {
           <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;background:${bgTc};color:${colorTc};font-family:var(--mono);white-space:nowrap;flex-shrink:0">${tl}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:1px">${dateRange} · 📍 ${c.loc||'장소 미정'}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px">${dateRange}${metaParts.length ? ' · ' + metaParts.join('  |  ') : ''}</div>
+            ${dutyHtml}
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
             ${linkBtn}
@@ -2131,6 +2178,11 @@ function renderCal() {
           </div>
         </div>
         <div id="detail_${rid}" style="display:none;padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface2)">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;margin-bottom:8px">
+            ${c.organizer ? `<div style="font-size:11px;color:var(--text2);line-height:1.5"><b style="color:var(--text)">주최</b><br>${c.organizer}</div>` : ''}
+            ${c.system ? `<div style="font-size:11px;color:var(--text2);line-height:1.5"><b style="color:var(--text)">System</b><br>${c.system}</div>` : ''}
+            ${c.duty ? `<div style="font-size:11px;color:var(--text2);line-height:1.5;white-space:pre-line"><b style="color:var(--text)">Duty</b><br>${c.duty}</div>` : ''}
+          </div>
           <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:${c.agendaData?'10px':'0'}">${c.note||'메모 없음'}</div>
           ${c.agendaData ? calAgendaHtml(c) : ''}
         </div>`;
