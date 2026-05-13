@@ -484,10 +484,11 @@
       <input type="text" id="videoSearch" placeholder="검색..." oninput="renderVideos()">
     </div>
     <div class="sidebar-inner">
-      <button onclick="openUploadModal()" style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        영상 추가하기
-      </button>
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?usp=sharing" target="_blank" style="text-decoration:none;width:100%;display:flex">
+        <button style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
+        📄 영상 추가하기 (Google Sheet)
+        </button>
+      </a>
       <div class="filter-section">
         <div class="filter-label">수술 종류</div>
         <div id="opFilters"></div>
@@ -917,7 +918,7 @@
 <script>
 /* ══════════════════════ DATA ══════════════════════ */
 
-const VIDEOS = [
+let VIDEOS = [
   { op:"Adrenal Cyst",       sys:"Xi",  adv:"VSE & TilePro",    subs:109000, title:"Robotic Excision of Hemorrhagic Left Adrenal Cyst in a pregnant woman",                       url:"https://www.youtube.com/watch?v=n8T8onA3brQ",                                              channel:"SAGES - Minimally Invasive Surgery Videos" },
   { op:"Endometriosis",      sys:"Xi",  adv:"ATM",              subs:3770,   title:"Safe excision of endometriosis, LUNA, Enterolysis and uterine suspension @meenakshijainm.d.com", url:"https://www.youtube.com/watch?v=EAbEqbWW8i4",                                           channel:"A WOMAN.S POINT OF VIEW." },
   { op:"BSO",                sys:"Xi",  adv:"Long Bipolar",     subs:3770,   title:"Benign ovarian Cystadenomas, Robotic TLH BSO by jain technique, check the statistics",          url:"https://www.youtube.com/watch?v=JEF-yAnsrRk",                                           channel:"A WOMAN.S POINT OF VIEW." },
@@ -931,6 +932,74 @@ const VIDEOS = [
   { op:"Hysterectomy",       sys:"DV5", adv:"VSE",              subs:0,      title:"DV5 Single Site RTLH BS - CONSOLE TIME 37mins",                                                 url:"https://www.youtube.com/watch?v=WhO9fxY2Gcs",                                           channel:"Lanalee Araba Sam, MD" },
   { op:"Hysterectomy",       sys:"Xi",  adv:"VSE",              subs:0,      title:"Robotic VNOTES hysterectomy with uterosacral ligament suspension",                              url:"https://share.surgeonapp.com/public/share/352e43c0-fc90-11f0-9b47-8f1e95e56e0d",       channel:"Surgeon ON" },
 ];
+
+
+const VIDEO_SHEET_URLS = [
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=468200524&single=true&output=csv"
+];
+
+function normalizeVideoRow(row, headers) {
+  const normalizedHeaders = headers.map(h => String(h || '').trim().toLowerCase());
+  const get = (...keys) => {
+    for (const key of keys) {
+      const idx = normalizedHeaders.indexOf(String(key).trim().toLowerCase());
+      if (idx >= 0 && row[idx] !== undefined) return String(row[idx] || '').trim();
+    }
+    return '';
+  };
+
+  const url = get('url', 'link', '링크', 'youtube', 'youtube url', '영상링크');
+  const title = get('title', 'name', '영상명', '제목');
+  const sys = get('sys', 'system', '시스템', 'platform') || 'Xi';
+
+  return {
+    op: get('op', 'procedure', '수술종류', '수술 종류', 'indication') || 'Other',
+    sys,
+    adv: get('adv', 'advanced tech', 'tech', '기술', 'instrument', 'system note'),
+    subs: Number(String(get('subs', 'subscriber', 'subscribers', '구독자') || '0').replace(/[^0-9.]/g, '')) || 0,
+    title,
+    url,
+    channel: get('channel', '채널', 'source', '출처'),
+    linkMissing: !url
+  };
+}
+
+async function loadVideosFromSheet() {
+  let loaded = false;
+  for (const url of VIDEO_SHEET_URLS) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) continue;
+
+      const text = await res.text();
+      if (!text || text.toLowerCase().includes('<html')) continue;
+
+      const rows = parseCSV(text);
+      if (rows.length < 2) continue;
+
+      const headers = rows[0].map(h => String(h || '').trim());
+      const items = rows
+        .slice(1)
+        .map(row => normalizeVideoRow(row, headers))
+        .filter(v => v.title || v.url);
+
+      if (items.length) {
+        VIDEOS = items;
+        loaded = true;
+        break;
+      }
+    } catch (err) {
+      console.warn('Video sheet loading failed:', err);
+    }
+  }
+
+  renderVideos();
+
+  if (!loaded) {
+    console.warn('No video sheet data loaded. Using embedded fallback videos. Create a sheet tab named "videos" with columns: op, sys, adv, title, url, channel, subs');
+  }
+}
+
 
 const KOLS = [
   { hospital:"의정부성모병원",  surgeon:"김진휘", vnotes:true, links:[{ label:"블로그 기사", url:"https://blog.naver.com/cmc_story/224213835577" }] },
@@ -1906,7 +1975,7 @@ function submitVideo() {
 }
 
 /* ══════════════════════ CALENDAR ══════════════════════ */
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/gviz/tq?tqx=out:csv&sheet=calendar";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=468200524&single=true&output=csv";
 
 let CONFERENCES = [];
 let sheetLoaded = false;
@@ -2391,7 +2460,7 @@ function submitCal() {
 
 
 /* ══════════════════════ INIT ══════════════════════ */
-renderVideos();
+loadVideosFromSheet();
 buildKolFilters();
 loadConferencesFromSheet();
 </script>
