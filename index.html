@@ -364,27 +364,70 @@
   .detail-section h4 { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--primary); font-family:var(--mono); margin-bottom:8px; }
   .detail-section p, .detail-section li { font-size:12px; line-height:1.65; color:var(--text2); }
   .pdf-pill { display:inline-flex; align-items:center; gap:5px; margin-top:8px; font-size:11px; color:var(--primary); background:var(--primary-soft); padding:4px 9px; border-radius:999px; font-weight:700; }
+  /* ── MOBILE DRAWER ── */
+  .mobile-filter-btn { display: none; }
+  .drawer-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .drawer-overlay.open { display: block; }
+  .sidebar-inner { display: contents; }
+
   @media (max-width: 900px) {
     .dashboard-grid { grid-template-columns:1fr !important; }
-    .header { height:auto; min-height:64px; padding:12px 16px; flex-direction:column; align-items:flex-start; gap:12px; position:relative; }
-    .header-left { width:100%; flex-wrap:wrap; align-items:flex-start; }
-    .tabs { order:3; width:100%; margin-left:0; overflow-x:auto; height:42px; }
-    .tab-btn { padding:0 12px; font-size:12px; }
-    .header-right { position:absolute; right:16px; top:14px; gap:6px; }
     .page.active { flex-direction:column; min-height:auto; }
-    .sidebar { width:100%; height:auto; position:relative; top:0; border-right:0; border-bottom:1px solid var(--border); padding:14px 16px; }
-    .filter-section { margin-bottom:12px; }
+
+    /* 사이드바 → 드로어로 전환 */
+    .sidebar {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
+      width: 280px !important;
+      height: 100vh !important;
+      z-index: 210;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      overflow-y: auto;
+      padding: 20px 16px !important;
+      border-right: 1px solid var(--border) !important;
+    }
+    .sidebar.drawer-open {
+      transform: translateX(0);
+    }
+    .sidebar-inner { display: block !important; }
+
+    /* 필터 버튼 — 메인 영역 상단에 표시 */
+    .mobile-filter-btn {
+      display: flex;
+      align-items: center; gap: 7px;
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      font-family: var(--font);
+      font-size: 13px; font-weight: 500;
+      color: var(--text2);
+      cursor: pointer;
+      margin-bottom: 14px;
+      transition: all 0.15s;
+      width: fit-content;
+    }
+    .mobile-filter-btn:hover { border-color: var(--primary-mid); color: var(--primary); }
+
+    /* 드로어 닫기 버튼 */
+    .drawer-close {
+      display: flex !important;
+    }
+
     .main, .kol-main, #page-paper > div, #page-dashboard > div { padding:16px !important; }
     .grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
     #paperGrid { grid-template-columns:1fr !important; }
-    .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    .case-row { grid-template-columns:1fr; gap:6px; }
-    .detail-body { grid-template-columns:1fr; }
+    .filter-section { margin-bottom:12px; }
   }
   @media (max-width: 520px) {
-    .metric-grid { grid-template-columns:1fr; }
-    .modal-info, .detail-body { padding:16px; }
-    .detail-head { padding:16px; }
     .grid { grid-template-columns:1fr !important; }
     .card-title { font-size:12px; }
   }
@@ -417,34 +460,62 @@
 
 <!-- NAV SUB: Section tabs (per specialty) -->
 <div class="nav-sub" id="navSub">
-  <button class="sub-btn active" id="sub-video" onclick="switchTab('video',this)">🎬 Surgical Video Library</button>
-  <button class="sub-btn" id="sub-kol" onclick="switchTab('kol',this)">📰 Article Library</button>
-  <button class="sub-btn" id="sub-paper" onclick="switchTab('paper',this)">📄 Paper Library</button>
+  <button class="sub-btn active" id="sub-video" onclick="switchTab('video',this)">🎬 수술영상</button>
+  <button class="sub-btn" id="sub-kol" onclick="switchTab('kol',this)">📰 기사</button>
+  <button class="sub-btn" id="sub-paper" onclick="switchTab('paper',this)">📄 논문</button>
+  <button class="sub-btn" id="sub-cal" onclick="switchTab('cal',this)">📅 캘린더</button>
 </div>
 
+
+<!-- Drawer Overlay -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 
 <!-- ══════════════════════════════════ -->
 <!--  PAGE 1 — VIDEO LIBRARY           -->
 <!-- ══════════════════════════════════ -->
 <div class="page active" id="page-video">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar-video">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="videoSearch" placeholder="검색..." oninput="renderVideos()">
     </div>
-    <div class="filter-section">
-      <div class="filter-label">수술 종류</div>
-      <div id="opFilters"></div>
-    </div>
-    <div class="filter-section">
-      <div class="filter-label">시스템</div>
-      <div id="sysFilters"></div>
-    </div>
-    <div class="filter-section">
-      <div class="filter-label">ADV. Tech</div>
-      <div id="advFilters"></div>
+    <div class="sidebar-inner">
+      <button onclick="openUploadModal()" style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        영상 추가하기
+      </button>
+      <div class="filter-section">
+        <div class="filter-label">수술 종류</div>
+        <div id="opFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">시스템</div>
+        <div id="sysFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">ADV. Tech</div>
+        <div id="advFilters"></div>
+      </div>
     </div>
   </aside>
+  <main class="main">
+    <div class="toolbar">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-video')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          필터
+        </button>
+        <div class="active-filters" id="activeTags"></div>
+      </div>
+      <div class="result-count"><span id="resultCount">0</span>개 영상</div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
   <main class="main">
     <div class="toolbar">
       <div class="active-filters" id="activeTags"></div>
@@ -459,23 +530,61 @@
 <!-- ══════════════════════════════════ -->
 <div class="page kol-page" id="page-kol">
   <!-- KOL 사이드바: 병원 필터 -->
-  <aside class="sidebar" id="kolSidebar">
+  <aside class="sidebar" id="sidebar-kol">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="kolSearch" placeholder="병원명, 술자 검색..." oninput="renderKOL()">
     </div>
-    <div class="filter-section">
-      <div class="filter-label">병원 필터</div>
-      <div id="kolHospitalFilters"></div>
+    <div class="sidebar-inner">
+      <!-- 전체 초기화 -->
+      <button id="kolResetBtn" onclick="resetKolFilters()" style="width:100%;margin-bottom:16px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.69"/></svg>
+        전체 초기화
+      </button>
+
+      <div class="filter-section">
+        <div class="filter-label">🔧 수술 기법</div>
+        <div id="kolTechFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">🩺 인디케이션</div>
+        <div id="kolIndicationFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">📌 카테고리</div>
+        <div id="kolCategoryFilters"></div>
+      </div>
     </div>
   </aside>
 
   <div class="kol-main" style="padding:24px 28px;flex:1;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div class="active-filters" id="kolActiveTags"></div>
-      <div class="kol-count"><span id="kolCount">0</span> institutions</div>
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:20px;box-shadow:var(--shadow)">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;margin-bottom:8px">🔗 기사 링크 → 자동 분석</div>
+      <div style="display:flex;gap:8px">
+        <input id="artUrlInput" type="text" placeholder="기사 URL을 붙여넣으세요"
+          style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none"
+          onkeydown="if(event.key==='Enter')analyzeArticleUrl()">
+        <button id="artAnalyzeBtn" onclick="analyzeArticleUrl()"
+          style="padding:9px 16px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.15s"
+          onmouseover="this.style.background='#A01030'" onmouseout="this.style.background='var(--primary)'">분석하기</button>
+      </div>
+      <div id="artAnalyzeStatus" style="font-size:11px;margin-top:7px;display:none;padding:7px 10px;border-radius:6px"></div>
     </div>
-    <div id="kolCards" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-kol')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          필터
+        </button>
+        <div class="active-filters" id="kolActiveTags"></div>
+      </div>
+      <div class="kol-count"><span id="kolCount">0</span>건</div>
+    </div>
+    <div id="kolCards" style="display:flex;flex-direction:column;gap:4px"></div>
   </div>
 </div>
 
@@ -484,19 +593,35 @@
 <!-- ══════════════════════════════════ -->
 <div class="page" id="page-paper" style="min-height:calc(100vh - 94px)">
   <!-- 논문 사이드바: 수술기법 필터 -->
-  <aside class="sidebar" style="top:94px;height:calc(100vh - 94px)">
+  <aside class="sidebar" id="sidebar-paper">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="paperSearch" placeholder="Search title, author..." oninput="renderPapers()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
     </div>
-    <div class="filter-section">
-      <div class="filter-label">Surgical Technique</div>
-      <div id="paperTechFilters"></div>
+    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
+      <span>🔽 기법 필터</span>
+      <span class="mfb-arrow">›</span>
+    </button>
+    <div class="sidebar-inner">
+      <div class="filter-section">
+        <div class="filter-label">필터</div>
+        <div id="paperTechFilters"></div>
+      </div>
     </div>
   </aside>
   <div style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div class="active-filters" id="paperActiveTags"></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-paper')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          기법 필터
+        </button>
+        <div class="active-filters" id="paperActiveTags"></div>
+      </div>
       <div style="font-size:12px;color:var(--text3)"><span id="paperCount">0</span> papers</div>
     </div>
     <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px"></div>
@@ -585,6 +710,181 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════ -->
+<!--  CARDIAC — Calendar                       -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-cardiac-cal" style="min-height:calc(100vh - 94px)">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
+    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">📅</div>
+    <div>
+      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · 캘린더</div>
+      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 학회 및 일정을 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">ISMICS</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">대한흉부외과학회</span>
+      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">AATS</span>
+    </div>
+  </div>
+</div>
+
+
+<div class="page" id="page-cal" style="min-height:calc(100vh - 94px)">
+  <aside class="sidebar" id="sidebar-cal">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
+    </div>
+    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
+      <span>🔽 필터 / 일정 추가</span>
+      <span class="mfb-arrow">›</span>
+    </button>
+    <div class="sidebar-inner">
+      <div class="filter-section">
+        <div class="filter-label">필터</div>
+        <div id="calFilters"></div>
+      </div>
+      <div class="filter-section" style="margin-top:8px">
+        <button onclick="openCalUpload()" style="width:100%;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          일정 추가하기
+        </button>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          분류 필터
+        </button>
+        <div class="active-filters" id="calActiveTags"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span>개 일정</div>
+    </div>
+    <div id="calGrid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  UPLOAD MODAL — Video                     -->
+<!-- ══════════════════════════════════════════ -->
+<div id="uploadOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closeUploadModal(event)">
+  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:16px;font-weight:700;color:var(--text)">영상 추가하기</div>
+      <button onclick="closeUploadModal()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">YouTube URL *</label>
+        <input id="u-url" type="text" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">영상 제목 *</label>
+        <input id="u-title" type="text" placeholder="수술 영상 제목" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">수술 종류</label>
+          <input id="u-op" type="text" placeholder="예: Hysterectomy" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">시스템</label>
+          <select id="u-sys" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+            <option value="Xi">Xi</option><option value="DV5">DV5</option><option value="SP">SP</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">ADV. Tech</label>
+          <input id="u-adv" type="text" placeholder="예: VSE, Force Bipolar" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">채널명</label>
+          <input id="u-ch" type="text" placeholder="YouTube 채널명" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+      </div>
+      <div id="u-preview" style="display:none;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+        <img id="u-thumb" style="width:100%;height:auto;display:block">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="previewVideo()" style="flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);font-family:var(--font);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer">썸네일 미리보기</button>
+        <button onclick="submitVideo()" style="flex:2;padding:9px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">추가하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  UPLOAD MODAL — Calendar                  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="calUploadOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closeCalUpload(event)">
+  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div id="calModalTitle" style="font-size:16px;font-weight:700;color:var(--text)">일정 추가하기</div>
+      <button onclick="closeCalUpload()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">학회명 / 이벤트명 *</label>
+        <input id="c-name" type="text" placeholder="예: KSGO 2025 정기학술대회" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">시작일 *</label>
+          <input id="c-start" type="date" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">종료일</label>
+          <input id="c-end" type="date" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">장소</label>
+          <input id="c-loc" type="text" placeholder="예: 서울 코엑스" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">필터</label>
+          <select id="c-tag" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+            <option value="conference">학회</option>
+            <option value="workshop">워크샵</option>
+            <option value="symposium">심포지엄</option>
+            <option value="roadshow">로드쇼</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">🔗 공식 웹사이트 URL</label>
+        <input id="c-url" type="text" placeholder="https://www.ksgo.or.kr" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">📎 아젠다 파일 업로드 (PDF / 이미지)</label>
+        <div style="border:1.5px dashed var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:border-color 0.15s;background:var(--surface2)" onclick="document.getElementById('c-agenda-file').click()" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+          <input id="c-agenda-file" type="file" accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="handleAgendaUpload(event)">
+          <div id="c-agenda-preview" style="font-size:12px;color:var(--text3)">
+            클릭해서 파일 선택 (PDF, JPG, PNG)
+          </div>
+        </div>
+        <input id="c-agenda-name" type="hidden" value="">
+        <input id="c-agenda-data" type="hidden" value="">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">메모</label>
+        <textarea id="c-note" placeholder="부스 번호, 발표 세션, 준비사항 등..." rows="2" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none;resize:none"></textarea>
+      </div>
+      <button onclick="submitCal()" id="calSubmitBtn" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">추가하기</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
@@ -679,6 +979,7 @@ function switchTab(tab, el) {
     if(tab === 'video') renderVideos();
     else if(tab === 'kol') renderKOL();
     else if(tab === 'paper') renderPapers();
+    else if(tab === 'cal') renderCal();
     else if(tab === 'dashboard') renderDashboard();
   }
 }
@@ -860,249 +1161,234 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModalBtn(); 
 /* ══════════════════════ KOL ══════════════════════ */
 const ARTICLES = [
   // ── vNOTES ──
-  {
-    hospital:"의정부성모병원", surgeon:"김진휘", date:"2026-03-10",
-    tag:"vnotes",
+  { hospital:"의정부성모병원", surgeon:"김진휘", date:"2026-03-10",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
     title:"의정부성모병원 산부인과, 피부 절개 없는 '로봇 vNOTES' 확대",
     desc:"복부 절개 없이 질을 통해 수술기구를 삽입하는 로봇 vNOTES를 자궁 및 난소 질환에 확대 적용. 3,400례 이상의 Robotic Surgery 노하우 축적 기반.",
-    links:[{label:"라포르시안 기사", url:"https://www.rapportian.com/news/articleView.html?idxno=233332"}]
-  },
-  {
-    hospital:"순천향서울병원", surgeon:"조재현", date:"2024-06-01",
-    tag:"vnotes",
+    image:"https://cdn.rapportian.com/news/photo/202503/233332_216476_2853.jpg",
+    links:[{label:"라포르시안 기사", url:"https://www.rapportian.com/news/articleView.html?idxno=233332"}] },
+  { hospital:"순천향서울병원", surgeon:"조재현", date:"2024-06-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
     title:"순천향서울병원 조재현 교수, 로봇 vNOTES 수술 도입 및 임상성과",
     desc:"로봇 vNOTES 질식 Hysterectomy 도입 및 초기 임상 결과 발표. 흉터 없는 최소침습 수술로 환자 만족도 향상.",
-    links:[
-      {label:"병원 뉴스", url:"https://www.schmc.ac.kr/seoul/selectBbsNttView.do?key=427&bbsNo=124&nttNo=261114"},
-      {label:"네이버 TV", url:"https://tv.naver.com/h/61718967"}
-    ]
-  },
-  {
-    hospital:"중앙대광명병원", surgeon:"김명선", date:"2024-01-01",
-    tag:"vnotes",
+    image:"https://www.schmc.ac.kr/image/upload/ckeditor/2024/04/20240412133340.jpg",
+    links:[{label:"병원 뉴스", url:"https://www.schmc.ac.kr/seoul/selectBbsNttView.do?key=427&bbsNo=124&nttNo=261114"},{label:"네이버 TV", url:"https://tv.naver.com/h/61718967"}] },
+  { hospital:"중앙대광명병원", surgeon:"김명선", date:"2024-01-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
     title:"중앙대광명병원 김명선 교수 — 로봇 vNOTES 산부인과 수술",
     desc:"중앙대광명병원 산부인과 로봇 vNOTES 수술 시행 및 술기 소개.",
-    links:[{label:"교수 프로필", url:"https://gh.cauhs.or.kr/home/medical/profView.do?deptNo=102&profNo=1182&empNo=01766"}]
-  },
-  {
-    hospital:"고대안암병원", surgeon:"류기진", date:"2023-05-01",
-    tag:"vnotes",
+    image:"https://gh.cauhs.or.kr/filedown/prof/doctor_img_1766.jpg",
+    links:[{label:"교수 프로필", url:"https://gh.cauhs.or.kr/home/medical/profView.do?deptNo=102&profNo=1182&empNo=01766"}] },
+  { hospital:"고대안암병원", surgeon:"류기진", date:"2023-05-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
     title:"고대안암병원 류기진 교수, 로봇 vNOTES 수술 도입",
     desc:"고려대 안암병원 산부인과 로봇 vNOTES Hysterectomy 및 부속기 수술 시행 소개.",
-    links:[{label:"기사", url:"https://www.medisobizanews.com/news/articleView.html?idxno=111424"}]
-  },
-  {
-    hospital:"인하대병원", surgeon:"추성필", date:"2023-03-01",
-    tag:"vnotes",
+    image:"https://cdn.medisobizanews.com/news/photo/202305/111424_78906_1457.jpg",
+    links:[{label:"기사", url:"https://www.medisobizanews.com/news/articleView.html?idxno=111424"}] },
+  { hospital:"인하대병원", surgeon:"추성필", date:"2023-03-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
     title:"인하대병원 추성필 교수, 로봇 vNOTES 수술 도입",
     desc:"인하대학교병원 산부인과 로봇 보조 vNOTES 수술 도입 및 임상 적용 현황.",
-    links:[{label:"기사", url:"https://www.bosa.co.kr/news/articleView.html?idxno=2199649"}]
-  },
-  {
-    hospital:"대전을지병원", surgeon:"양윤석", date:"2020-07-07",
-    tag:"vnotes",
+    image:"https://www.bosa.co.kr/news/photo/202303/2199649_210423_1534.jpg",
+    links:[{label:"기사", url:"https://www.bosa.co.kr/news/articleView.html?idxno=2199649"}] },
+  { hospital:"대전을지병원", surgeon:"양윤석", date:"2020-07-07",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
     title:"대전을지병원 양윤석 교수, 로봇 vNOTES Hysterectomy",
     desc:"대전을지병원 산부인과 양윤석 교수의 로봇 vNOTES Hysterectomy 도입 및 수술 성과 소개.",
-    links:[{label:"기사", url:"https://www.fnnews.com/news/202007071117128654"}]
-  },
-  {
-    hospital:"파란시티병원", surgeon:"박성환", date:"2023-01-01",
-    tag:"vnotes",
+    image:"https://www.fnnews.com/resource/media/image/2020/07/07/202007071117128654_l.jpg",
+    links:[{label:"기사", url:"https://www.fnnews.com/news/202007071117128654"}] },
+  { hospital:"파란시티병원", surgeon:"박성환", date:"2023-01-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
     title:"파란시티병원 박성환 원장, 로봇 vNOTES 수술 도입",
     desc:"로봇 vNOTES 산부인과 수술 도입 안내 및 환자 대상 수술 정보 공지.",
-    links:[{label:"병원 공지", url:"http://www.choonhae.or.kr/board/%EA%B3%A0%EA%B0%9D%EC%84%9C%EB%B9%84%EC%8A%A4/%EC%B6%98%ED%95%B4%EB%89%B4%EC%8A%A4%EA%B3%B5%EC%A7%80?command=view&id=6484"}]
-  },
+    image:"",
+    links:[{label:"병원 공지", url:"http://www.choonhae.or.kr/board/%EA%B3%A0%EA%B0%9D%EC%84%9C%EB%B9%84%EC%8A%A4/%EC%B6%98%ED%95%B4%EB%89%B4%EC%8A%A4%EA%B3%B5%EC%A7%80?command=view&id=6484"}] },
+  { hospital:"서울성모병원", surgeon:"이근호", date:"2024-01-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
+    title:"서울성모병원 이근호 교수 — 로봇 vNOTES 수술", desc:"서울성모병원 산부인과 로봇 vNOTES 관련 활동.", image:"", links:[] },
+  { hospital:"대구가톨릭대병원", surgeon:"유정민", date:"2024-01-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
+    title:"대구가톨릭대병원 유정민 교수 — 로봇 vNOTES 수술", desc:"대구가톨릭대병원 산부인과 로봇 vNOTES 관련 활동.", image:"", links:[] },
+  { hospital:"영남대병원", surgeon:"구유진", date:"2024-01-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
+    title:"영남대병원 구유진 교수 — 로봇 vNOTES 수술", desc:"영남대병원 산부인과 로봇 vNOTES 관련 활동.", image:"", links:[] },
+  { hospital:"삼성서울병원", surgeon:"김태중", date:"2024-01-01",
+    tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
+    title:"삼성서울병원 김태중 교수 — 로봇수술 임상 활동", desc:"삼성서울병원 산부인과 로봇수술 관련 활동.", image:"", links:[{label:"교수 프로필", url:"https://www.samsunghospital.com/m/smc/reservation/common/doctorProfile.do?DR_NO=379"}] },
+  { hospital:"온병원(부산)", surgeon:"산부인과팀", date:"2025-12-27",
+    tag:"vnotes", tech:"sp", indication:"hysterectomy",
+    title:"온병원, 단일공 다빈치SP로 부인과 로봇수술 새 지평",
+    desc:"부산 온병원 산부인과 다빈치 SP 단일공 로봇수술로 난소낭종·자궁질환에서 우수한 결과. 배꼽 주변 2~3cm 절개 흉터 최소화.",
+    image:"", links:[{label:"일요신문", url:"https://www.ilyo.co.kr/?ac=article_view&entry_id=505500"}] },
+  { hospital:"최상산부인과", surgeon:"산부인과팀", date:"2026-03-25",
+    tag:"vnotes", tech:"sp", indication:"hysterectomy",
+    title:"최상산부인과, 로봇수술 장비 다빈치 SP·X 구축",
+    desc:"단일공 로봇수술 다빈치 SP와 다관절 로봇 다빈치 X 도입. 좁고 깊은 골반강 내 자유로운 기구 움직임 구현.",
+    image:"", links:[{label:"메디컬투데이", url:"https://www.mdtoday.co.kr/news/view/1065604428337444"}] },
   // ── 달성 기념 ──
-  {
-    hospital:"분당서울대병원", surgeon:"산부인과팀", date:"2025-08-25",
-    tag:"milestone",
-    title:"분당서울대병원 산부인과 다빈치 Robotic Surgery 누적 3000례 달성",
-    desc:"2007년 도입 후 2021년 1000례, 2023년 2000례에 이어 2025년 6월 3000례 돌파. 연간 500건 이상 꾸준한 성장세. 자궁근종·자궁내막증·부인암까지 적용 범위 확대.",
-    links:[{label:"한국NGO신문 기사", url:"https://www.ngonews.kr/news/articleView.html?idxno=212572"}]
-  },
-  {
-    hospital:"한림대강남성심병원", surgeon:"박성호", date:"2025-12-03",
-    tag:"milestone",
-    title:"한림대강남성심병원 박성호 교수 Robotic Surgery 개인 통산 1000례 달성",
-    desc:"국내 산부인과 분야에서 다빈치 Si·Xi·SP 전 세대 시스템을 아우르며 개인 Robotic Surgery 1000례 돌파. H-CORE 센터장으로서 최소침습 수술 선도.",
-    links:[{label:"이데일리 기사", url:"https://www.edaily.co.kr/News/Read?newsId=02997926642394912&mediaCodeNo=257"}]
-  },
-  {
-    hospital:"건국대병원", surgeon:"산부인과팀", date:"2024-10-30",
-    tag:"milestone",
-    title:"건국대병원 산부인과 Robotic Surgery 2000례 달성 기념식 개최",
-    desc:"2017년 다빈치 Xi 도입 후 2022년 1000례, 2024년 2000례 달성. 2023년 다빈치 SP 추가 도입으로 Single-Port 수술 역량 강화.",
-    links:[{label:"이데일리 기사", url:"https://www.edaily.co.kr/News/Read?newsId=03440726639058168&mediaCodeNo=257"}]
-  },
-  {
-    hospital:"부산대병원", surgeon:"김기형·주종길", date:"2024-12-30",
-    tag:"milestone",
-    title:"부산대병원 산부인과 Robotic Surgery 1000례 달성 — 부산 지역 최초",
-    desc:"2014년 시작 후 부산 지역 최초 1000례. 자궁내막암 26.2%, 자궁근종 23.2% 비중. 다빈치 SP Single-Port Robotic Surgery 주력 시행.",
-    links:[{label:"청년의사 기사", url:"http://www.docdocdoc.co.kr/news/articleView.html?idxno=3024573"}]
-  },
-  {
-    hospital:"강남세브란스병원", surgeon:"산부인과팀", date:"2022-02-09",
-    tag:"milestone",
-    title:"강남세브란스병원 산부인과 다빈치 Robotic Surgery 1000례 달성",
-    desc:"2007년 산부인과 다빈치 Robotic Surgery 시작 이후 꾸준한 성장세를 이어와 1000례 달성.",
-    links:[{label:"의협신문 기사", url:"https://www.doctorsnews.co.kr/news/articleView.html?idxno=143221"}]
-  },
-  // ── 링크 없음 ──
-  {hospital:"서울성모병원", surgeon:"이근호", date:"2024-01-01", tag:"vnotes", title:"서울성모병원 이근호 교수 — 로봇 vNOTES 수술", desc:"서울성모병원 산부인과 로봇 vNOTES 관련 활동.", links:[]},
-  {hospital:"대구가톨릭대병원", surgeon:"유정민", date:"2024-01-01", tag:"vnotes", title:"대구가톨릭대병원 유정민 교수 — 로봇 vNOTES 수술", desc:"대구가톨릭대병원 산부인과 로봇 vNOTES 관련 활동.", links:[]},
-  {hospital:"영남대병원", surgeon:"구유진", date:"2024-01-01", tag:"vnotes", title:"영남대병원 구유진 교수 — 로봇 vNOTES 수술", desc:"영남대병원 산부인과 로봇 vNOTES 관련 활동.", links:[]},
-  {hospital:"삼성서울병원", surgeon:"김태중", date:"2024-01-01", tag:"vnotes", title:"삼성서울병원 김태중 교수 — Robotic Surgery 임상 활동", desc:"삼성서울병원 산부인과 Robotic Surgery 관련 활동.", links:[{label:"교수 프로필", url:"https://www.samsunghospital.com/m/smc/reservation/common/doctorProfile.do?DR_NO=379"}]},
+  { hospital:"동국대경주병원", surgeon:"김도균", date:"2026-04-02",
+    tag:"milestone", tech:"sp", indication:"endometriosis",
+    title:"동국대경주병원 로봇수술 최단기간 1,000례 — 아시아 최다",
+    desc:"2024년 6월 첫 시행 후 22개월 만에 1,000례 달성. 아시아·태평양 단일 진료과 최단기간 최다. 심부자궁내막증 2025년 세계 최다 수술 기록.",
+    image:"", links:[{label:"파이낸셜데일리", url:"https://www.fdaily.co.kr/news/article.html?no=107904"},{label:"병원신문", url:"https://www.khanews.com/news/articleView.html?idxno=244048"}] },
+  { hospital:"용인세브란스병원", surgeon:"박주현", date:"2026-04-01",
+    tag:"milestone", tech:"multiport", indication:"myoma",
+    title:"용인세브란스병원 박주현 교수, 산부인과 로봇수술 개인 1,000례 달성",
+    desc:"자궁근종·자궁내막증·부인암·난관문합술 등 다양한 영역에서 1,000례 달성. 거대 자궁근종(3.2kg) 포함 고난도 사례 다수.",
+    image:"", links:[{label:"메디포뉴스", url:"https://www.medifonews.com/news/article.html?no=212515"}] },
+  { hospital:"인하대병원", surgeon:"추성필", date:"2026-01-07",
+    tag:"milestone", tech:"sp", indication:"hysterectomy",
+    title:"인하대병원 다빈치SP 증설 — 인천 최대 규모 로봇수술센터",
+    desc:"다빈치SP 1대 추가 도입으로 총 3대(Xi 1대+SP 2대) 운용. 인천 최대 규모 로봇수술센터 달성.",
+    image:"", links:[{label:"중앙이코노미뉴스", url:"https://www.joongangenews.com/news/articleView.html?idxno=483733"}] },
+  { hospital:"한림대강남성심병원", surgeon:"산부인과팀", date:"2025-10-21",
+    tag:"milestone", tech:"sp", indication:"hysterectomy",
+    title:"한림대강남성심병원, 다빈치SP 도입 — 총 3대 로봇 동시 가동",
+    desc:"4세대 다빈치SP 추가 도입으로 산부인과 전용 Xi, 본관 Xi, SP 총 3대 동시 운영. 누적 3,000례 돌파.",
+    image:"", links:[{label:"아시아투데이", url:"https://www.asiatoday.co.kr/kn/view.php?key=20251021010007404"}] },
+  { hospital:"강남차병원", surgeon:"성석주", date:"2025-02-05",
+    tag:"milestone", tech:"multiport", indication:"myoma",
+    title:"강남차병원 산부인과 로봇수술 7,000례 달성 — 국내 최초·최단기간",
+    desc:"국내 산부인과 최단기간 최다 성과. 연 1,400례 이상 시행. 자궁근종제거술 68.9%, 난소종양제거술 20.0% 비중.",
+    image:"", links:[{label:"메디파나뉴스", url:"https://www.medipana.com/news/articleView.html?idxno=337197"}] },
+  { hospital:"세종충남대병원", surgeon:"유헌종", date:"2025-07-08",
+    tag:"milestone", tech:"multiport", indication:"myoma",
+    title:"세종충남대병원 유헌종 교수, 부인과 로봇수술 300례 돌파",
+    desc:"다빈치 Xi 활용 부인과 로봇수술 300례 달성. 자궁내막암·자궁경부암·자궁근종·난소낭종 등 적용.",
+    image:"", links:[{label:"한국NGO신문", url:"https://www.ngonews.kr/news/articleView.html?idxno=209539"}] },
+  { hospital:"분당서울대병원", surgeon:"산부인과팀", date:"2025-08-25",
+    tag:"milestone", tech:"multiport", indication:"myoma",
+    title:"분당서울대병원 산부인과 다빈치 로봇수술 누적 3,000례 달성",
+    desc:"2007년 도입 후 2021년 1,000례, 2023년 2,000례에 이어 2025년 3,000례 돌파. 자궁근종·자궁내막증·난소종양부터 부인암까지.",
+    image:"https://cdn.ngonews.kr/news/photo/202508/212572_195423_5231.jpg",
+    links:[{label:"한국NGO신문 기사", url:"https://www.ngonews.kr/news/articleView.html?idxno=212572"}] },
+  { hospital:"한림대강남성심병원", surgeon:"박성호", date:"2025-12-03",
+    tag:"milestone", tech:"multiport", indication:"hysterectomy",
+    title:"한림대강남성심병원 박성호 교수 개인 통산 1,000례 달성",
+    desc:"다빈치 Si·Xi·SP 전 세대 시스템 1,000례 돌파. H-CORE 센터장으로서 최소침습 수술 선도.",
+    image:"https://cdn.edaily.co.kr/images/publish/2025/12/EC201512030093.jpg",
+    links:[{label:"이데일리 기사", url:"https://www.edaily.co.kr/News/Read?newsId=02997926642394912&mediaCodeNo=257"}] },
+  { hospital:"건국대병원", surgeon:"산부인과팀", date:"2024-10-30",
+    tag:"milestone", tech:"sp", indication:"hysterectomy",
+    title:"건국대병원 산부인과 로봇수술 2,000례 달성 기념식 개최",
+    desc:"2017년 다빈치 Xi 도입 후 2022년 1,000례, 2024년 2,000례 달성. 2023년 다빈치 SP 추가 도입.",
+    image:"", links:[{label:"이데일리 기사", url:"https://www.edaily.co.kr/News/Read?newsId=03440726639058168&mediaCodeNo=257"}] },
+  { hospital:"부산대병원", surgeon:"김기형·주종길", date:"2024-12-30",
+    tag:"milestone", tech:"sp", indication:"hysterectomy",
+    title:"부산대병원 산부인과 로봇수술 1,000례 달성 — 부산 지역 최초",
+    desc:"2014년 시작 후 부산 지역 최초 1,000례. 자궁내막암 26.2%, 자궁근종 23.2% 비중.",
+    image:"", links:[{label:"청년의사 기사", url:"http://www.docdocdoc.co.kr/news/articleView.html?idxno=3024573"}] },
+  { hospital:"강남세브란스병원", surgeon:"산부인과팀", date:"2022-02-09",
+    tag:"milestone", tech:"multiport", indication:"hysterectomy",
+    title:"강남세브란스병원 산부인과 다빈치 로봇수술 1,000례 달성",
+    desc:"2007년 산부인과 다빈치 로봇수술 시작 이후 1,000례 달성.",
+    image:"", links:[{label:"의협신문 기사", url:"https://www.doctorsnews.co.kr/news/articleView.html?idxno=143221"}] },
+  // ── 인디케이션별 ──
+  { hospital:"동탄제일병원", surgeon:"이인호", date:"2025-04-30",
+    tag:"myoma", tech:"sp", indication:"myoma",
+    title:"동탄제일병원, 다빈치SP 도입 — 자궁근종·자궁내막증 치료 접근성 향상",
+    desc:"경기 남부 지역 여성병원 최초 다빈치SP 도입. 자궁근종·자궁선근증·자궁내막증 환자 대상 단일공 로봇수술 본격 시행.",
+    image:"", links:[{label:"경향신문 기사", url:"https://www.khan.co.kr/article/202504300955018"}] },
+  { hospital:"해운대백병원", surgeon:"지용일", date:"2025-04-22",
+    tag:"endometriosis", tech:"multiport", indication:"endometriosis",
+    title:"해운대백병원 지용일 교수, 단일공 로봇수술 300례 — 자궁내막증 특화",
+    desc:"자궁근종·자궁내막증·자궁선근증·부인암 등 로봇수술 300례 달성. 10대~70대 폭넓은 연령층 치료.",
+    image:"", links:[{label:"메디칼업저버 기사", url:"https://www.monews.co.kr/news/articleView.html?idxno=403698"}] },
+  { hospital:"이화여대목동병원", surgeon:"산부인과팀", date:"2024-11-18",
+    tag:"endometriosis", tech:"multiport", indication:"endometriosis",
+    title:"자궁내막증 로봇수술 — 난소 정상조직 보존하며 병변 정밀 제거",
+    desc:"자궁내막증 내막종 제거 시 복강경·로봇 복강경 수술 적용. 정상 난소조직 손상 최소화, 유착 조직 분리 후 해부학적 복원.",
+    image:"", links:[{label:"하이닥 기사", url:"https://news.hidoc.co.kr/news/articleView.html?idxno=40734"}] },
+  { hospital:"고대구로병원", surgeon:"산부인과팀", date:"2026-02-19",
+    tag:"hysterectomy", tech:"sp", indication:"hysterectomy",
+    title:"고대구로병원 로봇수술 6천례 + 단일공 3천례 동시 달성",
+    desc:"2025년 전체 로봇수술 전년 대비 32.5% 증가. SP 로봇수술 3천례 돌파. 세계 최초 단일공 로봇 식도암 수술 성공.",
+    image:"", links:[{label:"메디컬투데이 기사", url:"https://www.mdtoday.co.kr/news/view/1065591892501071"}] },
+  { hospital:"인튜이티브서지컬코리아", surgeon:"", date:"2025-07-15",
+    tag:"gyn", tech:"multiport", indication:"hysterectomy",
+    title:"다빈치 로봇 국내 도입 20주년 — 2024년 다빈치SP 세계 최다 수술국 1위",
+    desc:"다빈치 로봇 국내 도입 20주년 성과. 2024년 전 세계 다빈치SP 수술 건수 한국 1위. 합병증 44%, 사망률 46% 감소 메타분석 확인.",
+    image:"", links:[{label:"헤럴드경제 기사", url:"https://news.nate.com/view/20250715n24914"}] },
+  { hospital:"동아대병원", surgeon:"박정우", date:"2025-09-15",
+    tag:"gyn", tech:"sp", indication:"myoma",
+    title:"동아대병원 로봇수술 3천례 달성 — 자궁근종·부인암 전 영역 적용",
+    desc:"비수도권 최초 다빈치 로봇 도입(2007년) 후 3천례 달성. 자궁근종·난소종양·자궁경부암 부인과 전 영역.",
+    image:"", links:[{label:"부산일보 기사", url:"https://mobile.busan.com/view/election/view.php?code=2025091517261855804"}] },
 ,
-
-  // ── Local / Private Hospital Robot Surgery Articles ──
-  {
-    hospital:"민트병원", surgeon:"김하정", date:"2022-12-05", tag:"local_robot",
-    title:"민트병원 — 자궁 뒤 숨은 근종까지 로봇 팔로 정밀 제거·봉합",
-    desc:"4세대 다빈치X Robotic Surgery을 활용한 자궁·난소 질환 치료와 자궁근종 수술의 정밀성 소개.",
-    links:[{label:"중앙일보 헬스미디어", url:"https://jhealthmedia.joins.com/news/articleView.html?idxno=26091"}]
-  },
-  {
-    hospital:"민트병원", surgeon:"김하정", date:"2024-05-11", tag:"local_robot",
-    title:"민트병원 — 산부인과 Robotic Surgery 치료범위 및 적합 케이스 소개",
-    desc:"산부인과 Robotic Surgery의 치료범위, 특장점, 적합 케이스 및 병원 선택 기준을 설명한 병원 자체 콘텐츠.",
-    links:[{label:"민트병원TV", url:"https://www.mintir.com/bbs/board.php?bo_table=tv&device_view=pc&page=10&wr_id=474"}]
-  },
-  {
-    hospital:"기쁨병원", surgeon:"윤여울", date:"2024-12-04", tag:"local_robot",
-    title:"기쁨병원 — 다빈치SP 첫 자궁근종절제술 성공",
-    desc:"다빈치SP 도입 후 첫 자궁근종절제술 성공. 기존 Xi에 이어 SP까지 운영하며 자궁근종 등으로 Robotic Surgery 영역 확대.",
-    links:[{label:"의협신문", url:"https://www.doctorsnews.co.kr/news/articleView.html?idxno=157531"}]
-  },
-  {
-    hospital:"최상산부인과의원", surgeon:"최진영", date:"2026-04-28", tag:"local_robot",
-    title:"최상산부인과 — 삼성서울병원 협력 Single-Port Robotic Surgery 컨퍼런스 개최",
-    desc:"다빈치SP Single-Port Robotic Surgery 노하우를 주제로 삼성서울병원 김태중 교수와 학술 교류 진행.",
-    links:[{label:"스포츠경향", url:"https://sports.khan.co.kr/article/202604281627003"}]
-  },
-  {
-    hospital:"최상산부인과의원", surgeon:"최진영", date:"2026-03-27", tag:"local_robot",
-    title:"최상산부인과 — 다빈치SP·다빈치X 도입",
-    desc:"4세대 Robotic Surgery 시스템 다빈치SP와 다빈치X 도입으로 부인과 수술의 정밀성과 환자 맞춤 치료 환경 강화.",
-    links:[{label:"바이오타임즈", url:"https://www.biotimes.co.kr/news/articleView.html?idxno=30705"}]
-  },
-  {
-    hospital:"쉬즈메디병원", surgeon:"박성재", date:"2026-04-17", tag:"local_robot",
-    title:"쉬즈메디병원 — 다빈치SP Robotic Surgery 시스템 도입",
-    desc:"Single-Port Robotic Surgery 시스템 다빈치SP를 도입하며 부인과 수술 정밀도를 높일 수 있는 진료 환경 구축.",
-    links:[{label:"메디컬투데이", url:"https://mdtoday.co.kr/news/view/1065594426009871"}]
-  },
-  {
-    hospital:"동탄제일병원", surgeon:"산부인과팀", date:"2025-04-30", tag:"local_robot",
-    title:"동탄제일병원 — 첨단 다빈치SP Robotic Surgery 도입",
-    desc:"경기 남부 지역 여성병원 중 다빈치SP를 도입해 자궁근종, 자궁선근증, 자궁내막증 등 부인과 질환에 적용.",
-    links:[{label:"경향신문", url:"https://www.khan.co.kr/article/202504300955018"}]
-  },
-  {
-    hospital:"삼성미래여성병원", surgeon:"산부인과팀", date:"2025-10-24", tag:"local_robot",
-    title:"삼성미래여성병원 — 4세대 수술 로봇 다빈치X 도입",
-    desc:"다빈치X 도입으로 자궁근종, 자궁선근종, 난소낭종, 자궁내막증, 골반탈출증 치료 가능성을 소개.",
-    links:[{label:"전자신문", url:"https://www.etnews.com/20251024000134"}]
-  },
-  {
-    hospital:"아인병원", surgeon:"Robotic Surgery팀", date:"2026-04-28", tag:"local_robot",
-    title:"아인병원 — 다빈치 Robotic Surgery 1,000례 돌파",
-    desc:"2023년 11월 첫 부인과 Robotic Surgery 이후 자궁근종, 골반장기탈출증 등 산부인과·외과 분야로 Robotic Surgery 확대.",
-    links:[{label:"인천in", url:"https://www.incheonin.com/news/articleView.html?idxno=117515"}]
-  },
-  {
-    hospital:"연제일신병원", surgeon:"산부인과팀", date:"2024-07-31", tag:"local_robot",
-    title:"연제일신병원 — 레보아이 Robotic Surgery 100례 달성",
-    desc:"레보아이 도입 후 1년 만에 Robotic Surgery 100례 달성. 자궁근종절제술, 자궁전절제술, 난소낭종 등 산부인과 수술 포함.",
-    links:[{label:"로봇신문", url:"https://www.irobotnews.com/news/articleView.html?idxno=35658"}]
-  },
-  {
-    hospital:"연제일신병원", surgeon:"산부인과팀", date:"2023-06-08", tag:"local_robot",
-    title:"연제일신병원 — 복강경 수술로봇 레보아이 도입",
-    desc:"여성 질환 치료 경험을 바탕으로 산부인과 질환에 Robotic Surgery을 적극 활용할 계획 발표.",
-    links:[{label:"데일리메디", url:"https://www.dailymedi.com/news/news_view.php?wr_id=898550"}]
-  },
-  {
-    hospital:"서울미즈병원", surgeon:"로봇복강경센터", date:"2026-03-16", tag:"local_robot",
-    title:"서울미즈병원 — Robotic Surgery 누적 800건 달성",
-    desc:"로봇 복강경 수술 누적 800례 돌파. 자궁근종, 부인암 예방 등 다양한 여성 질환 치료 체계 강화.",
-    links:[{label:"서울미즈병원", url:"https://seoulmiz.com/press/%EC%84%9C%EC%9A%B8%EB%AF%B8%EC%A6%88%EB%B3%91%EC%9B%90-%EB%A1%9C%EB%B4%87%EC%88%98%EC%88%A0-%EB%88%84%EC%A0%81-800%EA%B1%B4-%EB%8B%AC%EC%84%B1%ED%95%98%EB%A9%B0-%EC%B9%98%EB%A3%8C-%EC%B2%B4%EA%B3%84-%EA%B0%95%ED%99%94/"}]
-  },
-  {
-    hospital:"서울미즈병원", surgeon:"로봇복강경센터", date:"2025-09-18", tag:"local_robot",
-    title:"서울미즈병원 — 부인과 질환 Robotic Surgery 500례 달성",
-    desc:"다빈치 로봇을 활용한 부인과 Robotic Surgery 500례 달성. 로봇복강경센터 운영 성과 소개.",
-    links:[{label:"서울미즈병원", url:"https://seoulmiz.com/press/%EC%84%9C%EC%9A%B8%EB%AF%B8%EC%A6%88%EB%B3%91%EC%9B%90-%EB%A1%9C%EB%B4%87%EB%B3%B5%EA%B0%95%EA%B2%BD%EC%84%BC%ED%84%B0-%EB%B6%80%EC%9D%B8%EA%B3%BC-%EC%A7%88%ED%99%98-%EB%A1%9C%EB%B4%87%EC%88%98%EC%88%A0-500%EB%A1%80-%EB%8B%AC%EC%84%B1/"}]
-  },
-  {
-    hospital:"청담산부인과의원", surgeon:"Robotic Surgery센터", date:"2025-08-28", tag:"local_robot",
-    title:"청담산부인과 — 자궁근종 Robotic Surgery 900례 돌파",
-    desc:"의원급 Robotic Surgery센터에서 다빈치 Robotic Surgery기 도입 2년 만에 부인과 자궁근종 Robotic Surgery 900례 돌파.",
-    links:[{label:"메디소비자뉴스", url:"https://www.medisobizanews.com/news/articleView.html?idxno=128404"}]
-  },
-  {
-    hospital:"린여성병원", surgeon:"", date:"", tag:"local_robot",
-    title:"린여성병원 — Robotic Surgery 관련 공개 기사 확인 필요",
-    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
-    links:[]
-  },
-  {
-    hospital:"서울송도병원", surgeon:"", date:"", tag:"local_robot",
-    title:"서울송도병원 — Robotic Surgery 관련 공개 기사 확인 필요",
-    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
-    links:[]
-  },
-  {
-    hospital:"그레이스병원", surgeon:"", date:"", tag:"local_robot",
-    title:"그레이스병원 — Robotic Surgery 관련 공개 기사 확인 필요",
-    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
-    links:[]
-  },
-  {
-    hospital:"한솔병원", surgeon:"", date:"", tag:"local_robot",
-    title:"한솔병원 — Robotic Surgery 관련 공개 기사 확인 필요",
-    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
-    links:[]
-  },
-  {
-    hospital:"아름제일병원", surgeon:"", date:"", tag:"local_robot",
-    title:"아름제일병원 — Robotic Surgery 관련 공개 기사 확인 필요",
-    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
-    links:[]
-  },
-  {
-    hospital:"민병원", surgeon:"", date:"", tag:"local_robot",
-    title:"민병원 — Robotic Surgery 관련 공개 기사 확인 필요",
-    desc:"현재 반영 가능한 공개 기사 링크를 확인하지 못했습니다. 확인 후 링크 업데이트 필요.",
-    links:[]
-  }
-
+  { hospital:"국제성모병원", surgeon:"김수림", date:"2026-05-13",
+    tag:"milestone", tech:"sp", indication:"myoma",
+    title:"국제성모병원 로봇수술센터, 단일공 로봇수술 700례 달성",
+    desc:"로봇수술센터장 김수림 교수(산부인과)가 거대 자궁근종 환자 자궁근종절제술로 700례 달성. 가임력 보존 목적 단일공 수술. 2024년 12월 500례 달성 후 단기간에 700례 돌파.",
+    image:"", links:[{label:"코리아헬스로그 기사", url:"https://www.koreahealthlog.com/news/articleView.html?idxno=56985"}] }
 ];
 
 let kolTagFilter = 'all';
 
+// 멀티 필터 state
+const kolFilters = { tech: 'all', indication: 'all', category: 'all' };
+
+const TECH_DEFS = [
+  { key:'vnotes',    label:'vNOTES' },
+  { key:'sp',        label:'단일공 (SP)' },
+  { key:'multiport', label:'멀티포트' },
+];
+const INDICATION_DEFS = [
+  { key:'hysterectomy',  label:'자궁절제술' },
+  { key:'myoma',         label:'자궁근종' },
+  { key:'endometriosis', label:'자궁내막증' },
+  { key:'ovary',         label:'난소' },
+];
+const CATEGORY_DEFS = [
+  { key:'milestone', label:'🏆 달성 기념' },
+  { key:'vnotes',    label:'vNOTES 관련' },
+  { key:'gyn',       label:'산부인과 일반' },
+];
+
+function resetKolFilters() {
+  kolFilters.tech = 'all';
+  kolFilters.indication = 'all';
+  kolFilters.category = 'all';
+  document.getElementById('kolSearch').value = '';
+  renderKOL();
+}
+
 function buildKolFilters() {
-  const el = document.getElementById('kolHospitalFilters'); el.innerHTML = '';
-  const defs = [
-    {key:'all',   label:'전체',      count: ARTICLES.length},
-    {key:'vnotes',label:'vNOTES 관련', count: ARTICLES.filter(a=>a.tag==='vnotes').length},
-    {key:'milestone',label:'달성 기념', count: ARTICLES.filter(a=>a.tag==='milestone').length},
-    {key:'local_robot',label:'로컬/전문병원 Robotic Surgery', count: ARTICLES.filter(a=>a.tag==='local_robot').length},
-  ];
-  defs.forEach(d => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (kolTagFilter===d.key?' active':'');
-    btn.innerHTML = `${d.label} <span class="btn-count">${d.count}</span>`;
-    btn.onclick = () => { kolTagFilter = d.key; renderKOL(); };
-    el.appendChild(btn);
-  });
+  function makeGroup(containerId, defs, filterKey) {
+    const el = document.getElementById(containerId); if(!el) return; el.innerHTML = '';
+    defs.forEach(d => {
+      const count = ARTICLES.filter(a => a[filterKey] === d.key).length;
+      if(!count) return;
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (kolFilters[filterKey]===d.key?' active':'');
+      btn.innerHTML = `${d.label} <span class="btn-count">${count}</span>`;
+      btn.onclick = () => {
+        kolFilters[filterKey] = kolFilters[filterKey]===d.key ? 'all' : d.key;
+        renderKOL();
+      };
+      el.appendChild(btn);
+    });
+  }
+  makeGroup('kolTechFilters',       TECH_DEFS,       'tech');
+  makeGroup('kolIndicationFilters', INDICATION_DEFS, 'indication');
+  makeGroup('kolCategoryFilters',   CATEGORY_DEFS,   'category');
+
+  // 전체초기화 버튼 강조
+  const resetBtn = document.getElementById('kolResetBtn');
+  if(resetBtn) {
+    const anyActive = Object.values(kolFilters).some(v=>v!=='all');
+    resetBtn.style.borderColor = anyActive ? 'var(--primary)' : 'var(--border)';
+    resetBtn.style.color = anyActive ? 'var(--primary)' : 'var(--text3)';
+    resetBtn.style.background = anyActive ? 'var(--primary-soft)' : 'var(--surface2)';
+  }
 }
 
 function renderKOL() {
   const q = document.getElementById('kolSearch').value.toLowerCase();
   let items = ARTICLES
     .filter(a =>
-      (kolTagFilter==='all' || a.tag===kolTagFilter) &&
+      (kolFilters.tech==='all'       || a.tech===kolFilters.tech) &&
+      (kolFilters.indication==='all' || a.indication===kolFilters.indication) &&
+      (kolFilters.category==='all'   || a.tag===kolFilters.category) &&
       (!q || a.hospital.toLowerCase().includes(q) || a.surgeon.toLowerCase().includes(q) || a.title.toLowerCase().includes(q))
     )
     .sort((a,b) => (b.date || '0000-00-00').localeCompare(a.date || '0000-00-00'));
@@ -1111,62 +1397,119 @@ function renderKOL() {
   document.getElementById('headerCount').textContent = items.length + ' 기사';
   buildKolFilters();
 
+  // Active tag chips
   const tagsEl = document.getElementById('kolActiveTags'); tagsEl.innerHTML='';
-  if(kolTagFilter!=='all'){
-    const label = kolTagFilter==='vnotes' ? 'vNOTES 관련' : (kolTagFilter==='milestone' ? '달성 기념' : '로컬/전문병원 Robotic Surgery');
+  const labelMap = {
+    tech: Object.fromEntries(TECH_DEFS.map(d=>[d.key,d.label])),
+    indication: Object.fromEntries(INDICATION_DEFS.map(d=>[d.key,d.label])),
+    category: Object.fromEntries(CATEGORY_DEFS.map(d=>[d.key,d.label])),
+  };
+  Object.entries(kolFilters).forEach(([k,v]) => {
+    if(v==='all') return;
     const t=document.createElement('div'); t.className='active-tag';
-    t.innerHTML=`${label} <span style="margin-left:4px">×</span>`;
-    t.onclick=()=>{ kolTagFilter='all'; renderKOL(); };
+    t.innerHTML=`${labelMap[k][v]||v} <span style="margin-left:4px">×</span>`;
+    t.onclick=()=>{ kolFilters[k]='all'; renderKOL(); };
     tagsEl.appendChild(t);
-  }
+  });
 
   const container = document.getElementById('kolCards'); container.innerHTML='';
   if(!items.length){ container.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`; return; }
 
-  // 연도별 그룹핑
+  const thisYear = String(new Date().getFullYear());
   const years = [...new Set(items.map(a => a.date.slice(0,4)))].sort((a,b)=>b-a);
+  const autoExpandAll = items.length < 10; // 전체 10개 미만이면 모두 펼침
 
   years.forEach(yr => {
     const grp = items.filter(a => a.date.startsWith(yr));
+    const isOpen = autoExpandAll || (yr === thisYear);
+    const sid = 'art_yr_'+yr;
 
-    // 연도 헤더
     const yrHeader = document.createElement('div');
-    yrHeader.style.cssText=`display:flex;align-items:center;gap:10px;margin:12px 0 6px`;
+    yrHeader.style.cssText='display:flex;align-items:center;gap:10px;margin:12px 0 5px;cursor:pointer;user-select:none';
+    yrHeader.onclick=()=>toggleArtYear(yr);
     yrHeader.innerHTML=`
-      <span style="font-size:13px;font-weight:600;color:var(--primary);font-family:var(--mono)">${yr}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>
+      ${yr===thisYear?'<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
       <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>`;
+      <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>
+      <span id="art_yarr_${yr}" style="font-size:14px;color:var(--text3);transition:transform 0.2s">${isOpen?'⌄':'›'}</span>`;
     container.appendChild(yrHeader);
 
+    const section = document.createElement('div');
+    section.id = sid;
+    section.style.cssText = 'overflow:hidden;transition:max-height 0.3s ease;max-height:'+(isOpen?'9999px':'0px');
+
     grp.forEach((a,i) => {
+      const aid = 'art_'+yr+'_'+i;
       const row = document.createElement('div');
-      row.style.cssText=`background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 14px;display:flex;align-items:center;gap:10px;animation:fadeUp 0.2s ease both;animation-delay:${i*0.02}s;transition:border-color 0.15s,background 0.15s;cursor:default`;
-      row.onmouseenter=()=>{row.style.borderColor='var(--primary-mid)';row.style.background='var(--primary-soft)'};
-      row.onmouseleave=()=>{row.style.borderColor='var(--border)';row.style.background='var(--surface)'};
-      row.onclick=()=>openDetail(a);
+      row.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;animation:fadeUp 0.2s ease both;animation-delay:'+(i*0.02)+'s;transition:border-color 0.15s;margin-bottom:4px';
+      row.onmouseenter=()=>row.style.borderColor='var(--primary-mid)';
+      row.onmouseleave=()=>row.style.borderColor='var(--border)';
 
       const tagColor = a.tag==='vnotes' ? 'background:#E6F1FB;color:#0C447C' : (a.tag==='milestone' ? 'background:#FAEEDA;color:#633806' : 'background:#EDEAE6;color:#4A4642');
       const tagLabel = a.tag==='vnotes' ? 'vNOTES' : (a.tag==='milestone' ? '🏆' : 'Robot');
-      const dateStr = a.date ? a.date.slice(5,10) : '확인필요'; // MM-DD
+      const dateStr = a.date ? a.date.slice(5,10) : '확인';
       const linkHtml = a.links.length
-        ? a.links.map(l=>`<a href="${l.url}" target="_blank" rel="noopener"
-            style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--primary);text-decoration:none;padding:2px 8px;border-radius:5px;background:var(--primary-soft);white-space:nowrap;transition:all 0.15s"
-            onmouseover="this.style.background='var(--primary)';this.style.color='white'"
-            onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            ${l.label}</a>`).join('')
-        : `<span style="font-size:11px;color:var(--text3)">—</span>`;
+        ? a.links.map(l=>`<a href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--primary);text-decoration:none;padding:2px 8px;border-radius:5px;background:var(--primary-soft);white-space:nowrap;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${l.label}</a>`).join('')
+        : '<span style="font-size:11px;color:var(--text3)">—</span>';
 
-      row.innerHTML=`
-        <span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap;${tagColor}">${tagLabel}</span>
-        <span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;min-width:90px">${a.hospital}</span>
-        <span style="font-size:11px;color:var(--text3);white-space:nowrap">${a.surgeon}</span>
-        <span style="font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.title}">${a.title}</span>
-        <span style="display:flex;gap:5px;flex-shrink:0;align-items:center">${linkHtml}</span>
-        <span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">${dateStr}</span>`;
-      container.appendChild(row);
+      const domain = a.links.length ? (()=>{try{return new URL(a.links[0].url).hostname;}catch(e){return '';}})() : '';
+      const faviconUrl = domain ? 'https://www.google.com/s2/favicons?domain='+domain+'&sz=64' : '';
+
+      row.innerHTML = makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, domain);
+      section.appendChild(row);
     });
+    container.appendChild(section);
   });
+}
+
+function makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, domain) {
+  const fav = faviconUrl
+    ? '<img src="' + faviconUrl + '" style="width:18px;height:18px;border-radius:3px;flex-shrink:0;object-fit:contain" onerror="this.style.display=\'none\'">'
+    : '';
+  const imgHtml = a.image
+    ? '<img src="' + a.image + '" style="width:140px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=\'none\'">'
+    : domain
+      ? '<div style="width:64px;height:64px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0"><img src="' + faviconUrl + '" style="width:24px;height:24px;object-fit:contain" onerror="this.style.display=\'none\'"><span style="font-size:8px;color:var(--text3);text-align:center;word-break:break-all;padding:0 4px">' + domain + '</span></div>'
+      : '';
+  return (
+    '<div style="padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleArt(\'' + aid + '\')">' +
+      fav +
+      '<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap;' + tagColor + '">' + tagLabel + '</span>' +
+      '<span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;min-width:80px">' + a.hospital + '</span>' +
+      '<span style="font-size:11px;color:var(--text3);white-space:nowrap">' + a.surgeon + '</span>' +
+      '<span style="font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + a.title + '">' + a.title + '</span>' +
+      '<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">' + dateStr + '</span>' +
+      '<span id="arr_' + aid + '" style="font-size:14px;color:var(--text3);transition:transform 0.2s;flex-shrink:0">›</span>' +
+    '</div>' +
+    '<div id="det_' + aid + '" style="display:none;border-top:1px solid var(--border);padding:14px;background:var(--surface2)">' +
+      '<div style="display:flex;gap:14px;align-items:flex-start">' +
+        imgHtml +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.4">' + a.title + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">' + a.desc + '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap">' + linkHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function toggleArtYear(yr) {
+  const sec = document.getElementById('art_yr_'+yr);
+  const arr = document.getElementById('art_yarr_'+yr);
+  if(!sec) return;
+  const isOpen = sec.style.maxHeight !== '0px';
+  sec.style.maxHeight = isOpen ? '0px' : '9999px';
+  arr.textContent = isOpen ? '›' : '⌄';
+}
+
+function toggleArt(aid) {
+  const det=document.getElementById('det_'+aid);
+  const arr=document.getElementById('arr_'+aid);
+  const isOpen=det.style.display!=='none';
+  det.style.display=isOpen?'none':'block';
+  arr.style.transform=isOpen?'':'rotate(90deg)';
 }
 
 /* ══════════════════════ PAPERS ══════════════════════ */
@@ -1498,6 +1841,418 @@ function renderDashboard(){
   document.getElementById('dashPapers').textContent = PAPERS.length;
   document.getElementById('dashPlatforms').textContent = VIDEOS.filter(v => v.sys==='DV5' || v.sys==='SP').length;
 }
+
+/* ══════════════════════ DRAWER ══════════════════════ */
+let _activeDrawer = null;
+
+function openDrawer(sidebarId) {
+  const sidebar = document.getElementById(sidebarId);
+  const overlay = document.getElementById('drawerOverlay');
+  if(!sidebar) return;
+  // 드로어 닫기 버튼 보이기
+  const closeBtn = sidebar.querySelector('.drawer-close');
+  if(closeBtn) closeBtn.style.display = 'flex';
+  sidebar.classList.add('drawer-open');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  _activeDrawer = sidebar;
+}
+
+function closeDrawer() {
+  if(_activeDrawer) {
+    _activeDrawer.classList.remove('drawer-open');
+    const closeBtn = _activeDrawer.querySelector('.drawer-close');
+    if(closeBtn) closeBtn.style.display = 'none';
+    _activeDrawer = null;
+  }
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ══════════════════════ VIDEO UPLOAD ══════════════════════ */
+function openUploadModal() {
+  document.getElementById('uploadOverlay').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeUploadModal(e) {
+  if(!e || e.target===document.getElementById('uploadOverlay')){
+    document.getElementById('uploadOverlay').style.display='none';
+    document.body.style.overflow='';
+  }
+}
+function getYtIdFromUrl(url) { const m=url.match(/[?&]v=([^&]+)/); return m?m[1]:null; }
+function previewVideo() {
+  const url = document.getElementById('u-url').value;
+  const id = getYtIdFromUrl(url);
+  if(!id){ alert('올바른 YouTube URL을 입력해 주세요.'); return; }
+  const thumb = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+  document.getElementById('u-thumb').src = thumb;
+  document.getElementById('u-preview').style.display = 'block';
+}
+function submitVideo() {
+  const url   = document.getElementById('u-url').value.trim();
+  const title = document.getElementById('u-title').value.trim();
+  const op    = document.getElementById('u-op').value.trim() || 'Other';
+  const sys   = document.getElementById('u-sys').value;
+  const adv   = document.getElementById('u-adv').value.trim();
+  const ch    = document.getElementById('u-ch').value.trim();
+  if(!url||!title){ alert('URL과 제목은 필수입니다.'); return; }
+  VIDEOS.push({ op, sys, adv, title, url, channel:ch, subs:0 });
+  closeUploadModal();
+  renderVideos();
+  // clear
+  ['u-url','u-title','u-op','u-adv','u-ch'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('u-preview').style.display='none';
+}
+
+/* ══════════════════════ CALENDAR ══════════════════════ */
+const CONFERENCES = [
+  // ── 2026 ──
+  { name:"KSGO Workshop", start:"2026-04-02", end:"2026-04-02", loc:"상암트레이닝센터", tag:"workshop", url:"https://www.ksgo.or.kr", note:"" },
+  { name:"KSGO Conference", start:"2026-04-03", end:"2026-04-03", loc:"코엑스 마곡", tag:"conference", url:"https://www.ksgo.or.kr", note:"" },
+  { name:"KSSP 대한단일공학회 Workshop", start:"2026-04-05", end:"2026-04-05", loc:"삼성서울병원", tag:"workshop", url:"", note:"" },
+  { name:"KSOG Conference", start:"2026-04-25", end:"2026-04-25", loc:"부산 롯데호텔", tag:"conference", url:"https://www.ksog.org", note:"" },
+  { name:"KSGE", start:"2026-05-09", end:"2026-05-09", loc:"스카이베이 경포", tag:"conference", url:"https://www.ksge.or.kr", note:"" },
+  { name:"SKRGS", start:"2026-05-16", end:"2026-05-16", loc:"세종대학교", tag:"conference", url:"", note:"" },
+  { name:"대한비뇨부인과학회", start:"2026-07-05", end:"2026-07-05", loc:"세종대학교 대양AI센터", tag:"conference", url:"", note:"" },
+  { name:"대한단일공수술학회", start:"2026-07-11", end:"2026-07-11", loc:"", tag:"conference", url:"", note:"" },
+  { name:"다툭 심포지엄", start:"2026-07-29", end:"2026-07-29", loc:"강남", tag:"symposium", url:"", note:"" },
+];
+
+let calTagFilter = 'all';
+let expandedCal = null;
+
+const CAL_TAGS = [
+  {key:'all',      label:'전체'},
+  {key:'conference',label:'학회'},
+  {key:'symposium', label:'심포지엄'},
+  {key:'workshop',  label:'워크샵'},
+  {key:'roadshow',  label:'로드쇼'},
+  {key:'other',     label:'기타'},
+];
+const CAL_TAG_COLOR = {conference:'#E6F1FB;color:#0C447C', symposium:'#EEEDFE;color:#3C3489', workshop:'#EAF3DE;color:#27500A', roadshow:'#FAEEDA;color:#633806', other:'#F1EFE8;color:#444441'};
+const CAL_TAG_LABEL = {conference:'학회',symposium:'심포지엄',workshop:'워크샵',roadshow:'로드쇼',other:'기타'};
+
+function buildCalFilters() {
+  const el=document.getElementById('calFilters'); el.innerHTML='';
+  CAL_TAGS.forEach(t=>{
+    const count = t.key==='all' ? CONFERENCES.length : CONFERENCES.filter(c=>c.tag===t.key).length;
+    const btn=document.createElement('button');
+    btn.className='filter-btn'+(calTagFilter===t.key?' active':'');
+    btn.innerHTML=`${t.label} <span class="btn-count">${count}</span>`;
+    btn.onclick=()=>{ calTagFilter=t.key; renderCal(); };
+    el.appendChild(btn);
+  });
+}
+
+function daysUntil(dateStr) {
+  const now=new Date(); now.setHours(0,0,0,0);
+  const d=new Date(dateStr);
+  return Math.ceil((d-now)/(1000*60*60*24));
+}
+
+function calAgendaHtml(c) {
+  if(!c.agendaData) return '';
+  const isImg = c.agendaData.startsWith('data:image');
+  const inner = isImg
+    ? '<img src="' + c.agendaData + '" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid var(--border);object-fit:contain;display:block">'
+    : '<a href="' + c.agendaData + '" download="' + (c.agendaName||'agenda') + '" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--primary);padding:6px 12px;border-radius:7px;background:var(--primary-soft);text-decoration:none">' +
+      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+      (c.agendaName||'아젠다 다운로드') + '</a>';
+  return '<div style="margin-top:6px"><div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:6px;letter-spacing:0.05em">📎 아젠다</div>' + inner + '</div>';
+}
+
+function renderCal() {
+  buildCalFilters();
+  const q=document.getElementById('calSearch').value.toLowerCase();
+  const today=new Date(); today.setHours(0,0,0,0);
+
+  let items=CONFERENCES
+    .filter(c=>(calTagFilter==='all'||c.tag===calTagFilter)&&(!q||c.name.toLowerCase().includes(q)||c.loc.toLowerCase().includes(q)||c.note.toLowerCase().includes(q)))
+    .sort((a,b)=>b.start.localeCompare(a.start)); // 최신순
+
+  document.getElementById('calCount').textContent=items.length;
+  document.getElementById('headerCount').textContent=items.length+' events';
+
+  const grid=document.getElementById('calGrid'); grid.innerHTML='';
+  if(!items.length){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';return;}
+
+  // 연도별 그룹
+  const years=[...new Set(items.map(c=>c.start.slice(0,4)))].sort((a,b)=>b-a);
+  const collapsedYears=new Set();
+
+  function makeYearSection(yr) {
+    const grp=items.filter(c=>c.start.startsWith(yr));
+    const isCurrentYear=yr===String(new Date().getFullYear());
+    const sid=`yr_${yr}`;
+
+    // 연도 헤더 (클릭 시 접기)
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:14px 0 6px;cursor:pointer;user-select:none';
+    hdr.onclick=()=>toggleYear(yr);
+    hdr.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        <span style="font-size:15px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>
+        ${isCurrentYear?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>
+      </div>
+      <span id="yarr_${yr}" style="font-size:16px;color:var(--text3);transition:transform 0.2s;font-weight:300">⌄</span>`;
+    grid.appendChild(hdr);
+
+    const section=document.createElement('div');
+    section.id=sid;
+    section.style.cssText='overflow:hidden;transition:max-height 0.3s ease';
+
+    grp.forEach((c,i)=>{
+      const isPast=new Date(c.end||c.start)<today;
+      const du=daysUntil(c.start);
+      const duLabel=isPast?'종료':du===0?'오늘!':du>0?`D-${du}`:`D+${Math.abs(du)}`;
+      const duColor=isPast?'var(--text3)':du<=7?'#C0143C':du<=30?'#E8856A':'var(--primary)';
+      const tc=CAL_TAG_COLOR[c.tag]||'background:#F1EFE8;color:#444441';
+      const tl=CAL_TAG_LABEL[c.tag]||c.tag;
+      const dateRange=c.end&&c.end!==c.start?`${c.start} ~ ${c.end.slice(5)}`:c.start;
+      const rid=`cal_${yr}_${i}`;
+
+      const linkBtn=c.url
+        ?`<a href="${c.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:5px;background:var(--primary-soft);color:var(--primary);text-decoration:none;font-weight:500;white-space:nowrap"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>공식 사이트</a>`
+        :`<span style="font-size:11px;color:var(--text3)">—</span>`;
+
+      const bgTc=tc.split(';')[0].replace('background:','');
+      const colorTc=tc.includes('color:')?tc.split('color:')[1]:'#444441';
+
+      const row=document.createElement('div');
+      row.id=rid;
+      row.style.cssText=`background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;overflow:hidden;transition:border-color 0.15s;opacity:${isPast?0.55:1}`;
+      row.onmouseenter=()=>row.style.borderColor='var(--primary-mid)';
+      row.onmouseleave=()=>row.style.borderColor='var(--border)';
+      // find index in CONFERENCES
+      const confIdx = CONFERENCES.indexOf(c);
+      row.innerHTML=`
+        <div style="padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleCal('${rid}')">
+          <div style="min-width:42px;text-align:center;flex-shrink:0">
+            <div style="font-size:11px;font-weight:700;color:${duColor};font-family:var(--mono);line-height:1.2">${duLabel}</div>
+          </div>
+          <div style="width:1px;height:28px;background:var(--border);flex-shrink:0"></div>
+          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;background:${bgTc};color:${colorTc};font-family:var(--mono);white-space:nowrap;flex-shrink:0">${tl}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px">${dateRange} · 📍 ${c.loc||'장소 미정'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+            ${linkBtn}
+            <button onclick="editCal(${confIdx})" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:var(--font)" title="수정">✏️</button>
+            <button onclick="deleteCal(${confIdx})" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:#C0143C;cursor:pointer;font-family:var(--font)" title="삭제">🗑</button>
+            <span id="arr_${rid}" style="font-size:14px;color:var(--text3);transition:transform 0.2s;cursor:pointer" onclick="toggleCal('${rid}')">›</span>
+          </div>
+        </div>
+        <div id="detail_${rid}" style="display:none;padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface2)">
+          <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:${c.agendaData?'10px':'0'}">${c.note||'메모 없음'}</div>
+          ${c.agendaData ? calAgendaHtml(c) : ''}
+        </div>`;
+      section.appendChild(row);
+    });
+    grid.appendChild(section);
+  }
+
+  years.forEach(yr=>makeYearSection(yr));
+}
+
+function toggleYear(yr) {
+  const sec=document.getElementById('yr_'+yr);
+  const arr=document.getElementById('yarr_'+yr);
+  if(!sec) return;
+  const isOpen=sec.style.maxHeight!=='0px'&&sec.style.maxHeight!=='';
+  if(isOpen){
+    sec.style.maxHeight='0px';
+    arr.style.transform='rotate(-90deg)';
+  } else {
+    sec.style.maxHeight=sec.scrollHeight+'px';
+    arr.style.transform='';
+  }
+}
+
+function toggleCal(rid) {
+  const detail=document.getElementById('detail_'+rid);
+  const arr=document.getElementById('arr_'+rid);
+  const isOpen=detail.style.display!=='none';
+  detail.style.display=isOpen?'none':'block';
+  arr.style.transform=isOpen?'':'rotate(90deg)';
+}
+
+/* ══ Calendar Upload ══ */
+/* ══════════════════════ ARTICLE URL 자동분석 ══════════════════════ */
+async function analyzeArticleUrl() {
+  const url = document.getElementById('artUrlInput').value.trim();
+  if(!url){ alert('URL을 입력해 주세요.'); return; }
+  const btn = document.getElementById('artAnalyzeBtn');
+  const status = document.getElementById('artAnalyzeStatus');
+  btn.textContent = '분석 중...'; btn.disabled = true;
+  status.style.display = 'block';
+  status.style.background = 'var(--surface2)';
+  status.style.color = 'var(--text3)';
+  status.textContent = '🔍 Claude가 기사를 분석하고 있어요...';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`당신은 의료/산부인과 관련 기사를 분석하는 어시스턴트입니다.
+주어진 URL의 기사를 분석하여 반드시 JSON만 반환하세요. 마크다운 없이 순수 JSON만.
+형식:
+{
+  "hospital": "병원명",
+  "surgeon": "의사명 (없으면 '산부인과팀')",
+  "date": "YYYY-MM-DD (모르면 오늘 날짜)",
+  "tag": "vnotes 또는 milestone (달성기념이면 milestone, vNOTES 관련이면 vnotes)",
+  "title": "기사 제목 (한국어, 50자 이내)",
+  "desc": "기사 요약 (한국어, 100자 이내, 핵심 내용만)",
+  "label": "링크 버튼 표시 텍스트 (예: 메디컬투데이 기사)"
+}`,
+        messages:[{role:'user', content:`다음 URL의 기사를 분석해주세요: ${url}`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    let parsed;
+    try {
+      const clean = text.replace(/```json|```/g,'').trim();
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      throw new Error('JSON 파싱 실패: ' + text.slice(0,100));
+    }
+
+    // ARTICLES에 추가
+    ARTICLES.push({
+      hospital: parsed.hospital || '병원명 미상',
+      surgeon:  parsed.surgeon  || '산부인과팀',
+      date:     parsed.date     || new Date().toISOString().slice(0,10),
+      tag:      parsed.tag      || 'vnotes',
+      title:    parsed.title    || '제목 없음',
+      desc:     parsed.desc     || '',
+      image:    '',
+      links:[{label: parsed.label || '기사 링크', url}]
+    });
+
+    status.style.background = '#EAF3DE';
+    status.style.color = '#27500A';
+    status.textContent = `✅ "${parsed.title}" — ${parsed.hospital} 추가 완료!`;
+    document.getElementById('artUrlInput').value = '';
+    renderKOL();
+  } catch(err) {
+    status.style.background = '#FAEEDA';
+    status.style.color = '#633806';
+    status.textContent = '⚠️ 분석 실패: ' + err.message + ' — URL을 확인하거나 직접 입력해 주세요.';
+  } finally {
+    btn.textContent = '분석하기'; btn.disabled = false;
+  }
+}
+
+/* ══════════════════════ CALENDAR 아젠다 업로드 ══════════════════════ */
+function handleAgendaUpload(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('c-agenda-data').value = e.target.result;
+    document.getElementById('c-agenda-name').value = file.name;
+    const prev = document.getElementById('c-agenda-preview');
+    if(file.type.startsWith('image/')) {
+      prev.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:120px;border-radius:6px;object-fit:contain">
+        <div style="font-size:11px;color:var(--text3);margin-top:5px">📎 ${file.name}</div>`;
+    } else {
+      prev.innerHTML = `<div style="font-size:22px">📄</div>
+        <div style="font-size:12px;color:var(--text2);font-weight:500;margin-top:4px">${file.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${(file.size/1024).toFixed(0)} KB</div>`;
+    }
+  };
+  if(file.type.startsWith('image/')) reader.readAsDataURL(file);
+  else reader.readAsDataURL(file);
+}
+
+function deleteCal(idx) {
+  if(!confirm('이 일정을 삭제할까요?')) return;
+  CONFERENCES.splice(idx, 1);
+  renderCal();
+}
+
+function editCal(idx) {
+  const c = CONFERENCES[idx];
+  document.getElementById('c-name').value  = c.name  || '';
+  document.getElementById('c-start').value = c.start || '';
+  document.getElementById('c-end').value   = c.end   || '';
+  document.getElementById('c-loc').value   = c.loc   || '';
+  document.getElementById('c-tag').value   = c.tag   || 'conference';
+  document.getElementById('c-url').value   = c.url   || '';
+  document.getElementById('c-note').value  = c.note  || '';
+  // 아젠다 미리보기 복원
+  const prev = document.getElementById('c-agenda-preview');
+  if(c.agendaData) {
+    document.getElementById('c-agenda-data').value = c.agendaData;
+    document.getElementById('c-agenda-name').value = c.agendaName || '';
+    if(c.agendaData.startsWith('data:image')) {
+      prev.innerHTML = `<img src="${c.agendaData}" style="max-width:100%;max-height:120px;border-radius:6px;object-fit:contain">
+        <div style="font-size:11px;color:var(--text3);margin-top:5px">📎 ${c.agendaName}</div>`;
+    } else {
+      prev.innerHTML = `<div style="font-size:22px">📄</div><div style="font-size:12px;color:var(--text2);font-weight:500;margin-top:4px">${c.agendaName}</div>`;
+    }
+  } else {
+    document.getElementById('c-agenda-data').value = '';
+    document.getElementById('c-agenda-name').value = '';
+    prev.innerHTML = '클릭해서 파일 선택 (PDF, JPG, PNG)';
+    prev.style.color = 'var(--text3)';
+  }
+  document.getElementById('calModalTitle').textContent = '일정 수정하기';
+  document.getElementById('calSubmitBtn').textContent  = '수정 저장';
+  document.getElementById('calUploadOverlay').dataset.editIdx = idx;
+  openCalUpload();
+}
+
+function openCalUpload() {
+  document.getElementById('calUploadOverlay').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeCalUpload(e) {
+  if(!e||e.target===document.getElementById('calUploadOverlay')){
+    document.getElementById('calUploadOverlay').style.display='none';
+    delete document.getElementById('calUploadOverlay').dataset.editIdx;
+    document.getElementById('calModalTitle').textContent = '일정 추가하기';
+    document.getElementById('calSubmitBtn').textContent  = '추가하기';
+    document.getElementById('c-agenda-data').value = '';
+    document.getElementById('c-agenda-name').value = '';
+    document.getElementById('c-agenda-preview').innerHTML = '클릭해서 파일 선택 (PDF, JPG, PNG)';
+    document.body.style.overflow='';
+  }
+}
+function submitCal() {
+  const name=document.getElementById('c-name').value.trim();
+  const start=document.getElementById('c-start').value;
+  if(!name||!start){alert('학회명과 시작일은 필수입니다.');return;}
+  const entry = {
+    name, start,
+    end:   document.getElementById('c-end').value   || start,
+    loc:   document.getElementById('c-loc').value.trim() || '',
+    tag:   document.getElementById('c-tag').value,
+    url:   document.getElementById('c-url').value.trim(),
+    note:  document.getElementById('c-note').value.trim(),
+    agendaData: document.getElementById('c-agenda-data').value || '',
+    agendaName: document.getElementById('c-agenda-name').value || '',
+  };
+  const overlay = document.getElementById('calUploadOverlay');
+  const editIdx = overlay.dataset.editIdx;
+  if(editIdx !== undefined && editIdx !== '') {
+    CONFERENCES[parseInt(editIdx)] = entry;
+  } else {
+    CONFERENCES.push(entry);
+  }
+  closeCalUpload();
+  renderCal();
+  ['c-name','c-start','c-end','c-loc','c-url','c-note'].forEach(id=>document.getElementById(id).value='');
+}
+
 
 /* ══════════════════════ INIT ══════════════════════ */
 renderVideos();
