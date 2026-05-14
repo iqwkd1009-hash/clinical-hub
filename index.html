@@ -339,6 +339,7 @@
   .sub-btn.active { color:var(--primary);border-bottom-color:var(--primary);font-weight:600; }
   .nav-right { display:flex;align-items:center;gap:8px; }
 
+  .icon-btn {
     border:1px solid var(--border); background:var(--surface2); color:var(--text2);
     border-radius:9px; padding:8px 10px; font-size:12px; font-weight:600; cursor:pointer;
     display:inline-flex; align-items:center; gap:6px; transition:all .15s; font-family:var(--font);
@@ -364,7 +365,74 @@
   .detail-section h4 { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--primary); font-family:var(--mono); margin-bottom:8px; }
   .detail-section p, .detail-section li { font-size:12px; line-height:1.65; color:var(--text2); }
   .pdf-pill { display:inline-flex; align-items:center; gap:5px; margin-top:8px; font-size:11px; color:var(--primary); background:var(--primary-soft); padding:4px 9px; border-radius:999px; font-weight:700; }
-  /* ── MOBILE DRAWER ── */
+  /* ── NETFLIX HOVER CARD ── */
+  .card-wrap {
+    position: relative;
+  }
+  .card-wrap:hover { z-index: 50; }
+  .card-hover-popup {
+    display: none;
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%) translateY(-8px) scale(0.96);
+    width: 320px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    z-index: 100;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+  }
+  .card-wrap:hover .card-hover-popup {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-12px) scale(1);
+    pointer-events: auto;
+  }
+  /* 왼쪽 끝 카드 → 오른쪽으로 */
+  .card-wrap.popup-right .card-hover-popup {
+    left: 0; transform: translateX(0) translateY(-8px) scale(0.96);
+  }
+  .card-wrap.popup-right:hover .card-hover-popup {
+    transform: translateX(0) translateY(-12px) scale(1);
+  }
+  /* 오른쪽 끝 카드 → 왼쪽으로 */
+  .card-wrap.popup-left .card-hover-popup {
+    left: auto; right: 0; transform: translateX(0) translateY(-8px) scale(0.96);
+  }
+  .card-wrap.popup-left:hover .card-hover-popup {
+    transform: translateX(0) translateY(-12px) scale(1);
+  }
+  .popup-thumb { position:relative; aspect-ratio:16/9; background:#111; overflow:hidden; }
+  .popup-thumb img { width:100%; height:100%; object-fit:cover; }
+  .popup-thumb-overlay {
+    position:absolute; inset:0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+    display:flex; align-items:flex-end; padding:12px;
+  }
+  .popup-sys-badge {
+    font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px;
+    font-family:var(--mono); backdrop-filter:blur(4px);
+  }
+  .popup-body { padding: 14px; }
+  .popup-op { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--primary); font-family:var(--mono); margin-bottom:5px; }
+  .popup-title { font-size:13px; font-weight:600; color:var(--text); line-height:1.4; margin-bottom:8px; }
+  .popup-desc { font-size:12px; color:var(--text2); line-height:1.6; margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .popup-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .popup-meta-item { font-size:11px; color:var(--text3); display:flex; align-items:center; gap:4px; }
+  .popup-actions { display:flex; gap:8px; }
+  .popup-btn {
+    flex:1; padding:8px; border-radius:8px; border:none; cursor:pointer;
+    font-family:var(--font); font-size:12px; font-weight:600; transition:all 0.15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .popup-btn.play { background:var(--primary); color:white; }
+  .popup-btn.play:hover { background:var(--primary-dark); }
+  .popup-btn.ext { background:var(--surface2); color:var(--text2); border:1px solid var(--border); }
+  .popup-btn.ext:hover { background:var(--border); }
   .mobile-filter-btn { display: none; }
   .drawer-overlay {
     display: none;
@@ -517,15 +585,6 @@
     <div class="grid" id="grid"></div>
   </main>
 </div>
-  <main class="main">
-    <div class="toolbar">
-      <div class="active-filters" id="activeTags"></div>
-      <div class="result-count"><span id="resultCount">0</span>개 영상</div>
-    </div>
-    <div class="grid" id="grid"></div>
-  </main>
-</div>
-
 <!-- ══════════════════════════════════ -->
 <!--  PAGE 2 — KOL LIST                -->
 <!-- ══════════════════════════════════ -->
@@ -960,6 +1019,9 @@ function normalizeVideoRow(row, headers) {
     title,
     url,
     channel: get('channel', '채널', 'source', '출처'),
+    description: get('description', 'desc', '설명', '내용', 'summary'),
+    surgeon: get('surgeon', '술자', '집도의', 'doctor', 'physician'),
+    duration: get('duration', '시간', '길이', 'length', 'runtime'),
     linkMissing: !url
   };
 }
@@ -1172,34 +1234,73 @@ function renderVideos() {
 
   const grid = document.getElementById('grid'); grid.innerHTML='';
   if(!items.length){ grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1">🔍 검색 결과가 없습니다</div>`; return; }
+  const total = items.length;
   items.forEach((v,i) => {
     const thumb = getThumb(v.url);
-    const card = document.createElement('div');
-    card.className='card'; card.style.animationDelay=(i*0.03)+'s';
+    const subsText = v.subs >= 10000 ? (v.subs/10000).toFixed(1)+'만명' : v.subs >= 1000 ? (v.subs/1000).toFixed(1)+'천명' : v.subs > 0 ? v.subs+'명' : '';
     const missingBadge = v.linkMissing ? `<span style="position:absolute;top:8px;right:8px;background:rgba(180,60,0,0.88);color:#FFD9B0;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;font-family:var(--mono)">⚠ 링크없음</span>` : '';
-    const subsText = v.subs >= 1000
-      ? (v.subs >= 10000 ? (v.subs/10000).toFixed(1)+'만명' : (v.subs/1000).toFixed(1)+'천명')
-      : v.subs > 0 ? v.subs+'명' : '';
-    const channelHtml = `<div class="card-channel">${v.channel}${subsText ? `<br><span style="font-size:10px;color:var(--text3)">구독자 ${subsText}</span>` : ''}</div>`;
-    card.innerHTML=`
+
+    // popup 방향 결정
+    const col = i % 4;
+    const popupDir = col === 0 ? 'popup-right' : col === 3 ? 'popup-left' : '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'card-wrap ' + popupDir;
+    wrap.style.animationDelay = (i*0.03)+'s';
+
+    // 카드 본체
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
       <div class="thumb-wrap">
-        ${thumb?`<img src="${thumb}" alt="${v.title}" loading="lazy" onerror="this.style.display='none'">`: ''}
+        ${thumb ? `<img src="${thumb}" alt="${v.title}" loading="lazy" onerror="this.style.display='none'">` : ''}
         <span class="sys-badge-thumb ${sysClass(v.sys)}">${v.sys}</span>
         ${missingBadge}
-        ${!v.linkMissing?`<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`:''}
+        ${!v.linkMissing ? `<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>` : ''}
       </div>
       <div class="card-body">
-        <div class="card-op" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">📌 ${v.op}</div>
-        <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px">TOPIC</div><div class="card-title">${v.title}</div>
+        <div class="card-op">📌 ${v.op}</div>
+        <div class="card-title">${v.title}</div>
         <div class="card-meta">
-          <div class="card-tags">${v.adv?`<span class="tag adv">${v.adv}</span>`:''}</div>
-          ${channelHtml}
+          <div class="card-tags">${v.adv ? `<span class="tag adv">${v.adv}</span>` : ''}</div>
+          <div class="card-channel">${v.channel}${subsText ? `<br><span style="font-size:10px;color:var(--text3)">구독자 ${subsText}</span>` : ''}</div>
         </div>
       </div>`;
-    if(!v.linkMissing) card.onclick=()=>openModal(v);
-    else card.style.cursor='default';
-    grid.appendChild(card);
+    if(!v.linkMissing) card.onclick = () => openModal(v);
+    else card.style.cursor = 'default';
+
+    // 넷플릭스 호버 팝업
+    const popup = document.createElement('div');
+    popup.className = 'card-hover-popup';
+    popup.innerHTML = `
+      <div class="popup-thumb">
+        ${thumb ? `<img src="${thumb}" alt="${v.title}" loading="lazy">` : `<div style="background:#1a1a2e;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🎬</div>`}
+        <div class="popup-thumb-overlay">
+          <span class="popup-sys-badge ${sysClass(v.sys)}">${v.sys}</span>
+        </div>
+      </div>
+      <div class="popup-body">
+        <div class="popup-op">📌 ${v.op}</div>
+        <div class="popup-title">${v.title}</div>
+        ${v.description ? `<div class="popup-desc">${v.description}</div>` : ''}
+        <div class="popup-meta">
+          ${v.surgeon ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${v.surgeon}</div>` : ''}
+          ${v.duration ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${v.duration}</div>` : ''}
+          ${v.adv ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${v.adv}</div>` : ''}
+          ${subsText ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>구독자 ${subsText}</div>` : ''}
+        </div>
+        <div class="popup-actions">
+          ${!v.linkMissing ? `<button class="popup-btn play" onclick="event.stopPropagation();openModal(${JSON.stringify(v).replace(/"/g,'&quot;')})"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>재생</button>` : ''}
+          ${!v.linkMissing ? `<a href="${v.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="popup-btn ext"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>유튜브</a>` : ''}
+        </div>
+      </div>`;
+
+    wrap.appendChild(card);
+    wrap.appendChild(popup);
+    grid.appendChild(wrap);
   });
+  // responsive popup direction
+  window.addEventListener('resize', renderVideos, { once: true });
 }
 
 function openModal(v) {
