@@ -613,10 +613,10 @@
     <div class="sidebar-inner">
 
       <!-- 기사 추가 버튼 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1711701439" target="_blank" rel="noopener" style="width:100%;margin-bottom:10px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <button onclick="openArticleModal()" style="width:100%;margin-bottom:10px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        기사 추가하기 (시트)
-      </a>
+        기사 추가하기
+      </button>
 
       <!-- 초기화 버튼 -->
       <button id="kolResetBtn" onclick="resetKolFilters()" style="width:100%;margin-bottom:14px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
@@ -655,18 +655,6 @@
   </aside>
 
   <div class="kol-main" style="padding:24px 28px;flex:1;overflow-y:auto">
-    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:20px;box-shadow:var(--shadow)">
-      <div style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;margin-bottom:8px">🔗 기사 링크 → 자동 분석</div>
-      <div style="display:flex;gap:8px">
-        <input id="artUrlInput" type="text" placeholder="기사 URL을 붙여넣으세요"
-          style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none"
-          onkeydown="if(event.key==='Enter')analyzeArticleUrl()">
-        <button id="artAnalyzeBtn" onclick="analyzeArticleUrl()"
-          style="padding:9px 16px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.15s"
-          onmouseover="this.style.background='#A01030'" onmouseout="this.style.background='var(--primary)'">분석하기</button>
-      </div>
-      <div id="artAnalyzeStatus" style="font-size:11px;margin-top:7px;display:none;padding:7px 10px;border-radius:6px"></div>
-    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-kol')">
@@ -839,10 +827,10 @@
     </button>
     <div class="sidebar-inner">
 
-      <!-- 일정 수정 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        일정 수정하기 (시트)
+      <!-- 일정 추가 버튼 — 상단 -->
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        일정 추가하기
       </a>
 
       <div class="filter-section">
@@ -872,6 +860,94 @@
 <!-- ══════════════════════════════════════════ -->
 <!--  PAPER ADD MODAL                          -->
 <!-- ══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════ -->
+<!--  ARTICLE ADD MODAL                        -->
+<!-- ══════════════════════════════════════════ -->
+<div id="articleModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closeArticleModal(event)">
+  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:16px;font-weight:700;color:var(--text)">기사 추가하기</div>
+      <button onclick="closeArticleModal()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">기사 제목 *</label>
+        <input id="a-title" type="text" placeholder="병원명, 교수명 등 기사 제목" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">병원명 *</label>
+          <input id="a-hospital" type="text" placeholder="예: 삼성서울병원" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">술자</label>
+          <input id="a-surgeon" type="text" placeholder="예: 홍길동" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">날짜</label>
+          <input id="a-date" type="date" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">카테고리</label>
+          <select id="a-tag" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+            <option value="milestone">🏆 달성 기념</option>
+            <option value="vnotes">vNOTES 관련</option>
+            <option value="dv5">dV5</option>
+            <option value="gyn">산부인과 일반</option>
+            <option value="myoma">자궁근종</option>
+            <option value="endometriosis">자궁내막증</option>
+            <option value="hysterectomy">자궁절제술</option>
+            <option value="ovary">난소</option>
+            <option value="gynca">부인암</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">수술 기법</label>
+          <select id="a-tech" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+            <option value="vnotes">vNOTES</option>
+            <option value="sp">단일공 (SP)</option>
+            <option value="multiport">멀티포트</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">인디케이션</label>
+          <select id="a-indication" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+            <option value="hysterectomy">자궁절제술</option>
+            <option value="myoma">자궁근종</option>
+            <option value="endometriosis">자궁내막증</option>
+            <option value="ovary">난소</option>
+            <option value="gynca">부인암</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">요약</label>
+        <textarea id="a-desc" rows="2" placeholder="기사 핵심 내용 한 두 줄..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none;resize:none"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">링크 레이블</label>
+          <input id="a-link-label" type="text" placeholder="예: 메디컬투데이" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">기사 URL</label>
+          <input id="a-link-url" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">이미지 URL (선택)</label>
+        <input id="a-image" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div id="articleModalStatus" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px"></div>
+      <button onclick="submitArticle()" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">추가하기</button>
+    </div>
+  </div>
+</div>
+
 <div id="paperModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
   <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -2727,6 +2803,50 @@ function submitCal() {
   ['c-name','c-start','c-end','c-loc','c-url','c-note'].forEach(id=>document.getElementById(id).value='');
 }
 
+
+/* ══════════════════════ ARTICLE MODAL ══════════════════════ */
+function openArticleModal() {
+  // 오늘 날짜 기본값
+  document.getElementById('a-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('articleModalOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeArticleModal(e) {
+  if(!e || e.target === document.getElementById('articleModalOverlay')) {
+    document.getElementById('articleModalOverlay').style.display = 'none';
+    document.getElementById('articleModalStatus').style.display = 'none';
+    document.body.style.overflow = '';
+    ['a-title','a-hospital','a-surgeon','a-desc','a-link-label','a-link-url','a-image']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  }
+}
+function submitArticle() {
+  const title    = document.getElementById('a-title').value.trim();
+  const hospital = document.getElementById('a-hospital').value.trim();
+  if(!title || !hospital) { alert('제목과 병원명은 필수입니다.'); return; }
+  const linkUrl   = document.getElementById('a-link-url').value.trim();
+  const linkLabel = document.getElementById('a-link-label').value.trim();
+  const newArticle = {
+    title,
+    hospital,
+    surgeon:    document.getElementById('a-surgeon').value.trim() || '산부인과팀',
+    date:       document.getElementById('a-date').value || new Date().toISOString().slice(0,10),
+    tag:        document.getElementById('a-tag').value,
+    tech:       document.getElementById('a-tech').value,
+    indication: document.getElementById('a-indication').value,
+    desc:       document.getElementById('a-desc').value.trim(),
+    image:      document.getElementById('a-image').value.trim(),
+    links: linkUrl ? [{label: linkLabel || '기사 링크', url: linkUrl}] : []
+  };
+  ARTICLES.push(newArticle);
+  const status = document.getElementById('articleModalStatus');
+  status.style.display = 'block';
+  status.style.background = '#EAF3DE';
+  status.style.color = '#27500A';
+  status.textContent = '✅ "' + title + '" 추가 완료!';
+  renderKOL();
+  setTimeout(() => closeArticleModal(), 1500);
+}
 
 /* ══════════════════════ PAPER MODAL ══════════════════════ */
 function openPaperModal() {
