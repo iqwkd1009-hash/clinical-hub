@@ -81,20 +81,30 @@
     color: var(--text3); margin-bottom: 8px;
   }
   .filter-btn {
-    display: block; width: 100%; text-align: left;
-    padding: 6px 10px; border-radius: 7px; border: none;
+    display: flex; width: 100%; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: 8px; border: 1px solid transparent;
     background: transparent; font-family: var(--font);
-    font-size: 13px; color: var(--text2);
-    cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+    font-size: 12px; color: var(--text2);
+    cursor: pointer; transition: all 0.15s; margin-bottom: 3px;
+    font-weight: 500;
   }
-  .filter-btn:hover { background: var(--surface2); color: var(--text); }
-  .filter-btn.active { background: var(--primary-soft); color: var(--primary); font-weight: 500; }
+  .filter-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
+  .filter-btn.active {
+    background: var(--primary-soft); color: var(--primary);
+    border-color: var(--primary-mid); font-weight: 600;
+  }
   .filter-btn .btn-count {
-    float: right; font-family: var(--mono); font-size: 11px;
+    font-family: var(--mono); font-size: 10px;
     color: var(--text3); background: var(--tag-bg);
-    padding: 1px 6px; border-radius: 10px;
+    padding: 1px 7px; border-radius: 10px; flex-shrink: 0;
   }
   .filter-btn.active .btn-count { background: var(--primary-mid); color: var(--primary); }
+  .filter-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text3);
+    margin: 12px 0 6px; padding: 0 2px;
+  }
+  .filter-label:first-child { margin-top: 4px; }
   .search-box {
     display: flex; align-items: center; gap: 8px;
     background: var(--surface2); border: 1px solid var(--border);
@@ -521,6 +531,7 @@
     </div>
   </div>
   <div class="nav-right">
+    <button class="icon-btn" onclick="toggleLang()" id="langBtn" title="언어 전환">🌐 KO</button>
     <button class="icon-btn" onclick="toggleTheme()" title="Dark mode">◐ Theme</button>
     <div class="count-badge" id="headerCount">0</div>
   </div>
@@ -600,24 +611,46 @@
       <input type="text" id="kolSearch" placeholder="병원명, 술자 검색..." oninput="renderKOL()">
     </div>
     <div class="sidebar-inner">
-      <!-- 전체 초기화 -->
-      <button id="kolResetBtn" onclick="resetKolFilters()" style="width:100%;margin-bottom:16px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.69"/></svg>
+
+      <!-- 기사 추가 버튼 -->
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1711701439" target="_blank" rel="noopener" style="width:100%;margin-bottom:10px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        기사 추가하기 (시트)
+      </a>
+
+      <!-- 초기화 버튼 -->
+      <button id="kolResetBtn" onclick="resetKolFilters()" style="width:100%;margin-bottom:14px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.69"/></svg>
         전체 초기화
       </button>
 
+      <!-- 수술 기법 -->
       <div class="filter-section">
-        <div class="filter-label">🔧 수술 기법</div>
+        <div class="filter-label" style="display:flex;align-items:center;gap:5px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          수술 기법
+        </div>
         <div id="kolTechFilters"></div>
       </div>
+
+      <!-- 인디케이션 -->
       <div class="filter-section">
-        <div class="filter-label">🩺 인디케이션</div>
+        <div class="filter-label" style="display:flex;align-items:center;gap:5px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          인디케이션
+        </div>
         <div id="kolIndicationFilters"></div>
       </div>
+
+      <!-- 카테고리 -->
       <div class="filter-section">
-        <div class="filter-label">📌 카테고리</div>
+        <div class="filter-label" style="display:flex;align-items:center;gap:5px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          카테고리
+        </div>
         <div id="kolCategoryFilters"></div>
       </div>
+
     </div>
   </aside>
 
@@ -662,11 +695,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="paperSearch" placeholder="Search title, author..." oninput="renderPapers()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
     </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 기법 필터</span>
-      <span class="mfb-arrow">›</span>
-    </button>
     <div class="sidebar-inner">
+      <!-- 논문 추가 버튼 -->
+      <button onclick="openPaperModal()" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        논문 추가하기
+      </button>
       <div class="filter-section">
         <div class="filter-label">필터</div>
         <div id="paperTechFilters"></div>
@@ -804,15 +838,16 @@
       <span class="mfb-arrow">›</span>
     </button>
     <div class="sidebar-inner">
+
+      <!-- 일정 수정 버튼 — 상단 -->
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        일정 수정하기 (시트)
+      </a>
+
       <div class="filter-section">
-        <div class="filter-label">필터</div>
+        <div class="filter-label">분류</div>
         <div id="calFilters"></div>
-      </div>
-      <div class="filter-section" style="margin-top:8px">
-        <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="width:100%;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-          일정 수정하기
-        </a>
       </div>
     </div>
   </aside>
@@ -834,6 +869,64 @@
 <!-- ══════════════════════════════════════════ -->
 <!--  UPLOAD MODAL — Video                     -->
 <!-- ══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════ -->
+<!--  PAPER ADD MODAL                          -->
+<!-- ══════════════════════════════════════════ -->
+<div id="paperModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
+  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:16px;font-weight:700;color:var(--text)">논문 추가하기</div>
+      <button onclick="closePaperModal()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">논문 제목 *</label>
+        <input id="p-title" type="text" placeholder="Robotic vNOTES Hysterectomy..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">저자 (Authors)</label>
+          <input id="p-authors" type="text" placeholder="Kim SJ, Lee YH, et al." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">출판연도</label>
+          <input id="p-year" type="text" placeholder="2024" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">저널명</label>
+          <input id="p-journal" type="text" placeholder="Surgical Endoscopy" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">기법 태그</label>
+          <select id="p-tech" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+            <option value="vNOTES">vNOTES</option>
+            <option value="SP">Single Port (SP)</option>
+            <option value="Multiport">Multiport</option>
+            <option value="RvNOTES">RvNOTES</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">병원/기관</label>
+        <input id="p-hospital" type="text" placeholder="Ewha Womans University, Korea" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">요약 (Abstract 한 줄)</label>
+        <textarea id="p-summary" rows="2" placeholder="핵심 결과 및 임상적 의의..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none;resize:none"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">DOI / PDF URL</label>
+        <input id="p-doi" type="text" placeholder="https://doi.org/..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
+      </div>
+      <div id="paperModalStatus" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px"></div>
+      <button onclick="submitPaper()" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary)'">추가하기</button>
+    </div>
+  </div>
+</div>
+
 <div id="uploadOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closeUploadModal(event)">
   <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -1561,21 +1654,25 @@ let kolTagFilter = 'all';
 const kolFilters = { tech: 'all', indication: 'all', category: 'all' };
 
 const TECH_DEFS = [
-  { key:'vnotes',    label:'vNOTES' },
-  { key:'sp',        label:'단일공 (SP)' },
-  { key:'multiport', label:'멀티포트' },
+  { key:'vnotes',    labelKo:'vNOTES',       labelEn:'vNOTES' },
+  { key:'sp',        labelKo:'단일공 (SP)',   labelEn:'Single Port (SP)' },
+  { key:'multiport', labelKo:'멀티포트',      labelEn:'Multiport (MP)' },
 ];
 const INDICATION_DEFS = [
-  { key:'hysterectomy',  label:'자궁절제술' },
-  { key:'myoma',         label:'자궁근종' },
-  { key:'endometriosis', label:'자궁내막증' },
-  { key:'ovary',         label:'난소' },
+  { key:'hysterectomy',  labelKo:'자궁절제술', labelEn:'Hysterectomy' },
+  { key:'myoma',         labelKo:'자궁근종',   labelEn:'Myoma' },
+  { key:'endometriosis', labelKo:'자궁내막증', labelEn:'Endometriosis' },
+  { key:'ovary',         labelKo:'난소',       labelEn:'Ovary' },
+  { key:'gynca',         labelKo:'부인암',     labelEn:'GYN Cancer' },
 ];
 const CATEGORY_DEFS = [
-  { key:'milestone', label:'🏆 달성 기념' },
-  { key:'vnotes',    label:'vNOTES 관련' },
-  { key:'gyn',       label:'산부인과 일반' },
+  { key:'milestone', labelKo:'🏆 달성 기념',  labelEn:'🏆 Milestone' },
+  { key:'vnotes',    labelKo:'vNOTES 관련',   labelEn:'vNOTES' },
+  { key:'dv5',       labelKo:'dV5',           labelEn:'dV5' },
+  { key:'gyn',       labelKo:'산부인과 일반', labelEn:'GYN General' },
 ];
+// helper to get label based on current language
+function defLabel(d) { return currentLang==='en' ? (d.labelEn||d.labelKo) : d.labelKo; }
 
 function resetKolFilters() {
   kolFilters.tech = 'all';
@@ -1593,7 +1690,7 @@ function buildKolFilters() {
       if(!count) return;
       const btn = document.createElement('button');
       btn.className = 'filter-btn' + (kolFilters[filterKey]===d.key?' active':'');
-      btn.innerHTML = `${d.label} <span class="btn-count">${count}</span>`;
+      btn.innerHTML = `${defLabel(d)} <span class="btn-count">${count}</span>`;
       btn.onclick = () => {
         kolFilters[filterKey] = kolFilters[filterKey]===d.key ? 'all' : d.key;
         renderKOL();
@@ -1633,9 +1730,9 @@ function renderKOL() {
   // Active tag chips
   const tagsEl = document.getElementById('kolActiveTags'); tagsEl.innerHTML='';
   const labelMap = {
-    tech: Object.fromEntries(TECH_DEFS.map(d=>[d.key,d.label])),
-    indication: Object.fromEntries(INDICATION_DEFS.map(d=>[d.key,d.label])),
-    category: Object.fromEntries(CATEGORY_DEFS.map(d=>[d.key,d.label])),
+    tech: Object.fromEntries(TECH_DEFS.map(d=>[d.key,defLabel(d)])),
+    indication: Object.fromEntries(INDICATION_DEFS.map(d=>[d.key,defLabel(d)])),
+    category: Object.fromEntries(CATEGORY_DEFS.map(d=>[d.key,defLabel(d)])),
   };
   Object.entries(kolFilters).forEach(([k,v]) => {
     if(v==='all') return;
@@ -1700,14 +1797,22 @@ function makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, d
   const fav = faviconUrl
     ? '<img src="' + faviconUrl + '" style="width:18px;height:18px;border-radius:3px;flex-shrink:0;object-fit:contain" onerror="this.style.display=\'none\'">'
     : '';
+
+  // 행 썸네일 — 이미지 있으면 작게 표시
+  const rowThumb = a.image
+    ? '<img src="' + a.image + '" style="width:48px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=\'none\'">'
+    : '';
+
+  // 펼침 영역 이미지 — 이미지 있으면 크게, 없으면 파비콘
   const imgHtml = a.image
-    ? '<img src="' + a.image + '" style="width:140px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=\'none\'">'
+    ? '<img src="' + a.image + '" style="width:160px;height:110px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=\'none\'">'
     : domain
       ? '<div style="width:64px;height:64px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0"><img src="' + faviconUrl + '" style="width:24px;height:24px;object-fit:contain" onerror="this.style.display=\'none\'"><span style="font-size:8px;color:var(--text3);text-align:center;word-break:break-all;padding:0 4px">' + domain + '</span></div>'
       : '';
+
   return (
     '<div style="padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleArt(\'' + aid + '\')">' +
-      fav +
+      (a.image ? rowThumb : fav) +
       '<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap;' + tagColor + '">' + tagLabel + '</span>' +
       '<span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;min-width:80px">' + a.hospital + '</span>' +
       '<span style="font-size:11px;color:var(--text3);white-space:nowrap">' + a.surgeon + '</span>' +
@@ -2623,9 +2728,140 @@ function submitCal() {
 }
 
 
+/* ══════════════════════ PAPER MODAL ══════════════════════ */
+function openPaperModal() {
+  document.getElementById('paperModalOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closePaperModal(e) {
+  if(!e || e.target === document.getElementById('paperModalOverlay')) {
+    document.getElementById('paperModalOverlay').style.display = 'none';
+    document.getElementById('paperModalStatus').style.display = 'none';
+    document.body.style.overflow = '';
+    ['p-title','p-authors','p-year','p-journal','p-hospital','p-summary','p-doi']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  }
+}
+function submitPaper() {
+  const title = document.getElementById('p-title').value.trim();
+  if(!title) { alert('논문 제목은 필수입니다.'); return; }
+  const newPaper = {
+    title,
+    authors:  document.getElementById('p-authors').value.trim(),
+    year:     document.getElementById('p-year').value.trim(),
+    journal:  document.getElementById('p-journal').value.trim(),
+    hospital: document.getElementById('p-hospital').value.trim(),
+    summary:  document.getElementById('p-summary').value.trim(),
+    doi:      document.getElementById('p-doi').value.trim(),
+    tech:     document.getElementById('p-tech').value,
+    chartData: null
+  };
+  PAPERS.push(newPaper);
+  const status = document.getElementById('paperModalStatus');
+  status.style.display = 'block';
+  status.style.background = '#EAF3DE';
+  status.style.color = '#27500A';
+  status.textContent = '✅ "' + title + '" 추가 완료!';
+  renderPapers();
+  setTimeout(() => closePaperModal(), 1500);
+}
+
+/* ══════════════════════ LANGUAGE TOGGLE ══════════════════════ */
+const TRANSLATIONS = {
+  ko: {
+    // Nav
+    'GYN': 'GYN', 'Cardiac': 'Cardiac',
+    // Sub tabs
+    '수술영상': '수술영상', '기사': '기사', '논문': '논문', '캘린더': '캘린더',
+    // Sidebar labels
+    '수술 종류': '수술 종류', '시스템': '시스템',
+    '수술 기법': '수술 기법', '인디케이션': '인디케이션', '카테고리': '카테고리',
+    '기사 추가하기 (시트)': '기사 추가하기 (시트)',
+    '논문 추가하기': '논문 추가하기',
+    '일정 수정하기 (시트)': '일정 수정하기 (시트)',
+    '전체 초기화': '전체 초기화',
+    // Filters
+    'vNOTES 관련': 'vNOTES 관련', '달성 기념': '달성 기념', '산부인과 일반': '산부인과 일반',
+    '자궁절제술': '자궁절제술', '자궁근종': '자궁근종', '자궁내막증': '자궁내막증',
+    '난소': '난소', '부인암': '부인암',
+    '단일공 (SP)': '단일공 (SP)', '멀티포트': '멀티포트',
+    // Buttons
+    '분석하기': '분석하기', '필터': '필터', '분류 필터': '분류 필터',
+    '검색...': '검색...',
+  },
+  en: {
+    // Nav
+    'GYN': 'GYN', 'Cardiac': 'Cardiac',
+    // Sub tabs
+    '수술영상': 'Videos', '기사': 'Articles', '논문': 'Papers', '캘린더': 'Calendar',
+    // Sidebar labels
+    '수술 종류': 'Procedure', '시스템': 'System',
+    '수술 기법': 'Technique', '인디케이션': 'Indication', '카테고리': 'Category',
+    '기사 추가하기 (시트)': 'Add Article (Sheet)',
+    '논문 추가하기': 'Add Paper',
+    '일정 수정하기 (시트)': 'Edit Schedule (Sheet)',
+    '전체 초기화': 'Reset All',
+    // Filters
+    'vNOTES 관련': 'vNOTES', '달성 기념': '🏆 Milestone', '산부인과 일반': 'GYN General',
+    '자궁절제술': 'Hysterectomy', '자궁근종': 'Myoma', '자궁내막증': 'Endometriosis',
+    '난소': 'Ovary', '부인암': 'GYN Cancer',
+    '단일공 (SP)': 'Single Port (SP)', '멀티포트': 'Multiport',
+    // Buttons
+    '분석하기': 'Analyze', '필터': 'Filter', '분류 필터': 'Category Filter',
+    '검색...': 'Search...',
+  }
+};
+
+let currentLang = localStorage.getItem('gynHubLang') || 'ko';
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || key;
+}
+
+function applyLang() {
+  const lang = currentLang;
+  const btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = '🌐 ' + (lang === 'ko' ? 'KO' : 'EN');
+
+  // Sub tabs
+  const tabMap = { 'sub-video': '수술영상', 'sub-kol': '기사', 'sub-paper': '논문', 'sub-cal': '캘린더' };
+  Object.entries(tabMap).forEach(([id, ko]) => {
+    const el = document.getElementById(id);
+    if(el) {
+      const icon = el.textContent.match(/^[^\s]+/)?.[0] || '';
+      el.textContent = icon + ' ' + t(ko);
+    }
+  });
+
+  // Filter labels (data-lang attribute)
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-lang'));
+  });
+
+  // Article search placeholder
+  const kolSearch = document.getElementById('kolSearch');
+  if(kolSearch) kolSearch.placeholder = lang === 'ko' ? '병원명, 술자 검색...' : 'Hospital, surgeon...';
+  const videoSearch = document.getElementById('videoSearch');
+  if(videoSearch) videoSearch.placeholder = lang === 'ko' ? '검색...' : 'Search...';
+  const paperSearch = document.getElementById('paperSearch');
+  if(paperSearch) paperSearch.placeholder = lang === 'ko' ? '제목, 저자 검색...' : 'Search title, author...';
+
+  // Re-render to update filter button labels
+  buildKolFilters();
+  buildVideoFilters();
+  renderCal();
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ko' ? 'en' : 'ko';
+  localStorage.setItem('gynHubLang', currentLang);
+  applyLang();
+}
+
 /* ══════════════════════ INIT ══════════════════════ */
 loadVideosFromSheet();
 loadArticlesFromSheet();
+applyLang();
 loadConferencesFromSheet();
 </script>
 </body>
