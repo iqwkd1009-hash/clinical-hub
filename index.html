@@ -997,6 +997,62 @@ const VIDEO_SHEET_URLS = [
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=468200524&single=true&output=csv"
 ];
 
+// ★ Articles 시트 URL — 시트에 'articles' 탭 추가 후 gid 값으로 교체하세요
+// 방법: 시트에서 articles 탭 클릭 → 주소창 gid=XXXXXX 복사 → 아래 붙여넣기
+const ARTICLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/export?gid=1711701439&format=csv&single=true";
+
+async function loadArticlesFromSheet() {
+  // gid가 설정되지 않았으면 fallback 사용
+  if(ARTICLE_SHEET_URL.includes('ARTICLES_GID')) {
+    console.warn('Articles sheet GID not set. Using embedded fallback data.');
+    renderKOL();
+    return;
+  }
+  try {
+    const res = await fetch(ARTICLE_SHEET_URL, { cache: 'no-store' });
+    if(!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    if(!text || text.toLowerCase().includes('<html')) throw new Error('invalid response');
+    const rows = parseCSV(text);
+    if(rows.length < 2) throw new Error('no data');
+    const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+    const get = (row, ...keys) => {
+      for(const k of keys) {
+        const idx = headers.indexOf(k);
+        if(idx >= 0 && row[idx] !== undefined) return String(row[idx]||'').trim();
+      }
+      return '';
+    };
+    const items = rows.slice(1)
+      .filter(r => r.some(c => c && c.trim()))
+      .map(r => ({
+        date:       get(r,'date'),
+        hospital:   get(r,'hospital'),
+        surgeon:    get(r,'surgeon'),
+        tag:        get(r,'tag'),
+        tech:       get(r,'tech'),
+        indication: get(r,'indication'),
+        title:      get(r,'title'),
+        desc:       get(r,'desc'),
+        image:      get(r,'image'),
+        links: (() => {
+          const label = get(r,'link_label');
+          const url   = get(r,'link_url');
+          return url ? [{label: label||'기사 링크', url}] : [];
+        })()
+      }))
+      .filter(a => a.title || a.hospital);
+    if(items.length) {
+      ARTICLES.length = 0;
+      items.forEach(a => ARTICLES.push(a));
+      console.log('Articles loaded from sheet:', items.length);
+    }
+  } catch(err) {
+    console.warn('Articles sheet loading failed:', err.message, '— using embedded fallback data');
+  }
+  renderKOL();
+}
+
 function normalizeVideoRow(row, headers) {
   const normalizedHeaders = headers.map(h => String(h || '').trim().toLowerCase());
   const get = (...keys) => {
@@ -1008,17 +1064,17 @@ function normalizeVideoRow(row, headers) {
   };
 
   const url = get('url', 'link', '링크', 'youtube', 'youtube url', '영상링크');
-  const title = get('title', 'name', '영상명', '제목');
+  const title = get('title', 'name', '영상명', '제목', '주제');
   const sys = get('sys', 'system', '시스템', 'platform') || 'Xi';
 
   return {
     op: get('op', 'procedure', '수술종류', '수술 종류', 'indication') || 'Other',
     sys,
-    adv: get('adv', 'advanced tech', 'tech', '기술', 'instrument', 'system note'),
+    adv: get('adv. tech', 'adv.tech', 'adv', 'advanced tech', 'tech', 'adv. tech', '기술', 'instrument'),
     subs: Number(String(get('subs', 'subscriber', 'subscribers', '구독자') || '0').replace(/[^0-9.]/g, '')) || 0,
     title,
     url,
-    channel: get('channel', '채널', 'source', '출처'),
+    channel: get('channel', '채널', 'source', '출처', '채널명'),
     description: get('description', 'desc', '설명', '내용', 'summary'),
     surgeon: get('surgeon', '술자', '집도의', 'doctor', 'physician'),
     duration: get('duration', '시간', '길이', 'length', 'runtime'),
@@ -1174,10 +1230,15 @@ function countVideo(key, val) {
 
 function buildVideoFilters() {
   const make = (id, key, vals) => {
-    const el = document.getElementById(id); el.innerHTML='';
+    const el = document.getElementById(id); if(!el) return; el.innerHTML='';
     const all = document.createElement('button');
     all.className='filter-btn'+(vFilters[key]==='all'?' active':'');
-    all.innerHTML=`전체 <span class="btn-count">${VIDEOS.length}</span>`;
+    all.innerHTML=`전체 <span class="btn-count">${VIDEOS.filter(v => {
+      if(key==='op') return vFilters.sys==='all'||v.sys===vFilters.sys;
+      if(key==='sys') return vFilters.op==='all'||v.op===vFilters.op;
+      if(key==='adv') return (vFilters.op==='all'||v.op===vFilters.op)&&(vFilters.sys==='all'||v.sys===vFilters.sys);
+      return true;
+    }).length}</span>`;
     all.onclick=()=>{ vFilters[key]='all'; renderVideos(); };
     el.appendChild(all);
     vals.forEach(v => {
@@ -1259,11 +1320,13 @@ function renderVideos() {
         ${!v.linkMissing ? `<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>` : ''}
       </div>
       <div class="card-body">
-        <div class="card-op">📌 ${v.op}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap">
+          <div class="card-op">📌 ${v.op}</div>
+          ${v.adv ? `<span class="tag adv" style="font-size:9px;padding:1px 6px">${v.adv}</span>` : ''}
+        </div>
         <div class="card-title">${v.title}</div>
         <div class="card-meta">
-          <div class="card-tags">${v.adv ? `<span class="tag adv">${v.adv}</span>` : ''}</div>
-          <div class="card-channel">${v.channel}${subsText ? `<br><span style="font-size:10px;color:var(--text3)">구독자 ${subsText}</span>` : ''}</div>
+          <div class="card-channel" style="font-size:10px;color:var(--text3)">${v.channel}${subsText ? `<span style="margin-left:4px;opacity:0.7">· 구독자 ${subsText}</span>` : ''}</div>
         </div>
       </div>`;
     if(!v.linkMissing) card.onclick = () => openModal(v);
@@ -1280,7 +1343,7 @@ function renderVideos() {
         </div>
       </div>
       <div class="popup-body">
-        <div class="popup-op">📌 ${v.op}</div>
+        <div class="popup-op">📌 ${v.op}${v.adv ? ` <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:5px;background:var(--primary-soft);color:var(--primary);margin-left:6px;font-family:var(--mono)">${v.adv}</span>` : ''}</div>
         <div class="popup-title">${v.title}</div>
         ${v.description ? `<div class="popup-desc">${v.description}</div>` : ''}
         <div class="popup-meta">
@@ -2562,7 +2625,7 @@ function submitCal() {
 
 /* ══════════════════════ INIT ══════════════════════ */
 loadVideosFromSheet();
-buildKolFilters();
+loadArticlesFromSheet();
 loadConferencesFromSheet();
 </script>
 </body>
