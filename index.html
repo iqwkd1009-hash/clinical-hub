@@ -137,6 +137,60 @@
 
   /* ── VIDEO GRID ── */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+
+  /* ── YOUTUBE STYLE VIDEO GRID ── */
+  .yt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .yt-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    animation: fadeUp 0.3s ease both;
+    transition: opacity 0.2s;
+  }
+  .yt-card:hover { opacity: 0.9; }
+  .yt-thumb {
+    position: relative;
+    aspect-ratio: 16/9;
+    background: #1a1714;
+    overflow: hidden;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  .yt-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.3s; display:block; }
+  .yt-card:hover .yt-thumb img { transform: scale(1.03); }
+  .yt-thumb .play-overlay { border-radius: 10px; }
+  .yt-card:hover .play-overlay { opacity:1; }
+  .yt-info { display:flex; gap:10px; }
+  .yt-info-text { flex:1; min-width:0; }
+  .yt-title {
+    font-size:13px; font-weight:600; color:var(--text);
+    line-height:1.4; margin-bottom:5px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .yt-meta { font-size:11px; color:var(--text3); line-height:1.6; }
+  .yt-channel { font-size:12px; color:var(--text2); font-weight:500; margin-bottom:2px; }
+  .yt-badges { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
+
+  /* 칩 필터 스타일 */
+  .chip-filter-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface); font-family: var(--font);
+    font-size: 12px; font-weight: 500; color: var(--text2);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .chip-filter-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--text3); }
+  .chip-filter-btn.active {
+    background: var(--text); color: var(--bg);
+    border-color: var(--text); font-weight: 600;
+  }
   .card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); overflow: hidden; cursor: pointer;
@@ -455,6 +509,7 @@
   .sidebar-inner { display: contents; }
 
   @media (max-width: 900px) {
+    .yt-grid { grid-template-columns: repeat(2,1fr) !important; gap:10px; }
     .dashboard-grid { grid-template-columns:1fr !important; }
     .page.active { flex-direction:column; min-height:auto; }
 
@@ -553,48 +608,53 @@
 <!--  PAGE 1 — VIDEO LIBRARY           -->
 <!-- ══════════════════════════════════ -->
 <div class="page active" id="page-video">
-  <aside class="sidebar" id="sidebar-video">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="videoSearch" placeholder="검색..." oninput="renderVideos()">
-    </div>
-    <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=468200524#gid=468200524" target="_blank" style="text-decoration:none;width:100%;display:flex">
-        <button style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
-        📄 영상 추가하기
-        </button>
-      </a>
-      <div class="filter-section">
-        <div class="filter-label">수술 종류</div>
-        <div id="opFilters"></div>
+  <!-- 유튜브 스타일: 상단 필터 바 + 풀와이드 그리드 -->
+  <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+
+    <!-- 상단 필터 바 -->
+    <div id="videoFilterBar" style="padding:12px 24px 0;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10">
+      <!-- 검색 + 영상추가 행 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:7px 14px;flex:1;max-width:360px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="videoSearch" placeholder="검색..." oninput="renderVideos()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
+        </div>
+        <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=468200524#gid=468200524" target="_blank" style="text-decoration:none;flex-shrink:0">
+          <button style="padding:7px 14px;border-radius:20px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            영상 추가하기
+          </button>
+        </a>
+        <div style="font-size:12px;color:var(--text3);white-space:nowrap;flex-shrink:0"><span id="resultCount">0</span><span data-ko="개 영상">개 영상</span></div>
       </div>
-      <div class="filter-section">
-        <div class="filter-label">시스템</div>
-        <div id="sysFilters"></div>
+
+      <!-- 칩 필터 3행 -->
+      <div style="display:flex;flex-direction:column;gap:6px;padding-bottom:10px">
+        <!-- 수술 종류 -->
+        <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+          <span data-ko="수술" style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;white-space:nowrap;flex-shrink:0">수술</span>
+          <div id="opFilters" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
+        </div>
+        <!-- 시스템 -->
+        <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none">
+          <span data-ko="시스템" style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;white-space:nowrap;flex-shrink:0">시스템</span>
+          <div id="sysFilters" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
+        </div>
+        <!-- ADV Tech -->
+        <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none">
+          <span data-ko="ADV" style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;white-space:nowrap;flex-shrink:0">ADV</span>
+          <div id="advFilters" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
+        </div>
       </div>
-      <div class="filter-section">
-        <div class="filter-label">ADV. Tech</div>
-        <div id="advFilters"></div>
-      </div>
+      <!-- 활성 필터 칩 -->
+      <div id="activeTags" style="display:flex;gap:6px;flex-wrap:wrap;padding-bottom:8px"></div>
     </div>
-  </aside>
-  <main class="main">
-    <div class="toolbar">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-video')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          필터
-        </button>
-        <div class="active-filters" id="activeTags"></div>
-      </div>
-      <div class="result-count"><span id="resultCount">0</span>개 영상</div>
+
+    <!-- 그리드 -->
+    <div style="flex:1;overflow-y:auto;padding:20px 24px">
+      <div class="yt-grid" id="grid"></div>
     </div>
-    <div class="grid" id="grid"></div>
-  </main>
+  </div>
 </div>
 <!-- ══════════════════════════════════ -->
 <!--  PAGE 2 — KOL LIST                -->
@@ -603,7 +663,7 @@
   <!-- KOL 사이드바: 병원 필터 -->
   <aside class="sidebar" id="sidebar-kol">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
       <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
     </div>
     <div class="search-box">
@@ -613,10 +673,10 @@
     <div class="sidebar-inner">
 
       <!-- 기사 추가 버튼 -->
-      <button onclick="openArticleModal()" style="width:100%;margin-bottom:10px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1711701439" target="_blank" rel="noopener" style="width:100%;margin-bottom:10px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         기사 추가하기
-      </button>
+      </a>
 
       <!-- 초기화 버튼 -->
       <button id="kolResetBtn" onclick="resetKolFilters()" style="width:100%;margin-bottom:14px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
@@ -663,7 +723,7 @@
         </button>
         <div class="active-filters" id="kolActiveTags"></div>
       </div>
-      <div class="kol-count"><span id="kolCount">0</span>건</div>
+      <div class="kol-count"><span id="kolCount">0</span><span data-ko="건">건</span></div>
     </div>
     <div id="kolCards" style="display:flex;flex-direction:column;gap:4px"></div>
   </div>
@@ -676,7 +736,7 @@
   <!-- 논문 사이드바: 수술기법 필터 -->
   <aside class="sidebar" id="sidebar-paper">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
       <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
     </div>
     <div class="search-box">
@@ -690,7 +750,7 @@
         논문 추가하기
       </button>
       <div class="filter-section">
-        <div class="filter-label">필터</div>
+        <div class="filter-label" data-ko="필터">필터</div>
         <div id="paperTechFilters"></div>
       </div>
     </div>
@@ -700,7 +760,7 @@
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-paper')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          기법 필터
+          <span data-ko="기법 필터">기법 필터</span>
         </button>
         <div class="active-filters" id="paperActiveTags"></div>
       </div>
@@ -814,7 +874,7 @@
 <div class="page" id="page-cal" style="min-height:calc(100vh - 94px)">
   <aside class="sidebar" id="sidebar-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
       <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
     </div>
     <div class="search-box">
@@ -834,7 +894,7 @@
       </a>
 
       <div class="filter-section">
-        <div class="filter-label">분류</div>
+        <div class="filter-label" data-ko="분류">분류</div>
         <div id="calFilters"></div>
       </div>
     </div>
@@ -844,11 +904,11 @@
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          분류 필터
+          <span data-ko="분류 필터">분류 필터</span>
         </button>
         <div class="active-filters" id="calActiveTags"></div>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span>개 일정</div>
+      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
     </div>
     <div id="calGrid"></div>
   </div>
@@ -943,7 +1003,7 @@
         <input id="a-image" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
       </div>
       <div id="articleModalStatus" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px"></div>
-      <button onclick="submitArticle()" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">추가하기</button>
+      <button onclick="submitArticle()" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer" data-ko="추가하기">추가하기</button>
     </div>
   </div>
 </div>
@@ -1110,7 +1170,7 @@
         <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">메모</label>
         <textarea id="c-note" placeholder="부스 번호, 발표 세션, 준비사항 등..." rows="2" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none;resize:none"></textarea>
       </div>
-      <button onclick="submitCal()" id="calSubmitBtn" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">추가하기</button>
+      <button onclick="submitCal()" id="calSubmitBtn" data-ko="추가하기" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">추가하기</button>
     </div>
   </div>
 </div>
@@ -1168,15 +1228,9 @@ const VIDEO_SHEET_URLS = [
 
 // ★ Articles 시트 URL — 시트에 'articles' 탭 추가 후 gid 값으로 교체하세요
 // 방법: 시트에서 articles 탭 클릭 → 주소창 gid=XXXXXX 복사 → 아래 붙여넣기
-const ARTICLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/export?gid=1711701439&format=csv&single=true";
+const ARTICLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=1711701439&single=true&output=csv";
 
 async function loadArticlesFromSheet() {
-  // gid가 설정되지 않았으면 fallback 사용
-  if(ARTICLE_SHEET_URL.includes('ARTICLES_GID')) {
-    console.warn('Articles sheet GID not set. Using embedded fallback data.');
-    renderKOL();
-    return;
-  }
   try {
     const res = await fetch(ARTICLE_SHEET_URL, { cache: 'no-store' });
     if(!res.ok) throw new Error('fetch failed');
@@ -1388,11 +1442,21 @@ function uniq(arr) {
 }
 
 
+// ADV. Tech 매칭 — "VSE & TilePro"는 VSE와 TilePro 각각에 매칭
+function advMatch(videoAdv, filterVal) {
+  if(!videoAdv || !filterVal) return false;
+  // 정확히 일치하거나, "VSE & TilePro" 같은 복합값에서 부분 매칭
+  if(videoAdv === filterVal) return true;
+  // 복합 adv에서 & 또는 , 로 분리해서 하나라도 매칭되면 true
+  const parts = videoAdv.split(/[&,]/).map(p => p.trim());
+  return parts.some(p => p === filterVal);
+}
+
 function countVideo(key, val) {
   return VIDEOS.filter(v => {
     const fo = key==='op'  ? v.op===val  : (vFilters.op==='all'  || v.op===vFilters.op);
     const fs = key==='sys' ? v.sys===val : (vFilters.sys==='all' || v.sys===vFilters.sys);
-    const fa = key==='adv' ? v.adv===val : (vFilters.adv==='all' || v.adv===vFilters.adv);
+    const fa = key==='adv' ? advMatch(v.adv, val) : (vFilters.adv==='all' || advMatch(v.adv, vFilters.adv));
     return fo && fs && fa;
   }).length;
 }
@@ -1400,27 +1464,25 @@ function countVideo(key, val) {
 function buildVideoFilters() {
   const make = (id, key, vals) => {
     const el = document.getElementById(id); if(!el) return; el.innerHTML='';
+    // 전체 칩
     const all = document.createElement('button');
-    all.className='filter-btn'+(vFilters[key]==='all'?' active':'');
-    all.innerHTML=`전체 <span class="btn-count">${VIDEOS.filter(v => {
-      if(key==='op') return vFilters.sys==='all'||v.sys===vFilters.sys;
-      if(key==='sys') return vFilters.op==='all'||v.op===vFilters.op;
-      if(key==='adv') return (vFilters.op==='all'||v.op===vFilters.op)&&(vFilters.sys==='all'||v.sys===vFilters.sys);
-      return true;
-    }).length}</span>`;
-    all.onclick=()=>{ vFilters[key]='all'; renderVideos(); };
+    all.className = 'chip-filter-btn' + (vFilters[key]==='all' ? ' active' : '');
+    all.textContent = '전체';
+    all.onclick = () => { vFilters[key]='all'; renderVideos(); };
     el.appendChild(all);
     vals.forEach(v => {
       const btn = document.createElement('button');
-      btn.className='filter-btn'+(vFilters[key]===v?' active':'');
-      btn.innerHTML=`${v} <span class="btn-count">${countVideo(key,v)}</span>`;
-      btn.onclick=()=>{ vFilters[key]=v; renderVideos(); };
+      btn.className = 'chip-filter-btn' + (vFilters[key]===v ? ' active' : '');
+      btn.textContent = v;
+      btn.onclick = () => { vFilters[key]=v; renderVideos(); };
       el.appendChild(btn);
     });
   };
   make('opFilters','op', uniq(VIDEOS.map(v=>v.op)));
   make('sysFilters','sys', uniq(VIDEOS.map(v=>v.sys)));
-  make('advFilters','adv', uniq(VIDEOS.map(v=>v.adv)).filter(Boolean));
+  // ADV. Tech 필터 — VSE & TilePro는 분리해서 각각 매칭
+  const advVals = ['VSE','TilePro','Force Bipolar','Long Bipolar','Suction & Irrigator','ITM'];
+  make('advFilters','adv', advVals);
 }
 
 function sysClass(s){ return s==='Xi'?'sys-Xi':s==='DV5'?'sys-DV5':'sys-SP'; }
@@ -1431,7 +1493,7 @@ function renderVideos() {
   const items = VIDEOS.filter(v => {
     if(vFilters.op!=='all' && v.op!==vFilters.op) return false;
     if(vFilters.sys!=='all' && v.sys!==vFilters.sys) return false;
-    if(vFilters.adv!=='all' && v.adv!==vFilters.adv) return false;
+    if(vFilters.adv!=='all' && !advMatch(v.adv, vFilters.adv)) return false;
     if(q && !v.title.toLowerCase().includes(q) && !v.op.toLowerCase().includes(q) && !v.channel.toLowerCase().includes(q)) return false;
     return true;
   }).sort((a,b) => {
@@ -1450,7 +1512,7 @@ function renderVideos() {
   });
 
   document.getElementById('resultCount').textContent = items.length;
-  document.getElementById('headerCount').textContent = items.length + ' videos';
+  document.getElementById('headerCount').textContent = items.length + (currentLang==='en' ? ' videos' : '개 영상');
 
   const tags = document.getElementById('activeTags'); tags.innerHTML='';
   [['op','수술'],['sys','시스템'],['adv','Tech']].forEach(([k,l])=>{
@@ -1464,76 +1526,71 @@ function renderVideos() {
 
   const grid = document.getElementById('grid'); grid.innerHTML='';
   if(!items.length){ grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1">🔍 검색 결과가 없습니다</div>`; return; }
-  const total = items.length;
+
   items.forEach((v,i) => {
     const thumb = getThumb(v.url);
     const subsText = v.subs >= 10000 ? (v.subs/10000).toFixed(1)+'만명' : v.subs >= 1000 ? (v.subs/1000).toFixed(1)+'천명' : v.subs > 0 ? v.subs+'명' : '';
     const missingBadge = v.linkMissing ? `<span style="position:absolute;top:8px;right:8px;background:rgba(180,60,0,0.88);color:#FFD9B0;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;font-family:var(--mono)">⚠ 링크없음</span>` : '';
 
-    // popup 방향 결정
-    const col = i % 4;
-    const popupDir = col === 0 ? 'popup-right' : col === 3 ? 'popup-left' : '';
-
     const wrap = document.createElement('div');
-    wrap.className = 'card-wrap ' + popupDir;
+    wrap.className = 'card-wrap';
     wrap.style.animationDelay = (i*0.03)+'s';
 
-    // 카드 본체
+    // 유튜브 스타일 카드
     const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="thumb-wrap">
-        ${thumb ? `<img src="${thumb}" alt="${v.title}" loading="lazy" onerror="this.style.display='none'">` : ''}
-        <span class="sys-badge-thumb ${sysClass(v.sys)}">${v.sys}</span>
-        ${missingBadge}
-        ${!v.linkMissing ? `<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>` : ''}
-      </div>
-      <div class="card-body">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap">
-          <div class="card-op">📌 ${v.op}</div>
-          ${v.adv ? `<span class="tag adv" style="font-size:9px;padding:1px 6px">${v.adv}</span>` : ''}
-        </div>
-        <div class="card-title">${v.title}</div>
-        <div class="card-meta">
-          <div class="card-channel" style="font-size:10px;color:var(--text3)">${v.channel}${subsText ? `<span style="margin-left:4px;opacity:0.7">· 구독자 ${subsText}</span>` : ''}</div>
-        </div>
-      </div>`;
+    card.className = 'yt-card';
+    card.innerHTML =
+      '<div class="yt-thumb">' +
+        (thumb ? '<img src="'+thumb+'" alt="'+v.title+'" loading="lazy" onerror="this.style.display=\'none\'">' : '<div style="background:#1a1714;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">🎬</div>') +
+        '<span class="sys-badge-thumb '+sysClass(v.sys)+'">'+v.sys+'</span>' +
+        missingBadge +
+        (!v.linkMissing ? '<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>' : '') +
+      '</div>' +
+      '<div class="yt-info">' +
+        '<div class="yt-info-text">' +
+          '<div class="yt-channel">'+v.channel+'</div>' +
+          '<div class="yt-title">'+v.title+'</div>' +
+          '<div class="yt-meta">' +
+            v.op +
+            (subsText ? ' · 구독자 '+subsText : '') +
+          '</div>' +
+          '<div class="yt-badges">' +
+            '<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-weight:600;font-family:var(--mono)">'+v.sys+'</span>' +
+            (v.adv ? '<span class="tag adv">'+v.adv+'</span>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
     if(!v.linkMissing) card.onclick = () => openModal(v);
     else card.style.cursor = 'default';
 
-    // 넷플릭스 호버 팝업
+    // 호버 팝업 유지
     const popup = document.createElement('div');
     popup.className = 'card-hover-popup';
-    popup.innerHTML = `
-      <div class="popup-thumb">
-        ${thumb ? `<img src="${thumb}" alt="${v.title}" loading="lazy">` : `<div style="background:#1a1a2e;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🎬</div>`}
-        <div class="popup-thumb-overlay">
-          <span class="popup-sys-badge ${sysClass(v.sys)}">${v.sys}</span>
-        </div>
-      </div>
-      <div class="popup-body">
-        <div class="popup-op">📌 ${v.op}${v.adv ? ` <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:5px;background:var(--primary-soft);color:var(--primary);margin-left:6px;font-family:var(--mono)">${v.adv}</span>` : ''}</div>
-        <div class="popup-title">${v.title}</div>
-        ${v.description ? `<div class="popup-desc">${v.description}</div>` : ''}
-        <div class="popup-meta">
-          ${v.surgeon ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${v.surgeon}</div>` : ''}
-          ${v.duration ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${v.duration}</div>` : ''}
-          ${v.adv ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${v.adv}</div>` : ''}
-          ${subsText ? `<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>구독자 ${subsText}</div>` : ''}
-        </div>
-        <div class="popup-actions">
-          ${!v.linkMissing ? `<button class="popup-btn play" onclick="event.stopPropagation();openModal(${JSON.stringify(v).replace(/"/g,'&quot;')})"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>재생</button>` : ''}
-          ${!v.linkMissing ? `<a href="${v.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="popup-btn ext"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>유튜브</a>` : ''}
-        </div>
-      </div>`;
+    popup.innerHTML =
+      '<div class="popup-thumb">' +
+        (thumb ? '<img src="'+thumb+'" alt="'+v.title+'" loading="lazy">' : '<div style="background:#1a1a2e;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🎬</div>') +
+        '<div class="popup-thumb-overlay"><span class="popup-sys-badge '+sysClass(v.sys)+'">'+v.sys+'</span></div>' +
+      '</div>' +
+      '<div class="popup-body">' +
+        '<div class="popup-op">📌 '+v.op+(v.adv ? ' <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:5px;background:var(--primary-soft);color:var(--primary);margin-left:6px;font-family:var(--mono)">'+v.adv+'</span>' : '')+'</div>' +
+        '<div class="popup-title">'+v.title+'</div>' +
+        (v.description ? '<div class="popup-desc">'+v.description+'</div>' : '') +
+        '<div class="popup-meta">' +
+          (v.surgeon ? '<div class="popup-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+v.surgeon+'</div>' : '') +
+          (subsText ? '<div class="popup-meta-item">구독자 '+subsText+'</div>' : '') +
+        '</div>' +
+        '<div class="popup-actions">' +
+          (!v.linkMissing ? '<button class="popup-btn play" onclick="event.stopPropagation();openModal('+JSON.stringify(v).replace(/"/g,'&quot;')+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>재생</button>' : '') +
+          (!v.linkMissing ? '<a href="'+v.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="popup-btn ext"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>유튜브</a>' : '') +
+        '</div>' +
+      '</div>';
 
     wrap.appendChild(card);
     wrap.appendChild(popup);
     grid.appendChild(wrap);
   });
-  // responsive popup direction
-  window.addEventListener('resize', renderVideos, { once: true });
 }
+
 
 function openModal(v) {
   currentUrl = v.url;
@@ -1756,6 +1813,7 @@ function resetKolFilters() {
   kolFilters.category = 'all';
   document.getElementById('kolSearch').value = '';
   renderKOL();
+  applyLang();
 }
 
 function buildKolFilters() {
@@ -1800,7 +1858,7 @@ function renderKOL() {
     .sort((a,b) => (b.date || '0000-00-00').localeCompare(a.date || '0000-00-00'));
 
   document.getElementById('kolCount').textContent = items.length;
-  document.getElementById('headerCount').textContent = items.length + ' 기사';
+  document.getElementById('headerCount').textContent = items.length + (currentLang==='en' ? ' articles' : ' 기사');
   buildKolFilters();
 
   // Active tag chips
@@ -2511,7 +2569,7 @@ function renderCal() {
     .sort(sortCalendarByDday); // D-day 가까운 순, 종료 일정은 하단
 
   document.getElementById('calCount').textContent=items.length;
-  document.getElementById('headerCount').textContent=items.length+' events';
+  document.getElementById('headerCount').textContent=items.length+' '+(currentLang==='en'?'events':'개 일정');
 
   const grid=document.getElementById('calGrid'); grid.innerHTML='';
   if(!items.length){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';return;}
@@ -2546,10 +2604,10 @@ function renderCal() {
     grp.forEach((c,i)=>{
       const isPast=effectiveEndTime(c)<today.getTime();
       const du=daysUntil(c.start);
-      const duLabel=isPast?'종료':du===0?'오늘!':du>0?`D-${du}`:`D+${Math.abs(du)}`;
+      const duLabel=isPast?(currentLang==='en'?'Ended':'종료'):du===0?(currentLang==='en'?'Today!':'오늘!'):du>0?`D-${du}`:`D+${Math.abs(du)}`;
       const duColor=isPast?'var(--text3)':du<=7?'#C0143C':du<=30?'#E8856A':'var(--primary)';
       const tc=CAL_TAG_COLOR[c.tag]||'background:#F1EFE8;color:#444441';
-      const tl=CAL_TAG_LABEL[c.tag]||c.tag;
+      const tl=calTagLabel(c.tag);
       const dateRange=c.end&&c.end!==c.start?`${c.start} ~ ${c.end.slice(5)}`:c.start;
       const metaParts = [];
       if (c.loc) metaParts.push(`📍 ${c.loc}`);
@@ -2888,88 +2946,124 @@ function submitPaper() {
 
 /* ══════════════════════ LANGUAGE TOGGLE ══════════════════════ */
 const TRANSLATIONS = {
-  ko: {
-    // Nav
-    'GYN': 'GYN', 'Cardiac': 'Cardiac',
-    // Sub tabs
-    '수술영상': '수술영상', '기사': '기사', '논문': '논문', '캘린더': '캘린더',
-    // Sidebar labels
-    '수술 종류': '수술 종류', '시스템': '시스템',
-    '수술 기법': '수술 기법', '인디케이션': '인디케이션', '카테고리': '카테고리',
-    '기사 추가하기 (시트)': '기사 추가하기 (시트)',
-    '논문 추가하기': '논문 추가하기',
-    '일정 수정하기 (시트)': '일정 수정하기 (시트)',
-    '전체 초기화': '전체 초기화',
-    // Filters
-    'vNOTES 관련': 'vNOTES 관련', '달성 기념': '달성 기념', '산부인과 일반': '산부인과 일반',
-    '자궁절제술': '자궁절제술', '자궁근종': '자궁근종', '자궁내막증': '자궁내막증',
-    '난소': '난소', '부인암': '부인암',
-    '단일공 (SP)': '단일공 (SP)', '멀티포트': '멀티포트',
-    // Buttons
-    '분석하기': '분석하기', '필터': '필터', '분류 필터': '분류 필터',
-    '검색...': '검색...',
-  },
+  ko: {},  // ko는 원본 HTML 그대로
   en: {
-    // Nav
-    'GYN': 'GYN', 'Cardiac': 'Cardiac',
     // Sub tabs
-    '수술영상': 'Videos', '기사': 'Articles', '논문': 'Papers', '캘린더': 'Calendar',
-    // Sidebar labels
-    '수술 종류': 'Procedure', '시스템': 'System',
-    '수술 기법': 'Technique', '인디케이션': 'Indication', '카테고리': 'Category',
-    '기사 추가하기 (시트)': 'Add Article (Sheet)',
-    '논문 추가하기': 'Add Paper',
-    '일정 수정하기 (시트)': 'Edit Schedule (Sheet)',
-    '전체 초기화': 'Reset All',
-    // Filters
-    'vNOTES 관련': 'vNOTES', '달성 기념': '🏆 Milestone', '산부인과 일반': 'GYN General',
-    '자궁절제술': 'Hysterectomy', '자궁근종': 'Myoma', '자궁내막증': 'Endometriosis',
-    '난소': 'Ovary', '부인암': 'GYN Cancer',
-    '단일공 (SP)': 'Single Port (SP)', '멀티포트': 'Multiport',
-    // Buttons
-    '분석하기': 'Analyze', '필터': 'Filter', '분류 필터': 'Category Filter',
-    '검색...': 'Search...',
+    '🎬 수술영상':'🎬 Videos','📰 기사':'📰 Articles','📄 논문':'📄 Papers','📅 캘린더':'📅 Calendar',
+    // Nav
+    '언어 전환':'Switch Language',
+    // Video section
+    '검색...':'Search...','영상 추가하기':'Add Video','개 영상':'videos',
+    '수술':'Procedure','시스템':'System','ADV':'ADV',
+    // KOL sidebar
+    '필터':'Filter','병원명, 술자 검색...':'Hospital, surgeon...','기사 추가하기':'Add Article',
+    '전체 초기화':'Reset All','수술 기법':'Technique','인디케이션':'Indication','카테고리':'Category',
+    // KOL main
+    '건':'articles',
+    // Paper sidebar
+    '논문 추가하기':'Add Paper',
+    // Cal sidebar
+    '학회명, 키워드...':'Conference, keyword...','일정 추가하기':'Add Schedule','분류':'Category',
+    '분류 필터':'Category Filter','개 일정':'events',
+    // Filter values
+    'vNOTES 관련':'vNOTES','🏆 달성 기념':'🏆 Milestone','dV5':'dV5','산부인과 일반':'GYN General',
+    '자궁절제술':'Hysterectomy','자궁근종':'Myoma','자궁내막증':'Endometriosis',
+    '난소':'Ovary','부인암':'GYN Cancer','단일공 (SP)':'Single Port (SP)','멀티포트 (MP)':'Multiport (MP)',
+    // Article modal
+    '기사 추가하기':'Add Article','기사 제목 *':'Title *','병원명 *':'Hospital *','술자':'Surgeon',
+    '날짜':'Date','카테고리':'Category','수술 기법':'Technique','인디케이션':'Indication',
+    '요약':'Summary','링크 레이블':'Link Label','기사 URL':'Article URL','이미지 URL (선택)':'Image URL (optional)',
+    '추가하기':'Add',
+    '🏆 달성 기념':'🏆 Milestone','vNOTES 관련':'vNOTES Related','산부인과 일반':'GYN General',
+    '자궁근종':'Myoma','자궁내막증':'Endometriosis','자궁절제술':'Hysterectomy','난소':'Ovary','부인암':'GYN Cancer',
+    '단일공 (SP)':'Single Port (SP)','멀티포트':'Multiport',
+    '병원명, 교수명 등 기사 제목':'Hospital, professor, article title',
+    '예: 삼성서울병원':'e.g. Samsung Medical Center','예: 홍길동':'e.g. Hong Gil-dong',
+    '기사 핵심 내용 한 두 줄...':'Key summary in 1-2 sentences...',
+    '예: 메디컬투데이':'e.g. Medical Today',
+    // Paper modal
+    '논문 추가하기':'Add Paper','논문 제목 *':'Paper Title *','저자 (Authors)':'Authors',
+    '출판연도':'Year','저널명':'Journal','기법 태그':'Technique','병원/기관':'Hospital/Institution',
+    '요약 (Abstract 한 줄)':'Summary (1-line Abstract)','DOI / PDF URL':'DOI / PDF URL',
+    '핵심 결과 및 임상적 의의...':'Key findings and clinical significance...',
+    // Cal modal
+    '일정 추가하기':'Add Schedule','일정 수정하기':'Edit Schedule',
+    '학회명 / 이벤트명 *':'Event Name *','시작일 *':'Start Date *','종료일':'End Date',
+    '장소':'Location','분류':'Type','메모':'Notes',
+    '📎 아젠다 파일 업로드 (PDF / 이미지)':'📎 Upload Agenda (PDF / Image)',
+    '클릭해서 파일 선택 (PDF, JPG, PNG)':'Click to select file (PDF, JPG, PNG)',
+    '🔗 공식 웹사이트 URL':'🔗 Official Website URL',
+    '학회':'Conference','워크샵':'Workshop','심포지엄':'Symposium','로드쇼':'Roadshow','기타':'Other',
+    '예: KSGO 2025 정기학술대회':'e.g. KSGO 2025 Annual Meeting',
+    '예: 서울 코엑스':'e.g. Seoul COEX',
+    '부스 번호, 발표 세션, 준비사항 등...':'Booth, session, preparation notes...',
+    '추가하기':'Add','수정 저장':'Save Changes',
+    // Modal buttons
+    '링크 복사':'Copy Link','바로 열기':'Open',
+    // Cardiac placeholders
+    'Cardiac · 캘린더':'Cardiac · Calendar',
+    '심장외과 학회 및 일정을 준비 중입니다.\n콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.':
+      'Cardiac conference schedules are being prepared.',
+    // Count labels in renderCal/renderKOL
+    '개 영상':'videos','건':'articles','개 일정':'events',
   }
 };
 
 let currentLang = localStorage.getItem('gynHubLang') || 'ko';
 
+function calTagLabel(tag) {
+  const ko = CAL_TAG_LABEL[tag] || tag;
+  if(currentLang === 'en') {
+    const enMap = {conference:'Conference',workshop:'Workshop',symposium:'Symposium',roadshow:'Roadshow',other:'Other'};
+    return enMap[tag] || ko;
+  }
+  return ko;
+}
+
 function t(key) {
-  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || key;
+  if(currentLang === 'ko') return key;
+  return TRANSLATIONS.en[key] || key;
 }
 
 function applyLang() {
-  const lang = currentLang;
+  const isEn = currentLang === 'en';
+  const T = TRANSLATIONS.en;
   const btn = document.getElementById('langBtn');
-  if(btn) btn.textContent = '🌐 ' + (lang === 'ko' ? 'KO' : 'EN');
+  if(btn) btn.textContent = '🌐 ' + (isEn ? 'EN' : 'KO');
 
-  // Sub tabs
-  const tabMap = { 'sub-video': '수술영상', 'sub-kol': '기사', 'sub-paper': '논문', 'sub-cal': '캘린더' };
-  Object.entries(tabMap).forEach(([id, ko]) => {
-    const el = document.getElementById(id);
-    if(el) {
-      const icon = el.textContent.match(/^[^\s]+/)?.[0] || '';
-      el.textContent = icon + ' ' + t(ko);
-    }
+  // 모든 [data-ko] 요소를 한번에 교체
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    el.textContent = isEn ? (T[el.dataset.ko] || el.dataset.ko) : el.dataset.ko;
   });
 
-  // Filter labels (data-lang attribute)
-  document.querySelectorAll('[data-lang]').forEach(el => {
-    el.textContent = t(el.getAttribute('data-lang'));
+  // placeholder
+  const phMap = {
+    'videoSearch':  isEn ? 'Search...'              : '검색...',
+    'kolSearch':    isEn ? 'Hospital, surgeon...'   : '병원명, 술자 검색...',
+    'paperSearch':  isEn ? 'Search title, author...' : '제목, 저자 검색...',
+    'calSearch':    isEn ? 'Conference, keyword...'  : '학회명, 키워드...',
+  };
+  Object.entries(phMap).forEach(([id, ph]) => {
+    const el = document.getElementById(id); if(el) el.placeholder = ph;
   });
 
-  // Article search placeholder
-  const kolSearch = document.getElementById('kolSearch');
-  if(kolSearch) kolSearch.placeholder = lang === 'ko' ? '병원명, 술자 검색...' : 'Hospital, surgeon...';
-  const videoSearch = document.getElementById('videoSearch');
-  if(videoSearch) videoSearch.placeholder = lang === 'ko' ? '검색...' : 'Search...';
-  const paperSearch = document.getElementById('paperSearch');
-  if(paperSearch) paperSearch.placeholder = lang === 'ko' ? '제목, 저자 검색...' : 'Search title, author...';
+  // sub tabs (textContent 교체)
+  [['sub-video','🎬 수술영상','🎬 Videos'],
+   ['sub-kol',  '📰 기사',   '📰 Articles'],
+   ['sub-paper','📄 논문',   '📄 Papers'],
+   ['sub-cal',  '📅 캘린더', '📅 Calendar']
+  ].forEach(([id, ko, en]) => {
+    const el = document.getElementById(id); if(el) el.textContent = isEn ? en : ko;
+  });
 
-  // Re-render to update filter button labels
+  // 결과 카운트 단위
+  const rcEl = document.getElementById('resultCount');
+  if(rcEl) rcEl.nextSibling && (rcEl.parentElement.childNodes[rcEl.parentElement.childNodes.length-1].textContent = isEn ? ' videos' : '개 영상');
+
+  // 필터 재렌더 (필터 버튼 텍스트 반영)
   buildKolFilters();
   buildVideoFilters();
-  renderCal();
+  if(document.getElementById('calGrid')) renderCal();
 }
 
 function toggleLang() {
