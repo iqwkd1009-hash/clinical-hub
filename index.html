@@ -2166,8 +2166,8 @@ function drawChart(p, canvasId) {
   const W = c.width, H = c.height;
   ctx.clearRect(0,0,W,H);
 
-  if(p.chart.type==='bar') {
-    const vals = p.chart.values, labs = p.chart.labels, cols = p.chart.colors;
+  if(p.chartData.type==='bar') {
+    const vals = p.chartData.values, labs = p.chartData.labels, cols = p.chartData.colors;
     const max = Math.max(...vals)*1.2;
     const pad={t:10,r:10,b:36,l:38}, bw=Math.floor((W-pad.l-pad.r)/vals.length*0.55), gap=Math.floor((W-pad.l-pad.r)/vals.length);
     // grid
@@ -2191,8 +2191,8 @@ function drawChart(p, canvasId) {
       lines.forEach((ln,li)=>ctx.fillText(ln,x+bw/2,H-pad.b+10+li*10));
     });
 
-  } else if(p.chart.type==='line') {
-    const vals=p.chart.values, labs=p.chart.labels;
+  } else if(p.chartData.type==='line') {
+    const vals=p.chartData.values, labs=p.chartData.labels;
     const max=Math.max(...vals)*1.15, min=0;
     const pad={t:10,r:16,b:32,l:36};
     const xStep=(W-pad.l-pad.r)/(vals.length-1);
@@ -2224,8 +2224,8 @@ function drawChart(p, canvasId) {
       ctx.fillStyle='#6B6460';ctx.font='9px DM Sans';ctx.fillText(labs[i],x,H-pad.b+11);
     });
 
-  } else if(p.chart.type==='donut') {
-    const vals=p.chart.values, labs=p.chart.labels, cols=p.chart.colors;
+  } else if(p.chartData.type==='donut') {
+    const vals=p.chartData.values, labs=p.chartData.labels, cols=p.chartData.colors;
     const total=vals.reduce((a,b)=>a+b,0);
     const cx=W/2-20, cy=H/2+4, r=Math.min(cx,cy)*0.72, ir=r*0.52;
     let angle=-Math.PI/2;
@@ -2248,8 +2248,8 @@ function drawChart(p, canvasId) {
       ctx.fillText(`${labs[i]} (${pct}%)`,lx+13,ly+i*18+9);
     });
 
-  } else if(p.chart.type==='grouped') {
-    const labs=p.chart.labels, A=p.chart.groupA, B=p.chart.groupB;
+  } else if(p.chartData.type==='grouped') {
+    const labs=p.chartData.labels, A=p.chartData.groupA, B=p.chartData.groupB;
     const max=Math.max(...A.values,...B.values)*1.25;
     const pad={t:10,r:10,b:42,l:38};
     const slotW=(W-pad.l-pad.r)/labs.length, bw=Math.floor(slotW*0.28);
@@ -2280,9 +2280,9 @@ function drawChart(p, canvasId) {
   }
 
   // note
-  if(p.chart.note){
+  if(p.chartData.note){
     ctx.fillStyle='#9E9894';ctx.font='8px DM Sans';ctx.textAlign='right';
-    ctx.fillText(p.chart.note,W-6,H-2);
+    ctx.fillText(p.chartData.note,W-6,H-2);
   }
 }
 
@@ -2291,7 +2291,7 @@ function renderPapers() {
   const q = document.getElementById('paperSearch').value.toLowerCase();
   const items = PAPERS.filter(p =>
     (paperTechFilter==='all' || p.tech===paperTechFilter) &&
-    (!q || p.title.toLowerCase().includes(q) || p.authors.toLowerCase().includes(q) || p.summary.toLowerCase().includes(q) || p.tags.some(t=>t.toLowerCase().includes(q)))
+    (!q || (p.title||'').toLowerCase().includes(q) || (p.authors||'').toLowerCase().includes(q) || (p.summary||'').toLowerCase().includes(q))
   );
   document.getElementById('paperCount').textContent = items.length;
   document.getElementById('headerCount').textContent = items.length + ' papers';
@@ -2309,39 +2309,37 @@ function renderPapers() {
   if(!items.length){ grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`; return; }
 
   items.forEach((p, i) => {
-    const tagHtml = p.tags.map(t => {
-      const isVnotes = t.toLowerCase().includes('vnotes')||t.toLowerCase().includes('notes');
-      return `<span style="font-size:10px;padding:2px 7px;border-radius:6px;background:${isVnotes?'#E6F1FB':'#EAF3DE'};color:${isVnotes?'#0C447C':'#27500A'};font-weight:600;font-family:var(--mono)">${t}</span>`;
-    }).join('');
-    const techLabel = PAPER_TECHS.find(t=>t.key===p.tech)?.label||p.tech;
-    const cid = `chart_${p.id}`;
+    const doi  = p.doi  || p.url  || '';
+    const hosp = p.hospital || p.affiliation || '';
+    const tech = p.tech || '';
+    const isVnotes = tech.toLowerCase().includes('vnotes');
+    const techColor = isVnotes ? 'background:#E6F1FB;color:#0C447C' : 'background:#D1FAE5;color:#065F46';
+    const cid = `chart_paper_${i}`;
 
     const card = document.createElement('div');
-    card.style.cssText=`background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:${i*0.04}s;transition:border-color 0.15s,box-shadow 0.15s`;
+    card.style.cssText = `background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:${i*0.04}s;transition:border-color 0.15s,box-shadow 0.15s`;
     card.onmouseenter=()=>{card.style.borderColor='var(--primary-mid)';card.style.boxShadow='var(--shadow-hover)'};
     card.onmouseleave=()=>{card.style.borderColor='var(--border)';card.style.boxShadow='var(--shadow)'};
 
-    card.innerHTML=`
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">${p.journal} · ${p.year}</span>
-          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:#E6F1FB;color:#0C447C;font-family:var(--mono)">${techLabel}</span>
-        </div>
-        <a href="${p.url}" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none" onmouseover="this.style.background='#A01030'" onmouseout="this.style.background='var(--primary)'">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF
-        </a>
-      </div>
-      <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45">${p.title}</div>
-      <div style="font-size:11px;color:var(--text2)">${p.authors}</div>
-      <div style="font-size:11px;color:var(--text3)">${p.affiliation}</div>
-      <div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">${p.summary}</div>
-      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:0.04em">${p.chart.title}</div>
-        <canvas id="${cid}" width="320" height="140" style="width:100%;height:auto;display:block"></canvas>
-      </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">${tagHtml}</div>`;
+    card.innerHTML =
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+          '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">' + (p.journal||'') + ' · ' + (p.year||'') + '</span>' +
+          (tech ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;font-family:var(--mono);' + techColor + '">' + tech + '</span>' : '') +
+        '</div>' +
+        (doi ? '<a href="' + doi + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none" onmouseover="this.style.background=\'#A01030\'" onmouseout="this.style.background=\'var(--primary)\'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF</a>' : '') +
+      '</div>' +
+      '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45">' + (p.title||'') + '</div>' +
+      '<div style="font-size:11px;color:var(--text2)">' + (p.authors||'') + '</div>' +
+      (hosp ? '<div style="font-size:11px;color:var(--text3)">' + hosp + '</div>' : '') +
+      (p.summary ? '<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">' + p.summary + '</div>' : '') +
+      (p.chartData ? '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><canvas id="' + cid + '" width="320" height="140" style="width:100%;height:auto;display:block"></canvas></div>' : '');
+
     grid.appendChild(card);
-    requestAnimationFrame(()=>drawChart(p, cid));
+
+    if(p.chartData) {
+      requestAnimationFrame(() => drawChart(p, cid));
+    }
   });
 }
 
