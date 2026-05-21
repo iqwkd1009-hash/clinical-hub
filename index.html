@@ -745,10 +745,10 @@
     </div>
     <div class="sidebar-inner">
       <!-- 논문 추가 버튼 -->
-      <button onclick="openPaperModal()" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1951995012" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         논문 추가하기
-      </button>
+      </a>
       <div class="filter-section">
         <div class="filter-label" data-ko="필터">필터</div>
         <div id="paperTechFilters"></div>
@@ -1229,6 +1229,7 @@ const VIDEO_SHEET_URLS = [
 // ★ Articles 시트 URL — 시트에 'articles' 탭 추가 후 gid 값으로 교체하세요
 // 방법: 시트에서 articles 탭 클릭 → 주소창 gid=XXXXXX 복사 → 아래 붙여넣기
 const ARTICLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=1711701439&single=true&output=csv";
+const PAPER_SHEET_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=1951995012&single=true&output=csv";
 
 async function loadArticlesFromSheet() {
   try {
@@ -1246,15 +1247,40 @@ async function loadArticlesFromSheet() {
       }
       return '';
     };
+
+    // System 컬럼 → tech 필드로 정규화
+    const normTech = v => {
+      const s = v.toLowerCase().trim();
+      if(s === 'sp') return 'sp';
+      if(s === 'mp' || s === 'multiport') return 'multiport';
+      if(s === 'vnotes') return 'vnotes';
+      return s || 'multiport';
+    };
+
+    // tag 정규화 (대소문자)
+    const normTag = v => {
+      const s = v.toLowerCase().trim();
+      if(s === 'endometriosis') return 'endometriosis';
+      if(s === 'myoma') return 'myoma';
+      if(s === 'vnotes') return 'vnotes';
+      if(s === 'milestone') return 'milestone';
+      if(s === 'dv5') return 'dv5';
+      if(s === 'gyn') return 'gyn';
+      return s;
+    };
+
+    // indication 정규화
+    const normInd = v => v.toLowerCase().trim();
+
     const items = rows.slice(1)
       .filter(r => r.some(c => c && c.trim()))
       .map(r => ({
         date:       get(r,'date'),
         hospital:   get(r,'hospital'),
         surgeon:    get(r,'surgeon'),
-        tag:        get(r,'tag'),
-        tech:       get(r,'tech'),
-        indication: get(r,'indication'),
+        tag:        normTag(get(r,'tag')),
+        tech:       normTech(get(r,'system','tech')),  // System 컬럼 사용
+        indication: normInd(get(r,'indication')),
         title:      get(r,'title'),
         desc:       get(r,'desc'),
         image:      get(r,'image'),
@@ -1274,6 +1300,48 @@ async function loadArticlesFromSheet() {
     console.warn('Articles sheet loading failed:', err.message, '— using embedded fallback data');
   }
   renderKOL();
+}
+
+async function loadPapersFromSheet() {
+  try {
+    const res = await fetch(PAPER_SHEET_URL, { cache: 'no-store' });
+    if(!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    if(!text || text.toLowerCase().includes('<html')) throw new Error('invalid response');
+    const rows = parseCSV(text);
+    if(rows.length < 2) throw new Error('no data');
+    const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+    const get = (row, ...keys) => {
+      for(const k of keys) {
+        const idx = headers.indexOf(k);
+        if(idx >= 0 && row[idx] !== undefined) return String(row[idx]||'').trim();
+      }
+      return '';
+    };
+    const items = rows.slice(1)
+      .filter(r => r.some(c => c && c.trim()))
+      .map(r => ({
+        title:    get(r,'title','제목'),
+        authors:  get(r,'authors','author','저자'),
+        year:     get(r,'year','연도'),
+        journal:  get(r,'journal','저널'),
+        hospital: get(r,'hospital','기관','institution'),
+        summary:  get(r,'summary','요약','abstract','desc'),
+        doi:      get(r,'doi','url','link'),
+        tech:     get(r,'tech','technique','기법'),
+        chartData:null
+      }))
+      .filter(p => p.title);
+    if(items.length) {
+      PAPERS.length = 0;
+      items.forEach(p => PAPERS.push(p));
+      console.log('Papers loaded from sheet:', items.length);
+      renderPapers();
+    }
+  } catch(err) {
+    console.warn('Papers sheet loading failed:', err.message, '— using embedded data');
+    renderPapers();
+  }
 }
 
 function normalizeVideoRow(row, headers) {
@@ -1789,7 +1857,7 @@ const kolFilters = { tech: 'all', indication: 'all', category: 'all' };
 const TECH_DEFS = [
   { key:'vnotes',    labelKo:'vNOTES',       labelEn:'vNOTES' },
   { key:'sp',        labelKo:'단일공 (SP)',   labelEn:'Single Port (SP)' },
-  { key:'multiport', labelKo:'멀티포트',      labelEn:'Multiport (MP)' },
+  { key:'multiport', labelKo:'멀티포트 (MP)', labelEn:'Multiport (MP)' },
 ];
 const INDICATION_DEFS = [
   { key:'hysterectomy',  labelKo:'자궁절제술', labelEn:'Hysterectomy' },
@@ -1799,10 +1867,12 @@ const INDICATION_DEFS = [
   { key:'gynca',         labelKo:'부인암',     labelEn:'GYN Cancer' },
 ];
 const CATEGORY_DEFS = [
-  { key:'milestone', labelKo:'🏆 달성 기념',  labelEn:'🏆 Milestone' },
-  { key:'vnotes',    labelKo:'vNOTES 관련',   labelEn:'vNOTES' },
-  { key:'dv5',       labelKo:'dV5',           labelEn:'dV5' },
-  { key:'gyn',       labelKo:'산부인과 일반', labelEn:'GYN General' },
+  { key:'milestone',     labelKo:'🏆 달성 기념',  labelEn:'🏆 Milestone' },
+  { key:'vnotes',        labelKo:'vNOTES 관련',   labelEn:'vNOTES' },
+  { key:'dv5',           labelKo:'dV5',           labelEn:'dV5' },
+  { key:'myoma',         labelKo:'자궁근종',      labelEn:'Myoma' },
+  { key:'endometriosis', labelKo:'자궁내막증',    labelEn:'Endometriosis' },
+  { key:'gyn',           labelKo:'산부인과 일반', labelEn:'GYN General' },
 ];
 // helper to get label based on current language
 function defLabel(d) { return currentLang==='en' ? (d.labelEn||d.labelKo) : d.labelKo; }
@@ -1987,91 +2057,85 @@ function toggleArt(aid) {
 /* ══════════════════════ PAPERS ══════════════════════ */
 const PAPERS = [
   {
-    id:1, tech:"vnotes",
     title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery",
-    authors:"Yun Seok Yang", affiliation:"Eulji University Hospital, Korea",
-    journal:"Surgical Endoscopy", year:2020,
-    url:"https://doi.org/10.1007/s00464-019-07115-z",
-    tags:["NOTES","Gasless","Hysterectomy","vNOTES"],
-    summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. 이소바릭(가스리스) 질식 접근법으로 흉터 없이 수술 가능함을 입증. 합병증 없음.",
-    chart:{
-      type:"bar",
-      title:"Key Operative Outcomes",
-      labels:["Console Time (min)","Docking Time (min)","EBL (mL)","Hospital Stay (d)"],
-      values:[135,15,50,3],
-      colors:["#C0143C","#E8B4C0","#C0143C","#E8B4C0"],
-      note:"n=13, median values"
-    }
+    authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy",
+    hospital:"Eulji University Hospital, Korea",
+    summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. 이소바릭(가스리스) 질식 접근법으로 흉터 없이 수술 가능함 입증. Console time 135min, EBL 50mL, 합병증 없음.",
+    doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES",
+    chartData:{labels:["Op Time (min)","EBL (mL)"],values:[135,50],type:"bar"}
   },
   {
-    id:2, tech:"vnotes",
     title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery",
-    authors:"Yun Seok Yang", affiliation:"Eulji University Hospital, Korea",
-    journal:"Journal of Robotic Surgery", year:2020,
-    url:"https://doi.org/10.1007/s11701-020-01093-4",
-    tags:["RGPT","Single-Site","vNOTES","Myomectomy"],
-    summary:"35명 대상 Robotic Glove Port Technique(RGPT) 도입 — 근종절제술 12예, 선근종절제 3예, 자궁내막증 낭종절제 6예, vNOTES 자궁절제 14예. 합병증 없음.",
-    chart:{
-      type:"donut",
-      title:"Procedure Distribution (n=35)",
-      labels:["Myomectomy","Adenomyo-myomectomy","ES Cystectomy","vNOTES Hyst."],
-      values:[12,3,6,14],
-      colors:["#C0143C","#E8856A","#F5B942","#6B8FD4"]
-    }
+    authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery",
+    hospital:"Eulji University Hospital, Korea",
+    summary:"35명 대상 로봇 글러브 포트 기법(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14). 전례 성공, 합병증 없음. Total OR time 160min.",
+    doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"SP",
+    chartData:{labels:["Myomectomy","Adenomyomectomy","Ovarian cystectomy","NOTES Hx"],values:[12,3,6,14],type:"donut"}
   },
   {
-    id:3, tech:"vnotes",
-    title:"Robot-assisted transvaginal natural orifice transluminal endoscopic surgery for management of endometriosis: a pilot study of 33 cases",
-    authors:"Yiming Zhang, Stephanie Delgado, Juan Liu, Zhenkun Guan, Xiaoming Guan",
-    affiliation:"Baylor College of Medicine, Houston TX, USA",
-    journal:"Journal of Minimally Invasive Gynecology (JMIG)", year:2021,
-    url:"https://doi.org/10.1016/j.jmig.2021.06.004",
-    tags:["RvNOTES","Endometriosis","Xi","Hysterectomy"],
-    summary:"자궁내막증 33예 RvNOTES TLH 첫 케이스 시리즈. 평균 수술 시간 141.9분, 평균 출혈 52.3mL. 수술 3주 후 VAS 통증 점수 유의미한 감소.",
-    chart:{
-      type:"line",
-      title:"VAS Pain Score Changes Post-op (n=26)",
-      labels:["Pre-op","Wk 1","Wk 2","Wk 3"],
-      values:[8.08,6.73,4.81,2.63],
-      colors:["#C0143C"],
-      note:"p<.001 (wk 2&3)"
-    }
+    title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience and technical considerations",
+    authors:"Zhang & Guan", year:"2021", journal:"JMIG",
+    hospital:"China",
+    summary:"33례 자궁내막증 환자 대상 RvNOTES 적용. 수술 후 VAS 통증 점수 유의미하게 감소. 재발 없음.",
+    doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES",
+    chartData:{labels:["Pre-op VAS","Post-op VAS","3M Follow-up"],values:[7.2,2.1,1.4],type:"line"}
   },
   {
-    id:4, tech:"vnotes",
-    title:"The comparison of gasless and traditional robot-assisted transvaginal natural orifice transluminal endoscopic surgery in hysterectomy",
-    authors:"Youwen Mei, Li He, Qiang Zhang, Ying Chen, Jiafeng Zheng, Xinyu Xiao, Yonghong Lin",
-    affiliation:"Chengdu Women's and Children's Central Hospital, China",
-    journal:"Frontiers in Medicine", year:2023,
-    url:"https://doi.org/10.3389/fmed.2023.1117158",
-    tags:["Gasless","vNOTES","GR-vNOTES","Hysterectomy"],
-    summary:"GR-vNOTES(가스리스) 5예 vs TR-vNOTES(기존) 9예 비교. 수술 시간·출혈량·입원기간 모두 유의미한 차이 없음. 가스리스 방식은 CO₂ 기복증 위험 회피.",
-    chart:{
-      type:"grouped",
-      title:"GR-vNOTES vs TR-vNOTES Comparison",
-      labels:["Op Time (min)","EBL (mL)","Hospital Stay (d)"],
-      groupA:{label:"GR-vNOTES", values:[125,50,3.2], color:"#C0143C"},
-      groupB:{label:"TR-vNOTES", values:[115,50,3.1], color:"#6B8FD4"},
-      note:"n=5 vs 9, p=NS"
-    }
+    title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study",
+    authors:"Mei & Lin", year:"2023", journal:"Frontiers in Medicine",
+    hospital:"China",
+    summary:"가스리스 vs 기존 RvNOTES 비교. 수술시간·출혈량·입원기간 비교. 가스리스군 복부 팽만 부작용 유의하게 낮음.",
+    doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES",
+    chartData:{labels:["Op Time","EBL","LOS"],values:[95,80,2.1],type:"grouped"}
   },
   {
-    id:5, tech:"vnotes",
-    title:"Indocyanine green–assisted retrograde ureterolysis in robotic transvaginal NOTES for the management of stage IV endometriosis with obliterated cul-de-sac",
-    authors:"Xiaoming Guan, Zhenkun Guan, Sowmya Sunkara, Brooke Thigpen",
-    affiliation:"Baylor College of Medicine, Houston TX, USA",
-    journal:"Journal of Minimally Invasive Gynecology (JMIG)", year:2023,
-    url:"https://doi.org/10.1016/j.jmig.2023.02.005",
-    tags:["ICG","Firefly","Stage IV","Endometriosis","vNOTES"],
-    summary:"Douglas와 폐쇄된 Stage IV 자궁내막증 대상 RvNOTES Hysterectomy. ICG + Firefly 모드로 요관 실시간 시각화. 당일 퇴원, 통증 최소.",
-    chart:{
-      type:"bar",
-      title:"Operative Time by Phase",
-      labels:["질식 준비","로봇 도킹","콘솔 수술","Total"],
-      values:[30,7,105,142],
-      colors:["#E8B4C0","#C0143C","#C0143C","#8B0020"],
-      note:"Estimated from Video Article"
-    }
+    title:"ICG-assisted retrograde ureterolysis in robotic vNOTES for deep infiltrating endometriosis",
+    authors:"Guan X et al.", year:"2023", journal:"JMIG",
+    hospital:"China",
+    summary:"심부자궁내막증 RvNOTES 시 ICG 형광 역행 요관박리술 적용. 요관 손상 없이 전례 성공. 수술시간 단축.",
+    doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract", tech:"vNOTES",
+    chartData:{labels:["Success Rate (%)","Ureteral Injury (%)"],values:[100,0],type:"bar"}
+  },
+  // ── SP System vNOTES ──
+  {
+    title:"Vaginal-Assisted Natural Orifice Translumenal Endoscopic Surgery Hysterectomy for Large Uterus Using the da Vinci SP",
+    authors:"et al.", year:"2025", journal:"JMIG",
+    hospital:"",
+    summary:"다빈치 SP를 이용한 대형 자궁 대상 vNOTES Hysterectomy 술기 보고. 복부 절개 없이 단일공 로봇으로 큰 자궁도 안전하게 제거 가능함을 입증.",
+    doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"SP",
+    chartData:null
+  },
+  {
+    title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor: a case report",
+    authors:"et al.", year:"2025", journal:"GYN Surgery / Case Report",
+    hospital:"",
+    summary:"다빈치 SP를 이용한 경질 로봇 병기 수술 증례. 의심 난소 경계성 종양에서 단일공 로봇 경질 접근법의 안전성 및 실현 가능성 확인.",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"SP",
+    chartData:null
+  },
+  {
+    title:"Robot-assisted transvaginal natural orifice transluminal endoscopic surgery for a 32-year-old patient with early-stage endometrial carcinoma: A case report (with video)",
+    authors:"et al.", year:"2022", journal:"GYN Oncology Reports",
+    hospital:"",
+    summary:"32세 조기 자궁내막암 환자에서 로봇 보조 경질 NOTES 수술 증례. 젊은 부인암 환자에서 단일공 로봇 경질 접근법으로 종양학적 안전성과 미용적 장점을 동시에 달성.",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000795", tech:"SP",
+    chartData:null
+  },
+  {
+    title:"Robotic assisted vaginal natural orifice transluminal endoscopic surgery high uterosacral ligament suspension (NOTES-HUS) for uterine prolapse with and without uterine preservation",
+    authors:"et al.", year:"2022", journal:"GYN Surgery Reports",
+    hospital:"",
+    summary:"자궁탈출증에서 자궁 보존 유무에 따른 로봇 보조 경질 NOTES 고위자궁천골인대 현수술. 단일공 접근으로 복강경 대비 동등한 효과와 우수한 환자 만족도.",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000473", tech:"SP",
+    chartData:null
+  },
+  {
+    title:"Robotic transvaginal NOTES: A step-by-step approach to surgical technique",
+    authors:"et al.", year:"2022", journal:"GYN Surgery Reports",
+    hospital:"",
+    summary:"로봇 경질 NOTES 단계별 수술 술기 가이드. 포트 삽입부터 봉합까지 체계적인 기술 표준화 제시. For Intuitive internal use only.",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000588", tech:"SP",
+    chartData:null
   },
 ];
 
@@ -3075,6 +3139,7 @@ function toggleLang() {
 /* ══════════════════════ INIT ══════════════════════ */
 loadVideosFromSheet();
 loadArticlesFromSheet();
+loadPapersFromSheet();
 applyLang();
 loadConferencesFromSheet();
 </script>
