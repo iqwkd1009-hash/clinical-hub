@@ -800,18 +800,21 @@
 <!--  CARDIAC — Surgical Video Library         -->
 <!-- ══════════════════════════════════════════ -->
 <div class="page" id="page-cardiac-video" style="min-height:calc(100vh - 94px)">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
-    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">🫀</div>
-    <div>
-      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · Surgical Video Library</div>
-      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 로봇수술 영상 라이브러리를 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+  <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+    <div style="padding:12px 24px 0;border-bottom:1px solid var(--border);background:var(--bg)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:7px 14px;flex:1;max-width:360px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="cardiacVideoSearch" placeholder="검색..." oninput="renderCardiacVideos()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
+        </div>
+        <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=46157436" target="_blank" style="text-decoration:none">
+          <button style="padding:7px 14px;border-radius:20px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">+ 영상 추가하기</button>
+        </a>
+        <div style="font-size:12px;color:var(--text3);white-space:nowrap"><span id="cardiacVideoCount">0</span>개 영상</div>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Mitral Valve Repair</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">CABG</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">AF Ablation</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Tricuspid Valve</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">TECAB</span>
+    <div style="flex:1;overflow-y:auto;padding:20px 24px">
+      <div class="yt-grid" id="cardiacVideoGrid"></div>
     </div>
   </div>
 </div>
@@ -820,17 +823,33 @@
 <!--  CARDIAC — Article Library                -->
 <!-- ══════════════════════════════════════════ -->
 <div class="page" id="page-cardiac-kol" style="min-height:calc(100vh - 94px)">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
-    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">📰</div>
-    <div>
-      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · Article Library</div>
-      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 관련 기사 및 KOL 활동 자료를 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+  <aside class="sidebar" id="sidebar-cardiac-kol">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">로봇 심장수술 달성 기념</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">KOL 활동</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">임상 결과 보도</span>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="cardiacKolSearch" placeholder="검색..." oninput="renderCardiacArticles()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
     </div>
+    <div class="sidebar-inner">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=924999404" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        기사 추가하기
+      </a>
+    </div>
+  </aside>
+  <div class="kol-main" style="padding:24px 28px;flex:1;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-kol')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          필터
+        </button>
+      </div>
+      <div style="font-size:12px;color:var(--text3)"><span id="cardiacKolCount">0</span>건</div>
+    </div>
+    <div id="cardiacKolCards" style="display:flex;flex-direction:column;gap:4px"></div>
   </div>
 </div>
 
@@ -838,17 +857,33 @@
 <!--  CARDIAC — Paper Library                  -->
 <!-- ══════════════════════════════════════════ -->
 <div class="page" id="page-cardiac-paper" style="min-height:calc(100vh - 94px)">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
-    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">📄</div>
-    <div>
-      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · Paper Library</div>
-      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 관련 임상 논문 라이브러리를 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+  <aside class="sidebar" id="sidebar-cardiac-paper">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Robotic CABG</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">Mitral Valve</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">AF Ablation</span>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="cardiacPaperSearch" placeholder="Search title, author..." oninput="renderCardiacPapers()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
     </div>
+    <div class="sidebar-inner">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1700395267" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        논문 추가하기
+      </a>
+    </div>
+  </aside>
+  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-paper')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          필터
+        </button>
+      </div>
+      <div style="font-size:12px;color:var(--text3)"><span id="cardiacPaperCount">0</span> papers</div>
+    </div>
+    <div id="cardiacPaperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px"></div>
   </div>
 </div>
 
@@ -856,17 +891,33 @@
 <!--  CARDIAC — Calendar                       -->
 <!-- ══════════════════════════════════════════ -->
 <div class="page" id="page-cardiac-cal" style="min-height:calc(100vh - 94px)">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center">
-    <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:28px">📅</div>
-    <div>
-      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Cardiac · 캘린더</div>
-      <div style="font-size:13px;color:var(--text3);max-width:360px;line-height:1.6">심장외과 학회 및 일정을 준비 중입니다.<br>콘텐츠가 추가되면 바로 이 탭에서 확인할 수 있어요.</div>
+  <aside class="sidebar" id="sidebar-cardiac-cal">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">ISMICS</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">대한흉부외과학회</span>
-      <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">AATS</span>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="cardiacCalSearch" placeholder="학회명, 키워드..." oninput="renderCardiacCal()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
     </div>
+    <div class="sidebar-inner">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        일정 추가하기
+      </a>
+    </div>
+  </aside>
+  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          필터
+        </button>
+      </div>
+      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+    </div>
+    <div id="cardiacCalGrid"></div>
   </div>
 </div>
 
@@ -1229,7 +1280,19 @@ const VIDEO_SHEET_URLS = [
 // ★ Articles 시트 URL — 시트에 'articles' 탭 추가 후 gid 값으로 교체하세요
 // 방법: 시트에서 articles 탭 클릭 → 주소창 gid=XXXXXX 복사 → 아래 붙여넣기
 const ARTICLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=1711701439&single=true&output=csv";
-const PAPER_SHEET_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=1951995012&single=true&output=csv";
+const PAPER_SHEET_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=1951995012&single=true&output=csv";
+
+// ── Cardiac Sheet URLs ──
+const BASE_PUB = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
+const CARDIAC_VIDEO_SHEET   = BASE_PUB + "?gid=46157436&single=true&output=csv";
+const CARDIAC_ARTICLE_SHEET = BASE_PUB + "?gid=924999404&single=true&output=csv";
+const CARDIAC_PAPER_SHEET   = BASE_PUB + "?gid=1700395267&single=true&output=csv";
+const CARDIAC_CAL_SHEET     = BASE_PUB + "?gid=1345374325&single=true&output=csv";
+
+let CARDIAC_VIDEOS   = [];
+let CARDIAC_ARTICLES = [];
+let CARDIAC_PAPERS   = [];
+let CARDIAC_CALS     = [];
 
 async function loadArticlesFromSheet() {
   try {
@@ -2143,20 +2206,30 @@ const PAPERS = [
 const PAPER_TECHS = [
   {key:'all',    label:'전체'},
   {key:'vnotes', label:'vNOTES'},
+  {key:'sp',     label:'SP'},
 ];
 
 let paperTechFilter = 'all';
 
 function buildPaperFilters() {
-  const el = document.getElementById('paperTechFilters'); el.innerHTML='';
+  const el = document.getElementById('paperTechFilters'); if(!el) return; el.innerHTML='';
   PAPER_TECHS.forEach(t => {
-    const count = t.key==='all' ? PAPERS.length : PAPERS.filter(p=>p.tech===t.key).length;
+    const count = t.key==='all'
+      ? PAPERS.length
+      : PAPERS.filter(p => normPaperTech(p.tech) === t.key).length;
     const btn = document.createElement('button');
-    btn.className = 'filter-btn'+(paperTechFilter===t.key?' active':'');
+    btn.className = 'filter-btn' + (paperTechFilter===t.key ? ' active' : '');
     btn.innerHTML = `${t.label} <span class="btn-count">${count}</span>`;
-    btn.onclick = ()=>{ paperTechFilter=t.key; renderPapers(); };
+    btn.onclick = () => { paperTechFilter = t.key; renderPapers(); };
     el.appendChild(btn);
   });
+}
+
+function normPaperTech(v) {
+  const s = (v||'').toLowerCase().trim();
+  if(s === 'sp' || s === 'single port') return 'sp';
+  if(s === 'vnotes' || s === 'rvnotes') return 'vnotes';
+  return s;
 }
 
 function drawChart(p, canvasId) {
@@ -2290,7 +2363,7 @@ function renderPapers() {
   buildPaperFilters();
   const q = document.getElementById('paperSearch').value.toLowerCase();
   const items = PAPERS.filter(p =>
-    (paperTechFilter==='all' || p.tech===paperTechFilter) &&
+    (paperTechFilter==='all' || normPaperTech(p.tech) === paperTechFilter) &&
     (!q || (p.title||'').toLowerCase().includes(q) || (p.authors||'').toLowerCase().includes(q) || (p.summary||'').toLowerCase().includes(q))
   );
   document.getElementById('paperCount').textContent = items.length;
@@ -3134,10 +3207,182 @@ function toggleLang() {
   applyLang();
 }
 
+/* ══════════════════════ CARDIAC SHEET LOADERS ══════════════════════ */
+async function fetchCSV(url) {
+  const res = await fetch(url, { cache: 'no-store' });
+  if(!res.ok) throw new Error('fetch failed');
+  const text = await res.text();
+  if(!text || text.toLowerCase().includes('<html')) throw new Error('invalid response');
+  return parseCSV(text);
+}
+
+async function loadCardiacData() {
+  const pub = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
+  const sheets = [
+    { url: pub+'?gid=46157436&single=true&output=csv',  arr: CARDIAC_VIDEOS,   type:'video' },
+    { url: pub+'?gid=924999404&single=true&output=csv', arr: CARDIAC_ARTICLES, type:'article' },
+    { url: pub+'?gid=1700395267&single=true&output=csv',arr: CARDIAC_PAPERS,   type:'paper' },
+    { url: pub+'?gid=1345374325&single=true&output=csv',arr: CARDIAC_CALS,     type:'cal' },
+  ];
+  await Promise.allSettled(sheets.map(async s => {
+    try {
+      const rows = await fetchCSV(s.url);
+      if(rows.length < 2) return;
+      const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+      const get = (row, ...keys) => {
+        for(const k of keys) {
+          const idx = headers.indexOf(k);
+          if(idx >= 0 && row[idx] !== undefined) return String(row[idx]||'').trim();
+        }
+        return '';
+      };
+      s.arr.length = 0;
+      rows.slice(1).filter(r=>r.some(c=>c&&c.trim())).forEach(r => {
+        if(s.type==='video') {
+          s.arr.push(normalizeVideoRow(r, headers));
+        } else if(s.type==='article') {
+          s.arr.push({
+            date: get(r,'date'), hospital: get(r,'hospital'), surgeon: get(r,'surgeon'),
+            tag: get(r,'tag'), tech: get(r,'system','tech'), indication: get(r,'indication'),
+            title: get(r,'title'), desc: get(r,'desc'), image: get(r,'image'),
+            links: (() => { const u=get(r,'link_url'); return u?[{label:get(r,'link_label')||'기사 링크',url:u}]:[]; })()
+          });
+        } else if(s.type==='paper') {
+          s.arr.push({
+            title: get(r,'title','제목'), authors: get(r,'authors','author','저자'),
+            year: get(r,'year','연도'), journal: get(r,'journal','저널'),
+            hospital: get(r,'hospital','기관'), summary: get(r,'summary','요약','desc'),
+            doi: get(r,'doi','url'), tech: get(r,'tech','기법'), chartData: null
+          });
+        } else if(s.type==='cal') {
+          s.arr.push({
+            name: get(r,'name'), start: get(r,'start'), end: get(r,'end'),
+            loc: get(r,'location','loc'), tag: get(r,'tag')||'conference',
+            url: get(r,'url'), note: get(r,'note')
+          });
+        }
+      });
+      console.log('Cardiac', s.type, 'loaded:', s.arr.length);
+    } catch(e) { console.warn('Cardiac', s.type, 'failed:', e.message); }
+  }));
+  renderCardiacVideos();
+  renderCardiacArticles();
+  renderCardiacPapers();
+  renderCardiacCal();
+}
+
+function renderCardiacVideos() {
+  const q = (document.getElementById('cardiacVideoSearch')?.value||'').toLowerCase();
+  const items = CARDIAC_VIDEOS.filter(v => !q || (v.title||'').toLowerCase().includes(q) || (v.op||'').toLowerCase().includes(q));
+  const el = document.getElementById('cardiacVideoCount'); if(el) el.textContent = items.length;
+  const grid = document.getElementById('cardiacVideoGrid'); if(!grid) return; grid.innerHTML='';
+  if(!items.length){ grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 영상을 추가해 주세요.</div>'; return; }
+  items.forEach((v,i) => {
+    const thumb = getThumb(v.url);
+    const wrap = document.createElement('div'); wrap.className='card-wrap';
+    const card = document.createElement('div'); card.className='yt-card';
+    card.innerHTML =
+      '<div class="yt-thumb">' +
+        (thumb?'<img src="'+thumb+'" loading="lazy" onerror="this.style.display=\'none\'">':'<div style="background:#1a1714;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">🫀</div>') +
+        '<span class="sys-badge-thumb '+sysClass(v.sys)+'">'+v.sys+'</span>' +
+        (!v.linkMissing?'<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>':'') +
+      '</div>' +
+      '<div class="yt-info"><div class="yt-info-text">' +
+        '<div class="yt-channel">'+(v.channel||'')+'</div>' +
+        '<div class="yt-title">'+(v.title||'')+'</div>' +
+        '<div class="yt-meta">'+(v.op||'')+'</div>' +
+      '</div></div>';
+    if(!v.linkMissing) card.onclick=()=>openModal(v);
+    wrap.appendChild(card); grid.appendChild(wrap);
+  });
+}
+
+function renderCardiacArticles() {
+  const q = (document.getElementById('cardiacKolSearch')?.value||'').toLowerCase();
+  const items = CARDIAC_ARTICLES.filter(a => !q || (a.title||'').toLowerCase().includes(q) || (a.hospital||'').toLowerCase().includes(q));
+  const el = document.getElementById('cardiacKolCount'); if(el) el.textContent = items.length;
+  const container = document.getElementById('cardiacKolCards'); if(!container) return; container.innerHTML='';
+  if(!items.length){ container.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 기사를 추가해 주세요.</div>'; return; }
+  const thisYear = String(new Date().getFullYear());
+  const years = [...new Set(items.map(a=>a.date.slice(0,4)))].sort((a,b)=>b-a);
+  const autoExpandAll = items.length < 10;
+  years.forEach(yr => {
+    const grp = items.filter(a=>a.date.startsWith(yr));
+    const isOpen = autoExpandAll || yr===thisYear;
+    const hdr=document.createElement('div'); hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:12px 0 5px;cursor:pointer;user-select:none';
+    hdr.onclick=()=>{ const sec=document.getElementById('cardiac_art_yr_'+yr); const arr=document.getElementById('cardiac_art_yarr_'+yr); if(!sec)return; const open=sec.style.maxHeight!=='0px'; sec.style.maxHeight=open?'0px':'9999px'; arr.textContent=open?'›':'⌄'; };
+    hdr.innerHTML='<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">'+yr+'</span><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:var(--text3)">'+grp.length+'건</span><span id="cardiac_art_yarr_'+yr+'" style="font-size:14px;color:var(--text3)">'+(isOpen?'⌄':'›')+'</span>';
+    container.appendChild(hdr);
+    const sec=document.createElement('div'); sec.id='cardiac_art_yr_'+yr; sec.style.cssText='overflow:hidden;transition:max-height 0.3s ease;max-height:'+(isOpen?'9999px':'0px');
+    grp.forEach((a,i)=>{
+      const aid='cardiac_art_'+yr+'_'+i;
+      const domain=a.links.length?(()=>{try{return new URL(a.links[0].url).hostname;}catch(e){return '';}})():'';
+      const fav=domain?'https://www.google.com/s2/favicons?domain='+domain+'&sz=64':'';
+      const linkHtml=a.links.length?a.links.map(l=>'<a href="'+l.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:500;color:var(--primary);padding:2px 8px;border-radius:5px;background:var(--primary-soft);text-decoration:none">'+l.label+'</a>').join(''):'';
+      const row=document.createElement('div'); row.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:4px;transition:border-color 0.15s';
+      row.innerHTML=makeArtRow(aid,a,'background:#E6F1FB;color:#0C447C','Cardiac',a.date?a.date.slice(5,10):'',linkHtml,fav,domain);
+      sec.appendChild(row);
+    });
+    container.appendChild(sec);
+  });
+}
+
+function renderCardiacPapers() {
+  const q = (document.getElementById('cardiacPaperSearch')?.value||'').toLowerCase();
+  const items = CARDIAC_PAPERS.filter(p => !q || (p.title||'').toLowerCase().includes(q) || (p.authors||'').toLowerCase().includes(q));
+  const el = document.getElementById('cardiacPaperCount'); if(el) el.textContent = items.length;
+  const grid = document.getElementById('cardiacPaperGrid'); if(!grid) return; grid.innerHTML='';
+  if(!items.length){ grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 논문을 추가해 주세요.</div>'; return; }
+  items.forEach((p,i)=>{
+    const doi=p.doi||p.url||'';
+    const card=document.createElement('div');
+    card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:'+(i*0.04)+'s';
+    card.innerHTML=
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
+        '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">'+(p.journal||'')+' · '+(p.year||'')+'</span>'+
+        (doi?'<a href="'+doi+'" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none">DOI / PDF</a>':'')+
+      '</div>'+
+      '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45">'+(p.title||'')+'</div>'+
+      '<div style="font-size:11px;color:var(--text2)">'+(p.authors||'')+'</div>'+
+      (p.summary?'<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">'+p.summary+'</div>':'');
+    grid.appendChild(card);
+  });
+}
+
+function renderCardiacCal() {
+  const q = (document.getElementById('cardiacCalSearch')?.value||'').toLowerCase();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const items = CARDIAC_CALS.filter(c => !q || (c.name||'').toLowerCase().includes(q) || (c.loc||'').toLowerCase().includes(q)).sort((a,b)=>b.start.localeCompare(a.start));
+  const el = document.getElementById('cardiacCalCount'); if(el) el.textContent = items.length;
+  const grid = document.getElementById('cardiacCalGrid'); if(!grid) return; grid.innerHTML='';
+  if(!items.length){ grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 일정을 추가해 주세요.</div>'; return; }
+  const years=[...new Set(items.map(c=>c.start.slice(0,4)))].sort((a,b)=>b-a);
+  years.forEach(yr=>{
+    const grp=items.filter(c=>c.start.startsWith(yr));
+    const hdr=document.createElement('div'); hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:14px 0 6px';
+    hdr.innerHTML='<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">'+yr+'</span><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:var(--text3)">'+grp.length+'건</span>';
+    grid.appendChild(hdr);
+    grp.forEach((c,i)=>{
+      const du=daysUntil(c.start); const isPast=new Date(c.end||c.start)<today;
+      const duLabel=isPast?'종료':du===0?'오늘!':du>0?'D-'+du:'D+'+Math.abs(du);
+      const duColor=isPast?'var(--text3)':du<=7?'#C0143C':du<=30?'#E8856A':'var(--primary)';
+      const row=document.createElement('div'); row.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;padding:10px 14px;display:flex;align-items:center;gap:10px';
+      row.innerHTML=
+        '<div style="min-width:42px;text-align:center;flex-shrink:0"><div style="font-size:11px;font-weight:700;color:'+duColor+';font-family:var(--mono)">'+duLabel+'</div></div>'+
+        '<div style="width:1px;height:28px;background:var(--border);flex-shrink:0"></div>'+
+        '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.name||'')+'</div><div style="font-size:10px;color:var(--text3);margin-top:1px">'+(c.start||'')+' · 📍 '+(c.loc||'장소 미정')+'</div></div>'+
+        (c.url?'<a href="'+c.url+'" target="_blank" rel="noopener" style="font-size:11px;padding:2px 8px;border-radius:5px;background:var(--primary-soft);color:var(--primary);text-decoration:none">링크</a>':'');
+      grid.appendChild(row);
+    });
+  });
+}
+
 /* ══════════════════════ INIT ══════════════════════ */
 loadVideosFromSheet();
 loadArticlesFromSheet();
 loadPapersFromSheet();
+loadCardiacData();
+renderPapers();
 applyLang();
 loadConferencesFromSheet();
 </script>
