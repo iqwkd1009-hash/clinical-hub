@@ -510,6 +510,10 @@
 
   @media (max-width: 900px) {
     .yt-grid { grid-template-columns: repeat(2,1fr) !important; gap:10px; }
+    .yt-thumb { aspect-ratio: 16/9 !important; }
+    .yt-card { width: 100% !important; }
+    .card-wrap { width: 100% !important; }
+    .card-hover-popup { display: none !important; }
     .dashboard-grid { grid-template-columns:1fr !important; }
     .page.active { flex-direction:column; min-height:auto; }
 
@@ -1392,6 +1396,7 @@ async function loadPapersFromSheet() {
         summary:  get(r,'summary','요약','abstract','desc'),
         doi:      get(r,'doi','url','link'),
         tech:     get(r,'tech','technique','기법'),
+        attach:   get(r,'첨부','attach','attachment','media'),
         chartData:null
       }))
       .filter(p => p.title);
@@ -2124,7 +2129,7 @@ const PAPERS = [
     authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy",
     hospital:"Eulji University Hospital, Korea",
     summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. 이소바릭(가스리스) 질식 접근법으로 흉터 없이 수술 가능함 입증. Console time 135min, EBL 50mL, 합병증 없음.",
-    doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES",
+    doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", attach:"Photo",
     chartData:{labels:["Op Time (min)","EBL (mL)"],values:[135,50],type:"bar"}
   },
   {
@@ -2132,7 +2137,7 @@ const PAPERS = [
     authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery",
     hospital:"Eulji University Hospital, Korea",
     summary:"35명 대상 로봇 글러브 포트 기법(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14). 전례 성공, 합병증 없음. Total OR time 160min.",
-    doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"SP",
+    doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"SP", attach:"Video",
     chartData:{labels:["Myomectomy","Adenomyomectomy","Ovarian cystectomy","NOTES Hx"],values:[12,3,6,14],type:"donut"}
   },
   {
@@ -2399,6 +2404,7 @@ function renderPapers() {
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
           '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">' + (p.journal||'') + ' · ' + (p.year||'') + '</span>' +
           (tech ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;font-family:var(--mono);' + techColor + '">' + tech + '</span>' : '') +
+          (p.attach ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:' + (p.attach.toLowerCase()==='video'?'#FEF3C7':'#F3F4F6') + ';color:' + (p.attach.toLowerCase()==='video'?'#92400E':'#374151') + ';font-family:var(--mono)">' + (p.attach.toLowerCase()==='video'?'🎬 Video':'📷 Photo') + '</span>' : '') +
         '</div>' +
         (doi ? '<a href="' + doi + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none" onmouseover="this.style.background=\'#A01030\'" onmouseout="this.style.background=\'var(--primary)\'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF</a>' : '') +
       '</div>' +
@@ -2777,11 +2783,9 @@ function renderCal() {
             <div style="font-size:10px;color:var(--text3);margin-top:1px">${dateRange}${metaParts.length ? ' · ' + metaParts.join('  |  ') : ''}</div>
             ${dutyHtml}
           </div>
-          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
             ${linkBtn}
-            <button onclick="editCal(${confIdx})" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:var(--font)" title="수정">✏️</button>
-            <button onclick="deleteCal(${confIdx})" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:#C0143C;cursor:pointer;font-family:var(--font)" title="삭제">🗑</button>
-            <span id="arr_${rid}" style="font-size:14px;color:var(--text3);transition:transform 0.2s;cursor:pointer" onclick="toggleCal('${rid}')">›</span>
+            <span id="arr_${rid}" style="font-size:14px;color:var(--text3);transition:transform 0.2s">›</span>
           </div>
         </div>
         <div id="detail_${rid}" style="display:none;padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -3252,7 +3256,7 @@ async function loadCardiacData() {
             title: get(r,'title','제목'), authors: get(r,'authors','author','저자'),
             year: get(r,'year','연도'), journal: get(r,'journal','저널'),
             hospital: get(r,'hospital','기관'), summary: get(r,'summary','요약','desc'),
-            doi: get(r,'doi','url'), tech: get(r,'tech','기법'), chartData: null
+            doi: get(r,'doi','url'), tech: get(r,'tech','기법'), attach: get(r,'첨부','attach','attachment','media'), chartData: null
           });
         } else if(s.type==='cal') {
           s.arr.push({
