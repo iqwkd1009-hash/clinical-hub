@@ -8,7 +8,7 @@
 <style>
   
 :root {
-  /* ── PRIMARY BRAND ── */
+  /* ── PRIMARY BRAND (GYN default) ── */
   --primary: #4254D0;
   --primary-dark: #2F3EA8;
   --primary-soft: #EEF1FF;
@@ -46,6 +46,40 @@
   /* ── FONT ── */
   --font: 'DM Sans', sans-serif;
   --mono: 'DM Mono', monospace;
+}
+
+/* ── CARDIAC THEME ── */
+body.cardiac-mode {
+  --primary: #C0143C;
+  --primary-dark: #960F2E;
+  --primary-soft: #FFF0F3;
+  --primary-mid: #F9B8C6;
+  --bg: #FDF8F8;
+  --surface2: #FBF3F4;
+  --border: #EDD8DB;
+  --tag-bg: #FFF0F3;
+  --tag-text: #C0143C;
+  --shadow:
+    0 1px 3px rgba(74, 22, 30, 0.05),
+    0 8px 24px rgba(192, 20, 60, 0.06);
+  --shadow-hover:
+    0 4px 12px rgba(74, 22, 30, 0.08),
+    0 18px 42px rgba(192, 20, 60, 0.12);
+}
+body.cardiac-mode.dark {
+  --bg:#150C0D; --surface:#1E1213; --surface2:#281618; --border:#3D2023;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(192,20,60,0.1);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 18px 42px rgba(192,20,60,0.18);
+}
+
+/* Cardiac spec-btn 빨강 스타일 */
+#spec-cardiac.active {
+  background: #FFF0F3 !important;
+  color: #C0143C !important;
+  border-color: #C0143C !important;
+}
+#spec-cardiac.active::before {
+  background: #C0143C !important;
 }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -497,81 +531,130 @@
   .popup-btn.play:hover { background:var(--primary-dark); }
   .popup-btn.ext { background:var(--surface2); color:var(--text2); border:1px solid var(--border); }
   .popup-btn.ext:hover { background:var(--border); }
+  /* drawer */
   .mobile-filter-btn { display: none; }
-  .drawer-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 200;
-    backdrop-filter: blur(2px);
-  }
-  .drawer-overlay.open { display: block; }
-  .sidebar-inner { display: contents; }
+  .drawer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; backdrop-filter:blur(2px); }
+  .drawer-overlay.open { display:block; }
+  .sidebar-inner { display:contents; }
+
+  /* 하단 탭바 — 데스크탑에선 숨김 */
+  .mobile-tab-bar { display: none; }
 
   @media (max-width: 900px) {
-    .yt-grid { grid-template-columns: repeat(2,1fr) !important; gap:10px; }
-    .yt-thumb { aspect-ratio: 16/9 !important; }
-    .yt-card { width: 100% !important; }
-    .card-wrap { width: 100% !important; }
-    .card-hover-popup { display: none !important; }
-    .dashboard-grid { grid-template-columns:1fr !important; }
+    /* ── 레이아웃 ── */
     .page.active { flex-direction:column; min-height:auto; }
+    .dashboard-grid { grid-template-columns:1fr !important; }
+    body { padding-bottom: 64px; }
 
-    /* 사이드바 → 드로어로 전환 */
-    .sidebar {
-      position: fixed !important;
-      top: 0 !important; left: 0 !important;
-      width: 280px !important;
-      height: 100vh !important;
-      z-index: 210;
-      transform: translateX(-100%);
-      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
-      overflow-y: auto;
-      padding: 20px 16px !important;
-      border-right: 1px solid var(--border) !important;
-    }
-    .sidebar.drawer-open {
-      transform: translateX(0);
-    }
-    .sidebar-inner { display: block !important; }
+    /* ── 상단 네비 ── */
+    .nav-top { height:52px; padding:0 12px; position:relative; }
+    .nav-top-left .logo-text { font-size:15px; }
 
-    /* 필터 버튼 — 메인 영역 상단에 표시 */
-    .mobile-filter-btn {
+    /* spec 버튼 → 중앙 pill */
+    .spec-group {
+      position: absolute; left:50%; transform:translateX(-50%);
+      background: var(--surface2); border-radius:20px; padding:3px;
+      display:flex; gap:2px; border:1px solid var(--border);
+    }
+    .spec-btn { padding:4px 14px !important; font-size:12px !important; border:none !important; border-radius:16px !important; }
+
+    /* 오른쪽 버튼 간소화 */
+    .nav-right { gap:4px; }
+    .icon-btn { padding:5px 8px !important; font-size:11px !important; }
+
+    /* ── nav-sub 숨김 → 하단 탭바로 대체 ── */
+    .nav-sub { display:none !important; }
+
+    /* ── 하단 탭바 ── */
+    .mobile-tab-bar {
       display: flex;
-      align-items: center; gap: 7px;
-      padding: 7px 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      position: fixed; bottom:0; left:0; right:0;
+      height: 60px;
+      padding-bottom: env(safe-area-inset-bottom);
       background: var(--surface);
-      font-family: var(--font);
-      font-size: 13px; font-weight: 500;
-      color: var(--text2);
-      cursor: pointer;
-      margin-bottom: 14px;
-      transition: all 0.15s;
-      width: fit-content;
+      border-top: 1px solid var(--border);
+      z-index: 150;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.07);
     }
-    .mobile-filter-btn:hover { border-color: var(--primary-mid); color: var(--primary); }
+    .mobile-tab-item {
+      flex: 1; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:3px;
+      cursor:pointer; border:none; background:transparent;
+      font-family:var(--font); font-size:10px; font-weight:500;
+      color:var(--text3); transition:color 0.15s;
+      -webkit-tap-highlight-color:transparent; padding:6px 4px;
+    }
+    .mobile-tab-item svg { width:21px; height:21px; stroke-width:1.8; transition:stroke-width 0.15s; }
+    .mobile-tab-item.active { color:var(--primary); }
+    .mobile-tab-item.active svg { stroke-width:2.4; }
+    .mobile-tab-label { font-size:10px; font-weight:500; }
 
-    /* 드로어 닫기 버튼 */
-    .drawer-close {
-      display: flex !important;
+    /* ── 사이드바 → 드로어 ── */
+    .sidebar {
+      position:fixed !important; top:0 !important; left:0 !important;
+      width:280px !important; height:100vh !important; z-index:210;
+      transform:translateX(-100%);
+      transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:4px 0 24px rgba(0,0,0,0.15);
+      overflow-y:auto; padding:20px 16px !important;
+      border-right:1px solid var(--border) !important;
+    }
+    .sidebar.drawer-open { transform:translateX(0); }
+    .sidebar-inner { display:block !important; }
+    .drawer-close { display:flex !important; }
+
+    /* ── 필터 버튼 ── */
+    .mobile-filter-btn {
+      display:flex; align-items:center; gap:7px;
+      padding:6px 12px; border:1px solid var(--border);
+      border-radius:8px; background:var(--surface);
+      font-family:var(--font); font-size:12px; font-weight:500;
+      color:var(--text2); cursor:pointer; margin-bottom:12px;
+      transition:all 0.15s; width:fit-content;
     }
 
-    .main, .kol-main, #page-paper > div, #page-dashboard > div { padding:16px !important; }
-    .grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+    /* ── 패딩 ── */
+    .main, .kol-main { padding:14px !important; }
+    #videoFilterBar { padding:10px 14px 0 !important; }
     #paperGrid { grid-template-columns:1fr !important; }
     .filter-section { margin-bottom:12px; }
+
+    /* ── 영상 그리드 ── */
+    .yt-grid { grid-template-columns:repeat(2,1fr) !important; gap:10px; }
+    .yt-thumb { aspect-ratio:16/9 !important; }
+    .yt-card, .card-wrap { width:100% !important; }
+    .card-hover-popup { display:none !important; }
   }
+
   @media (max-width: 520px) {
-    .grid { grid-template-columns:1fr !important; }
-    .card-title { font-size:12px; }
+    .yt-grid { grid-template-columns:1fr !important; }
+    #paperGrid { grid-template-columns:1fr !important; }
+    .yt-title { font-size:12px; }
   }
 
 </style>
 </head>
 <body>
+
+<!-- ── 하단 탭바 (모바일 전용) ── -->
+<nav class="mobile-tab-bar">
+  <button class="mobile-tab-item active" id="mtab-video" onclick="switchTab('video',document.getElementById('sub-video'));updateMobileTabs('video')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="15" height="10" rx="2"/><path d="m17 11 5-3v8l-5-3z"/></svg>
+    <span class="mobile-tab-label">수술영상</span>
+  </button>
+  <button class="mobile-tab-item" id="mtab-kol" onclick="switchTab('kol',document.getElementById('sub-kol'));updateMobileTabs('kol')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M4 11h8"/><path d="M4 7h4"/><path d="M4 15h8"/><path d="M2 17h2a2 2 0 0 1 0 4H2v-4z"/></svg>
+    <span class="mobile-tab-label">기사</span>
+  </button>
+  <button class="mobile-tab-item" id="mtab-paper" onclick="switchTab('paper',document.getElementById('sub-paper'));updateMobileTabs('paper')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <span class="mobile-tab-label">논문</span>
+  </button>
+  <button class="mobile-tab-item" id="mtab-cal" onclick="switchTab('cal',document.getElementById('sub-cal'));updateMobileTabs('cal')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span class="mobile-tab-label">캘린더</span>
+  </button>
+</nav>
 
 <!-- NAV TOP: Brand + Specialty -->
 <div class="nav-top">
@@ -582,10 +665,10 @@
     <div class="brand-name">Clinical <span>Hub</span></div>
     <div class="specialty-tabs">
       <button class="spec-btn active" id="spec-gyn" onclick="switchSpec('gyn',this)">
-        <span class="spec-dot" style="background:#C0143C"></span> GYN
+        <span class="spec-dot" style="background:#4254D0"></span> GYN
       </button>
       <button class="spec-btn" id="spec-cardiac" onclick="switchSpec('cardiac',this)">
-        <span class="spec-dot" style="background:#1A56DB"></span> Cardiac
+        <span class="spec-dot" style="background:#C0143C"></span> Cardiac
       </button>
     </div>
   </div>
@@ -949,7 +1032,7 @@
       </a>
 
       <div class="filter-section">
-        <div class="filter-label" data-ko="분류">분류</div>
+        <div class="filter-label" data-ko="필터">필터</div>
         <div id="calFilters"></div>
       </div>
     </div>
@@ -1503,10 +1586,13 @@ function switchSpec(spec, el) {
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('sub-video').classList.add('active');
 
+  // 테마 전환
   if(spec === 'cardiac') {
+    document.body.classList.add('cardiac-mode');
     document.getElementById('page-cardiac-video').classList.add('active');
     document.getElementById('headerCount').textContent = 'Cardiac';
   } else {
+    document.body.classList.remove('cardiac-mode');
     document.getElementById('page-video').classList.add('active');
     renderVideos();
   }
@@ -2426,7 +2512,9 @@ function renderPapers() {
 
 /* ══════════════════════ ENHANCED UX ══════════════════════ */
 function toggleTheme(){
+  const isCardiac = document.body.classList.contains('cardiac-mode');
   document.body.classList.toggle('dark');
+  if(isCardiac) document.body.classList.add('cardiac-mode');
   localStorage.setItem('gynHubTheme', document.body.classList.contains('dark') ? 'dark' : 'light');
 }
 if(localStorage.getItem('gynHubTheme') === 'dark') document.body.classList.add('dark');
@@ -3277,54 +3365,115 @@ async function loadCardiacData() {
 
 function renderCardiacVideos() {
   const q = (document.getElementById('cardiacVideoSearch')?.value||'').toLowerCase();
-  const items = CARDIAC_VIDEOS.filter(v => !q || (v.title||'').toLowerCase().includes(q) || (v.op||'').toLowerCase().includes(q));
+  const items = CARDIAC_VIDEOS.filter(v => {
+    if(q) return (v.title||'').toLowerCase().includes(q)||(v.op||'').toLowerCase().includes(q)||(v.channel||'').toLowerCase().includes(q);
+    return true;
+  });
   const el = document.getElementById('cardiacVideoCount'); if(el) el.textContent = items.length;
+  document.getElementById('headerCount').textContent = items.length + (currentLang==='en'?' videos':'개 영상');
+
   const grid = document.getElementById('cardiacVideoGrid'); if(!grid) return; grid.innerHTML='';
-  if(!items.length){ grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 영상을 추가해 주세요.</div>'; return; }
+  if(!items.length){ grid.innerHTML='<div class="empty-state" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 영상을 추가해 주세요.</div>'; return; }
+
   items.forEach((v,i) => {
     const thumb = getThumb(v.url);
-    const wrap = document.createElement('div'); wrap.className='card-wrap';
+    const subsText = v.subs >= 10000 ? (v.subs/10000).toFixed(1)+'만명' : v.subs >= 1000 ? (v.subs/1000).toFixed(1)+'천명' : v.subs > 0 ? v.subs+'명' : '';
+    const missingBadge = v.linkMissing ? '<span style="position:absolute;top:8px;right:8px;background:rgba(180,60,0,0.88);color:#FFD9B0;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;font-family:var(--mono)">⚠ 링크없음</span>' : '';
+
+    const wrap = document.createElement('div'); wrap.className='card-wrap'; wrap.style.animationDelay=(i*0.03)+'s';
     const card = document.createElement('div'); card.className='yt-card';
     card.innerHTML =
       '<div class="yt-thumb">' +
-        (thumb?'<img src="'+thumb+'" loading="lazy" onerror="this.style.display=\'none\'">':'<div style="background:#1a1714;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">🫀</div>') +
+        (thumb ? '<img src="'+thumb+'" alt="'+v.title+'" loading="lazy" onerror="this.style.display=\'none\'">' : '<div style="background:#1a1714;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">🫀</div>') +
         '<span class="sys-badge-thumb '+sysClass(v.sys)+'">'+v.sys+'</span>' +
-        (!v.linkMissing?'<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>':'') +
+        missingBadge +
+        (!v.linkMissing ? '<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>' : '') +
       '</div>' +
       '<div class="yt-info"><div class="yt-info-text">' +
-        '<div class="yt-channel">'+(v.channel||'')+'</div>' +
-        '<div class="yt-title">'+(v.title||'')+'</div>' +
-        '<div class="yt-meta">'+(v.op||'')+'</div>' +
+        '<div class="yt-channel">'+v.channel+(subsText?'<span style="margin-left:4px;opacity:0.7;font-size:10px">· 구독자 '+subsText+'</span>':'')+'</div>' +
+        '<div class="yt-title">'+v.title+'</div>' +
+        '<div class="yt-meta">'+v.op+(v.adv?'<span class="tag adv" style="margin-left:4px">'+v.adv+'</span>':'')+'</div>' +
+        '<div class="yt-badges"><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-weight:600;font-family:var(--mono)">'+v.sys+'</span>'+
+        (v.adv ? '<span class="tag adv">'+v.adv+'</span>' : '')+'</div>' +
       '</div></div>';
-    if(!v.linkMissing) card.onclick=()=>openModal(v);
-    wrap.appendChild(card); grid.appendChild(wrap);
+    if(!v.linkMissing) card.onclick = ()=>openModal(v);
+    else card.style.cursor='default';
+
+    const popup = document.createElement('div'); popup.className='card-hover-popup';
+    popup.innerHTML =
+      '<div class="popup-thumb">' +
+        (thumb?'<img src="'+thumb+'" loading="lazy">':'<div style="background:#1a1a2e;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🫀</div>') +
+        '<div class="popup-thumb-overlay"><span class="popup-sys-badge '+sysClass(v.sys)+'">'+v.sys+'</span></div>' +
+      '</div>' +
+      '<div class="popup-body">' +
+        '<div class="popup-op">📌 '+v.op+(v.adv?' <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:5px;background:var(--primary-soft);color:var(--primary);margin-left:6px;font-family:var(--mono)">'+v.adv+'</span>':'')+'</div>' +
+        '<div class="popup-title">'+v.title+'</div>' +
+        '<div class="popup-actions">' +
+          (!v.linkMissing?'<button class="popup-btn play" onclick="event.stopPropagation();openModal('+JSON.stringify(v).replace(/"/g,'&quot;')+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>재생</button>':'') +
+          (!v.linkMissing?'<a href="'+v.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="popup-btn ext">유튜브</a>':'') +
+        '</div>' +
+      '</div>';
+
+    wrap.appendChild(card); wrap.appendChild(popup); grid.appendChild(wrap);
   });
 }
 
 function renderCardiacArticles() {
   const q = (document.getElementById('cardiacKolSearch')?.value||'').toLowerCase();
-  const items = CARDIAC_ARTICLES.filter(a => !q || (a.title||'').toLowerCase().includes(q) || (a.hospital||'').toLowerCase().includes(q));
+  const items = CARDIAC_ARTICLES.filter(a =>
+    !q || (a.title||'').toLowerCase().includes(q) ||
+    (a.hospital||'').toLowerCase().includes(q) ||
+    (a.surgeon||'').toLowerCase().includes(q)
+  );
   const el = document.getElementById('cardiacKolCount'); if(el) el.textContent = items.length;
   const container = document.getElementById('cardiacKolCards'); if(!container) return; container.innerHTML='';
   if(!items.length){ container.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 기사를 추가해 주세요.</div>'; return; }
+
   const thisYear = String(new Date().getFullYear());
-  const years = [...new Set(items.map(a=>a.date.slice(0,4)))].sort((a,b)=>b-a);
+  const years = [...new Set(items.map(a=>(a.date||'').slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
   const autoExpandAll = items.length < 10;
+
   years.forEach(yr => {
-    const grp = items.filter(a=>a.date.startsWith(yr));
-    const isOpen = autoExpandAll || yr===thisYear;
-    const hdr=document.createElement('div'); hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:12px 0 5px;cursor:pointer;user-select:none';
-    hdr.onclick=()=>{ const sec=document.getElementById('cardiac_art_yr_'+yr); const arr=document.getElementById('cardiac_art_yarr_'+yr); if(!sec)return; const open=sec.style.maxHeight!=='0px'; sec.style.maxHeight=open?'0px':'9999px'; arr.textContent=open?'›':'⌄'; };
-    hdr.innerHTML='<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">'+yr+'</span><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:var(--text3)">'+grp.length+'건</span><span id="cardiac_art_yarr_'+yr+'" style="font-size:14px;color:var(--text3)">'+(isOpen?'⌄':'›')+'</span>';
+    const grp = items.filter(a=>(a.date||'').startsWith(yr));
+    const isOpen = autoExpandAll || yr === thisYear;
+    const yrId = 'cardiac_art_yr_' + yr;
+    const arrId = 'cardiac_art_yarr_' + yr;
+
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:14px 0 6px;cursor:pointer;user-select:none';
+    hdr.onclick = () => {
+      const sec = document.getElementById(yrId);
+      const arr = document.getElementById(arrId);
+      if(!sec) return;
+      const open = sec.style.maxHeight !== '0px';
+      sec.style.maxHeight = open ? '0px' : '9999px';
+      if(arr) arr.textContent = open ? '›' : '⌄';
+    };
+    hdr.innerHTML =
+      '<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">'+yr+'</span>' +
+      '<div style="flex:1;height:1px;background:var(--border)"></div>' +
+      '<span style="font-size:11px;color:var(--text3)">'+grp.length+'건</span>' +
+      '<span id="'+arrId+'" style="font-size:14px;color:var(--text3)">'+(isOpen?'⌄':'›')+'</span>';
     container.appendChild(hdr);
-    const sec=document.createElement('div'); sec.id='cardiac_art_yr_'+yr; sec.style.cssText='overflow:hidden;transition:max-height 0.3s ease;max-height:'+(isOpen?'9999px':'0px');
-    grp.forEach((a,i)=>{
-      const aid='cardiac_art_'+yr+'_'+i;
-      const domain=a.links.length?(()=>{try{return new URL(a.links[0].url).hostname;}catch(e){return '';}})():'';
-      const fav=domain?'https://www.google.com/s2/favicons?domain='+domain+'&sz=64':'';
-      const linkHtml=a.links.length?a.links.map(l=>'<a href="'+l.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:500;color:var(--primary);padding:2px 8px;border-radius:5px;background:var(--primary-soft);text-decoration:none">'+l.label+'</a>').join(''):'';
-      const row=document.createElement('div'); row.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:4px;transition:border-color 0.15s';
-      row.innerHTML=makeArtRow(aid,a,'background:#E6F1FB;color:#0C447C','Cardiac',a.date?a.date.slice(5,10):'',linkHtml,fav,domain);
+
+    const sec = document.createElement('div');
+    sec.id = yrId;
+    sec.style.cssText = 'overflow:hidden;transition:max-height 0.3s ease;max-height:'+(isOpen?'9999px':'0px');
+
+    grp.forEach((a,i) => {
+      const aid = 'cardiac_art_'+yr+'_'+i;
+      const domain = a.links.length ? (()=>{try{return new URL(a.links[0].url).hostname;}catch(e){return '';}})() : '';
+      const fav = domain ? 'https://www.google.com/s2/favicons?domain='+domain+'&sz=64' : '';
+      const linkHtml = a.links.map(l=>'<a href="'+l.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:500;color:var(--primary);padding:2px 8px;border-radius:5px;background:var(--primary-soft);text-decoration:none">'+l.label+'</a>').join('');
+      const tagColor = 'background:var(--primary-soft);color:var(--primary)';
+      const tagLabel = a.tag || 'Cardiac';
+      const dateStr = (a.date||'').slice(5,10);
+
+      const row = document.createElement('div');
+      row.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:4px;transition:border-color 0.15s';
+      row.onmouseenter = ()=>{ row.style.borderColor='var(--primary-mid)'; };
+      row.onmouseleave = ()=>{ row.style.borderColor='var(--border)'; };
+      row.innerHTML = makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, fav, domain);
       sec.appendChild(row);
     });
     container.appendChild(sec);
@@ -3333,22 +3482,37 @@ function renderCardiacArticles() {
 
 function renderCardiacPapers() {
   const q = (document.getElementById('cardiacPaperSearch')?.value||'').toLowerCase();
-  const items = CARDIAC_PAPERS.filter(p => !q || (p.title||'').toLowerCase().includes(q) || (p.authors||'').toLowerCase().includes(q));
+  const items = CARDIAC_PAPERS.filter(p =>
+    !q || (p.title||'').toLowerCase().includes(q) ||
+    (p.authors||'').toLowerCase().includes(q) ||
+    (p.summary||'').toLowerCase().includes(q)
+  );
   const el = document.getElementById('cardiacPaperCount'); if(el) el.textContent = items.length;
   const grid = document.getElementById('cardiacPaperGrid'); if(!grid) return; grid.innerHTML='';
   if(!items.length){ grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 논문을 추가해 주세요.</div>'; return; }
-  items.forEach((p,i)=>{
-    const doi=p.doi||p.url||'';
-    const card=document.createElement('div');
-    card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:'+(i*0.04)+'s';
-    card.innerHTML=
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
-        '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">'+(p.journal||'')+' · '+(p.year||'')+'</span>'+
-        (doi?'<a href="'+doi+'" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none">DOI / PDF</a>':'')+
-      '</div>'+
-      '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45">'+(p.title||'')+'</div>'+
-      '<div style="font-size:11px;color:var(--text2)">'+(p.authors||'')+'</div>'+
-      (p.summary?'<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">'+p.summary+'</div>':'');
+
+  items.forEach((p,i) => {
+    const doi = p.doi || p.url || '';
+    const tech = p.tech || '';
+    const isVnotes = tech.toLowerCase().includes('vnotes');
+    const techColor = isVnotes ? 'background:#E6F1FB;color:#0C447C' : 'background:#D1FAE5;color:#065F46';
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:'+(i*0.04)+'s;transition:border-color 0.15s,box-shadow 0.15s';
+    card.onmouseenter = ()=>{ card.style.borderColor='var(--primary-mid)'; card.style.boxShadow='var(--shadow-hover)'; };
+    card.onmouseleave = ()=>{ card.style.borderColor='var(--border)'; card.style.boxShadow='var(--shadow)'; };
+    card.innerHTML =
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+          '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">'+(p.journal||'')+' · '+(p.year||'')+'</span>' +
+          (tech ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;font-family:var(--mono);'+techColor+'">'+tech+'</span>' : '') +
+          (p.attach ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:'+(p.attach.toLowerCase()==='video'?'#FEF3C7':'#F3F4F6')+';color:'+(p.attach.toLowerCase()==='video'?'#92400E':'#374151')+';font-family:var(--mono)">'+(p.attach.toLowerCase()==='video'?'🎬 Video':'📷 Photo')+'</span>' : '') +
+        '</div>' +
+        (doi ? '<a href="'+doi+'" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF</a>' : '') +
+      '</div>' +
+      '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45">'+(p.title||'')+'</div>' +
+      '<div style="font-size:11px;color:var(--text2)">'+(p.authors||'')+'</div>' +
+      ((p.hospital||p.affiliation) ? '<div style="font-size:11px;color:var(--text3)">'+(p.hospital||p.affiliation||'')+'</div>' : '') +
+      (p.summary ? '<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">'+p.summary+'</div>' : '');
     grid.appendChild(card);
   });
 }
@@ -3356,28 +3520,83 @@ function renderCardiacPapers() {
 function renderCardiacCal() {
   const q = (document.getElementById('cardiacCalSearch')?.value||'').toLowerCase();
   const today = new Date(); today.setHours(0,0,0,0);
-  const items = CARDIAC_CALS.filter(c => !q || (c.name||'').toLowerCase().includes(q) || (c.loc||'').toLowerCase().includes(q)).sort((a,b)=>b.start.localeCompare(a.start));
-  const el = document.getElementById('cardiacCalCount'); if(el) el.textContent = items.length;
+  const allItems = CARDIAC_CALS.filter(c =>
+    !q || (c.name||'').toLowerCase().includes(q) ||
+    (c.loc||'').toLowerCase().includes(q) ||
+    (c.note||'').toLowerCase().includes(q)
+  );
+  const el = document.getElementById('cardiacCalCount'); if(el) el.textContent = allItems.length;
   const grid = document.getElementById('cardiacCalGrid'); if(!grid) return; grid.innerHTML='';
-  if(!items.length){ grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 일정을 추가해 주세요.</div>'; return; }
-  const years=[...new Set(items.map(c=>c.start.slice(0,4)))].sort((a,b)=>b-a);
-  years.forEach(yr=>{
-    const grp=items.filter(c=>c.start.startsWith(yr));
-    const hdr=document.createElement('div'); hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:14px 0 6px';
-    hdr.innerHTML='<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">'+yr+'</span><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:var(--text3)">'+grp.length+'건</span>';
+  if(!allItems.length){ grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3)">데이터가 없습니다. 시트에 일정을 추가해 주세요.</div>'; return; }
+
+  // 날짜 정렬 (최신순)
+  const sorted = [...allItems].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  const years = [...new Set(sorted.map(c=>(c.start||'').slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
+
+  years.forEach(yr => {
+    const grp = sorted.filter(c=>(c.start||'').startsWith(yr));
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:14px 0 8px';
+    hdr.innerHTML =
+      '<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">'+yr+'</span>' +
+      '<div style="flex:1;height:1px;background:var(--border)"></div>' +
+      '<span style="font-size:11px;color:var(--text3)">'+grp.length+'건</span>';
     grid.appendChild(hdr);
-    grp.forEach((c,i)=>{
-      const du=daysUntil(c.start); const isPast=new Date(c.end||c.start)<today;
-      const duLabel=isPast?'종료':du===0?'오늘!':du>0?'D-'+du:'D+'+Math.abs(du);
-      const duColor=isPast?'var(--text3)':du<=7?'#C0143C':du<=30?'#E8856A':'var(--primary)';
-      const row=document.createElement('div'); row.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;padding:10px 14px;display:flex;align-items:center;gap:10px';
-      row.innerHTML=
-        '<div style="min-width:42px;text-align:center;flex-shrink:0"><div style="font-size:11px;font-weight:700;color:'+duColor+';font-family:var(--mono)">'+duLabel+'</div></div>'+
-        '<div style="width:1px;height:28px;background:var(--border);flex-shrink:0"></div>'+
-        '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.name||'')+'</div><div style="font-size:10px;color:var(--text3);margin-top:1px">'+(c.start||'')+' · 📍 '+(c.loc||'장소 미정')+'</div></div>'+
-        (c.url?'<a href="'+c.url+'" target="_blank" rel="noopener" style="font-size:11px;padding:2px 8px;border-radius:5px;background:var(--primary-soft);color:var(--primary);text-decoration:none">링크</a>':'');
-      grid.appendChild(row);
+
+    grp.forEach((c, confIdx) => {
+      const du = daysUntil(c.start);
+      const isPast = new Date(c.end||c.start) < today;
+      const duLabel = isPast ? (currentLang==='en'?'Ended':'종료') : du===0?(currentLang==='en'?'Today!':'오늘!') : du>0?'D-'+du:'D+'+Math.abs(du);
+      const duColor = isPast?'var(--text3)':du<=7?'#C0143C':du<=30?'#E8856A':'var(--primary)';
+      const tagLabel = calTagLabel(c.tag);
+      const rid = 'cardiac_cal_'+yr+'_'+confIdx;
+      const linkBtn = c.url ? '<a href="'+c.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="link-btn" style="font-size:11px;padding:2px 8px;border-radius:5px;background:var(--primary-soft);color:var(--primary);text-decoration:none;flex-shrink:0">🔗 링크</a>' : '';
+
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;overflow:hidden;transition:border-color 0.15s';
+      card.onmouseenter = ()=>{ card.style.borderColor='var(--primary-mid)'; };
+      card.onmouseleave = ()=>{ card.style.borderColor='var(--border)'; };
+
+      const inner = `
+        <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleCardiacCal('${rid}')">
+          <div style="min-width:42px;text-align:center;flex-shrink:0">
+            <div style="font-size:12px;font-weight:700;color:${duColor};font-family:var(--mono)">${duLabel}</div>
+          </div>
+          <div style="width:1px;height:30px;background:var(--border);flex-shrink:0"></div>
+          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;background:var(--primary-soft);color:var(--primary);white-space:nowrap;font-family:var(--mono);flex-shrink:0">${tagLabel}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name||''}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px">${c.start||''}${c.end&&c.end!==c.start?' ~ '+c.end:''} · 📍 ${c.loc||'장소 미정'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            ${linkBtn}
+            <span id="arr_${rid}" style="font-size:14px;color:var(--text3);transition:transform 0.2s">›</span>
+          </div>
+        </div>
+        <div id="det_${rid}" style="display:none;border-top:1px solid var(--border);padding:12px 14px;background:var(--surface2)">
+          ${c.note ? '<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">📝 '+c.note+'</div>' : ''}
+          ${c.url ? '<a href="'+c.url+'" target="_blank" rel="noopener" style="font-size:12px;color:var(--primary);text-decoration:none">🔗 공식 사이트 바로가기</a>' : ''}
+        </div>`;
+      card.innerHTML = inner;
+      grid.appendChild(card);
     });
+  });
+}
+
+function toggleCardiacCal(rid) {
+  const det = document.getElementById('det_'+rid);
+  const arr = document.getElementById('arr_'+rid);
+  if(!det) return;
+  const isOpen = det.style.display !== 'none';
+  det.style.display = isOpen ? 'none' : 'block';
+  if(arr) arr.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+/* ══════════════════════ MOBILE TAB SYNC ══════════════════════ */
+function updateMobileTabs(active) {
+  ['video','kol','paper','cal'].forEach(t => {
+    const btn = document.getElementById('mtab-' + t);
+    if(btn) btn.classList.toggle('active', t === active);
   });
 }
 
