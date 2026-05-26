@@ -83,6 +83,7 @@ body.cardiac-mode.dark {
 }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; max-width: 100%; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
   /* ── HEADER ── */
@@ -232,7 +233,8 @@ body.cardiac-mode.dark {
     box-shadow: var(--shadow); animation: fadeUp 0.3s ease both;
   }
   .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--primary-mid); }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp { from { opacity:0; } to { opacity:1; } }
+  @keyframes modalIn { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
   .thumb-wrap { position: relative; aspect-ratio: 16/10; background: #1a1714; overflow: hidden; }
   .thumb-wrap img { width:100%; height:100%; object-fit:cover; transition: transform 0.3s; display:block; }
   .card:hover .thumb-wrap img { transform: scale(1.04); }
@@ -541,6 +543,13 @@ body.cardiac-mode.dark {
   .mobile-tab-bar { display: none; }
 
   @media (max-width: 900px) {
+    /* ── 가로 스크롤 완전 차단 ── */
+    html, body { overflow-x: hidden !important; }
+    .page, .page.active { overflow-x: hidden !important; max-width: 100vw !important; }
+    #videoFilterBar { overflow-x: hidden !important; }
+    .yt-grid { overflow-x: hidden !important; }
+    .kol-main, .main { overflow-x: hidden !important; }
+
     /* ── 레이아웃 ── */
     .page.active { flex-direction:column; min-height:auto; }
     .dashboard-grid { grid-template-columns:1fr !important; }
@@ -685,6 +694,12 @@ body.cardiac-mode.dark {
   <button class="sub-btn" id="sub-kol" onclick="switchTab('kol',this)">📰 기사</button>
   <button class="sub-btn" id="sub-paper" onclick="switchTab('paper',this)">📄 논문</button>
   <button class="sub-btn" id="sub-cal" onclick="switchTab('cal',this)">📅 캘린더</button>
+</div>
+
+<!-- D-day 배너 -->
+<div id="ddayBanner" style="display:none;align-items:center;justify-content:space-between;padding:7px 20px;background:var(--primary-soft);border-bottom:1px solid var(--primary-mid);font-size:12px;font-family:var(--font);gap:10px;flex-wrap:wrap">
+  <div id="ddayText" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"></div>
+  <button onclick="document.getElementById('ddayBanner').style.display='none'" style="border:none;background:transparent;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;flex-shrink:0">✕</button>
 </div>
 
 
@@ -1252,66 +1267,7 @@ body.cardiac-mode.dark {
 <!-- ══════════════════════════════════════════ -->
 <!--  UPLOAD MODAL — Calendar                  -->
 <!-- ══════════════════════════════════════════ -->
-<div id="calUploadOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closeCalUpload(event)">
-  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div id="calModalTitle" style="font-size:16px;font-weight:700;color:var(--text)">일정 추가하기</div>
-      <button onclick="closeCalUpload()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">학회명 / 이벤트명 *</label>
-        <input id="c-name" type="text" placeholder="예: KSGO 2025 정기학술대회" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">시작일 *</label>
-          <input id="c-start" type="date" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">종료일</label>
-          <input id="c-end" type="date" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">장소</label>
-          <input id="c-loc" type="text" placeholder="예: 서울 코엑스" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">필터</label>
-          <select id="c-tag" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
-            <option value="conference">학회</option>
-            <option value="workshop">워크샵</option>
-            <option value="symposium">심포지엄</option>
-            <option value="roadshow">로드쇼</option>
-            <option value="other">기타</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">🔗 공식 웹사이트 URL</label>
-        <input id="c-url" type="text" placeholder="https://www.ksgo.or.kr" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">📎 아젠다 파일 업로드 (PDF / 이미지)</label>
-        <div style="border:1.5px dashed var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:border-color 0.15s;background:var(--surface2)" onclick="document.getElementById('c-agenda-file').click()" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
-          <input id="c-agenda-file" type="file" accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="handleAgendaUpload(event)">
-          <div id="c-agenda-preview" style="font-size:12px;color:var(--text3)">
-            클릭해서 파일 선택 (PDF, JPG, PNG)
-          </div>
-        </div>
-        <input id="c-agenda-name" type="hidden" value="">
-        <input id="c-agenda-data" type="hidden" value="">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.06em;display:block;margin-bottom:5px">메모</label>
-        <textarea id="c-note" placeholder="부스 번호, 발표 세션, 준비사항 등..." rows="2" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--surface2);color:var(--text);outline:none;resize:none"></textarea>
-      </div>
-      <button onclick="submitCal()" id="calSubmitBtn" data-ko="추가하기" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">추가하기</button>
-    </div>
-  </div>
-</div>
+<!-- calUploadOverlay removed -->
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
@@ -1586,11 +1542,15 @@ function switchSpec(spec, el) {
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('sub-video').classList.add('active');
 
+  // 모바일 탭바 — 영상 탭으로 리셋
+  updateMobileTabs('video');
+
   // 테마 전환
   if(spec === 'cardiac') {
     document.body.classList.add('cardiac-mode');
     document.getElementById('page-cardiac-video').classList.add('active');
     document.getElementById('headerCount').textContent = 'Cardiac';
+    renderCardiacVideos();
   } else {
     document.body.classList.remove('cardiac-mode');
     document.getElementById('page-video').classList.add('active');
@@ -1602,6 +1562,7 @@ function switchTab(tab, el) {
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  updateMobileTabs(tab);
 
   if(currentSpec === 'cardiac') {
     document.getElementById('page-cardiac-' + tab).classList.add('active');
@@ -1815,6 +1776,7 @@ function renderVideos() {
 
 
 function openModal(v) {
+  addRecent('video', v);
   currentUrl = v.url;
   document.getElementById('modalOp').textContent = v.op;
   document.getElementById('modalTitle').textContent = v.title;
@@ -2171,11 +2133,12 @@ function makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, d
   return (
     '<div style="padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleArt(\'' + aid + '\')">' +
       (a.image ? rowThumb : fav) +
-      '<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap;' + tagColor + '">' + tagLabel + '</span>' +
-      '<span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;min-width:80px">' + a.hospital + '</span>' +
+      '<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap;cursor:pointer;' + tagColor + '" onclick="event.stopPropagation();filterByTag(\'' + (tagLabel.toLowerCase()) + '\')" title="이 태그로 필터">' + tagLabel + '</span>' +
+      '<span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;min-width:80px;cursor:pointer" onclick="event.stopPropagation();filterByHospital(this.textContent)" title="병원 필터">' + a.hospital + '</span>' +
       '<span style="font-size:11px;color:var(--text3);white-space:nowrap">' + a.surgeon + '</span>' +
       '<span style="font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + a.title + '">' + a.title + '</span>' +
       '<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">' + dateStr + '</span>' +
+      ((() => { try { const d=new Date(a.date); const now=new Date(); return (now-d)<7*86400000 && d<=now; } catch(e){return false;} })() ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:#FEF3C7;color:#92400E;font-family:var(--mono);flex-shrink:0">NEW</span>' : '') +
       '<span id="arr_' + aid + '" style="font-size:14px;color:var(--text3);transition:transform 0.2s;flex-shrink:0">›</span>' +
     '</div>' +
     '<div id="det_' + aid + '" style="display:none;border-top:1px solid var(--border);padding:14px;background:var(--surface2)">' +
@@ -2184,7 +2147,9 @@ function makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, d
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.4">' + a.title + '</div>' +
           '<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">' + a.desc + '</div>' +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap">' + linkHtml + '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' + linkHtml +
+        (a.links.length ? '<button onclick="event.stopPropagation();shareItem(\'' + (a.title||'').replace(/'/g,"\'") + '\',\'' + (a.links[0].url||'').replace(/'/g,"\'") + '\')" style="border:none;background:var(--surface2);border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--text2);font-size:11px;display:inline-flex;align-items:center;gap:3px;font-family:var(--font)" title="공유"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>공유</button>' : '') +
+      '</div>' +
         '</div>' +
       '</div>' +
     '</div>'
@@ -2494,7 +2459,10 @@ function renderPapers() {
         '</div>' +
         (doi ? '<a href="' + doi + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none" onmouseover="this.style.background=\'#A01030\'" onmouseout="this.style.background=\'var(--primary)\'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF</a>' : '') +
       '</div>' +
-      '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45">' + (p.title||'') + '</div>' +
+      '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
+        '<span style="flex:1">' + (p.title||'') + '</span>' +
+        '<button onclick="copyToClipboard(\''+((p.title||'').replace(/'/g,"\\'")+' ('+p.authors+', '+p.journal+' '+p.year+')')+'\', this)" style="flex-shrink:0;margin-top:1px;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px;font-size:11px" title="제목 복사"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+      '</div>' +
       '<div style="font-size:11px;color:var(--text2)">' + (p.authors||'') + '</div>' +
       (hosp ? '<div style="font-size:11px;color:var(--text3)">' + hosp + '</div>' : '') +
       (p.summary ? '<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">' + p.summary + '</div>' : '') +
@@ -2517,7 +2485,21 @@ function toggleTheme(){
   if(isCardiac) document.body.classList.add('cardiac-mode');
   localStorage.setItem('gynHubTheme', document.body.classList.contains('dark') ? 'dark' : 'light');
 }
-if(localStorage.getItem('gynHubTheme') === 'dark') document.body.classList.add('dark');
+// OS 다크모드 자동 감지 (저장값 없으면 시스템 따라감)
+const savedTheme = localStorage.getItem('gynHubTheme');
+if(savedTheme === 'dark') {
+  document.body.classList.add('dark');
+} else if(!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.body.classList.add('dark');
+}
+// OS 다크모드 변경 감지
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  if(!localStorage.getItem('gynHubTheme')) {
+    document.body.classList.toggle('dark', e.matches);
+    const isCardiac = document.body.classList.contains('cardiac-mode');
+    if(isCardiac) document.body.classList.add('cardiac-mode');
+  }
+});
 
 function openDetail(a){
   document.getElementById('detailTitle').textContent = `${a.surgeon} · ${a.hospital}`;
@@ -2581,7 +2563,7 @@ function closeUploadModal(e) {
     document.body.style.overflow='';
   }
 }
-function getYtIdFromUrl(url) { const m=url.match(/[?&]v=([^&]+)/); return m?m[1]:null; }
+// getYtIdFromUrl → getYtId 통합
 function previewVideo() {
   const url = document.getElementById('u-url').value;
   const id = getYtIdFromUrl(url);
@@ -2917,76 +2899,8 @@ function toggleCal(rid) {
 
 /* ══ Calendar Upload ══ */
 /* ══════════════════════ ARTICLE URL 자동분석 ══════════════════════ */
-async function analyzeArticleUrl() {
-  const url = document.getElementById('artUrlInput').value.trim();
-  if(!url){ alert('URL을 입력해 주세요.'); return; }
-  const btn = document.getElementById('artAnalyzeBtn');
-  const status = document.getElementById('artAnalyzeStatus');
-  btn.textContent = '분석 중...'; btn.disabled = true;
-  status.style.display = 'block';
-  status.style.background = 'var(--surface2)';
-  status.style.color = 'var(--text3)';
-  status.textContent = '🔍 Claude가 기사를 분석하고 있어요...';
+// analyzeArticleUrl removed (UI replaced by sheet link)
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`당신은 의료/산부인과 관련 기사를 분석하는 어시스턴트입니다.
-주어진 URL의 기사를 분석하여 반드시 JSON만 반환하세요. 마크다운 없이 순수 JSON만.
-형식:
-{
-  "hospital": "병원명",
-  "surgeon": "의사명 (없으면 '산부인과팀')",
-  "date": "YYYY-MM-DD (모르면 오늘 날짜)",
-  "tag": "vnotes 또는 milestone (달성기념이면 milestone, vNOTES 관련이면 vnotes)",
-  "title": "기사 제목 (한국어, 50자 이내)",
-  "desc": "기사 요약 (한국어, 100자 이내, 핵심 내용만)",
-  "label": "링크 버튼 표시 텍스트 (예: 메디컬투데이 기사)"
-}`,
-        messages:[{role:'user', content:`다음 URL의 기사를 분석해주세요: ${url}`}]
-      })
-    });
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-    let parsed;
-    try {
-      const clean = text.replace(/```json|```/g,'').trim();
-      parsed = JSON.parse(clean);
-    } catch(e) {
-      throw new Error('JSON 파싱 실패: ' + text.slice(0,100));
-    }
-
-    // ARTICLES에 추가
-    ARTICLES.push({
-      hospital: parsed.hospital || '병원명 미상',
-      surgeon:  parsed.surgeon  || '산부인과팀',
-      date:     parsed.date     || new Date().toISOString().slice(0,10),
-      tag:      parsed.tag      || 'vnotes',
-      title:    parsed.title    || '제목 없음',
-      desc:     parsed.desc     || '',
-      image:    '',
-      links:[{label: parsed.label || '기사 링크', url}]
-    });
-
-    status.style.background = '#EAF3DE';
-    status.style.color = '#27500A';
-    status.textContent = `✅ "${parsed.title}" — ${parsed.hospital} 추가 완료!`;
-    document.getElementById('artUrlInput').value = '';
-    renderKOL();
-  } catch(err) {
-    status.style.background = '#FAEEDA';
-    status.style.color = '#633806';
-    status.textContent = '⚠️ 분석 실패: ' + err.message + ' — URL을 확인하거나 직접 입력해 주세요.';
-  } finally {
-    btn.textContent = '분석하기'; btn.disabled = false;
-  }
-}
-
-/* ══════════════════════ CALENDAR 아젠다 업로드 ══════════════════════ */
 function handleAgendaUpload(event) {
   const file = event.target.files[0];
   if(!file) return;
@@ -3014,82 +2928,8 @@ function deleteCal(idx) {
   renderCal();
 }
 
-function editCal(idx) {
-  const c = CONFERENCES[idx];
-  document.getElementById('c-name').value  = c.name  || '';
-  document.getElementById('c-start').value = c.start || '';
-  document.getElementById('c-end').value   = c.end   || '';
-  document.getElementById('c-loc').value   = c.loc   || '';
-  document.getElementById('c-tag').value   = c.tag   || 'conference';
-  document.getElementById('c-url').value   = c.url   || '';
-  document.getElementById('c-note').value  = c.note  || '';
-  // 아젠다 미리보기 복원
-  const prev = document.getElementById('c-agenda-preview');
-  if(c.agendaData) {
-    document.getElementById('c-agenda-data').value = c.agendaData;
-    document.getElementById('c-agenda-name').value = c.agendaName || '';
-    if(c.agendaData.startsWith('data:image')) {
-      prev.innerHTML = `<img src="${c.agendaData}" style="max-width:100%;max-height:120px;border-radius:6px;object-fit:contain">
-        <div style="font-size:11px;color:var(--text3);margin-top:5px">📎 ${c.agendaName}</div>`;
-    } else {
-      prev.innerHTML = `<div style="font-size:22px">📄</div><div style="font-size:12px;color:var(--text2);font-weight:500;margin-top:4px">${c.agendaName}</div>`;
-    }
-  } else {
-    document.getElementById('c-agenda-data').value = '';
-    document.getElementById('c-agenda-name').value = '';
-    prev.innerHTML = '클릭해서 파일 선택 (PDF, JPG, PNG)';
-    prev.style.color = 'var(--text3)';
-  }
-  document.getElementById('calModalTitle').textContent = '일정 수정하기';
-  document.getElementById('calSubmitBtn').textContent  = '수정 저장';
-  document.getElementById('calUploadOverlay').dataset.editIdx = idx;
-  openCalUpload();
-}
+// editCal removed
 
-function openCalUpload() {
-  document.getElementById('calUploadOverlay').style.display='flex';
-  document.body.style.overflow='hidden';
-}
-function closeCalUpload(e) {
-  if(!e||e.target===document.getElementById('calUploadOverlay')){
-    document.getElementById('calUploadOverlay').style.display='none';
-    delete document.getElementById('calUploadOverlay').dataset.editIdx;
-    document.getElementById('calModalTitle').textContent = '일정 추가하기';
-    document.getElementById('calSubmitBtn').textContent  = '추가하기';
-    document.getElementById('c-agenda-data').value = '';
-    document.getElementById('c-agenda-name').value = '';
-    document.getElementById('c-agenda-preview').innerHTML = '클릭해서 파일 선택 (PDF, JPG, PNG)';
-    document.body.style.overflow='';
-  }
-}
-function submitCal() {
-  const name=document.getElementById('c-name').value.trim();
-  const start=document.getElementById('c-start').value;
-  if(!name||!start){alert('학회명과 시작일은 필수입니다.');return;}
-  const entry = {
-    name, start,
-    end:   document.getElementById('c-end').value   || start,
-    loc:   document.getElementById('c-loc').value.trim() || '',
-    tag:   document.getElementById('c-tag').value,
-    url:   document.getElementById('c-url').value.trim(),
-    note:  document.getElementById('c-note').value.trim(),
-    agendaData: document.getElementById('c-agenda-data').value || '',
-    agendaName: document.getElementById('c-agenda-name').value || '',
-  };
-  const overlay = document.getElementById('calUploadOverlay');
-  const editIdx = overlay.dataset.editIdx;
-  if(editIdx !== undefined && editIdx !== '') {
-    CONFERENCES[parseInt(editIdx)] = entry;
-  } else {
-    CONFERENCES.push(entry);
-  }
-  closeCalUpload();
-  renderCal();
-  ['c-name','c-start','c-end','c-loc','c-url','c-note'].forEach(id=>document.getElementById(id).value='');
-}
-
-
-/* ══════════════════════ ARTICLE MODAL ══════════════════════ */
 function openArticleModal() {
   // 오늘 날짜 기본값
   document.getElementById('a-date').value = new Date().toISOString().slice(0,10);
@@ -3592,6 +3432,123 @@ function toggleCardiacCal(rid) {
   if(arr) arr.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 
+/* ══════════════════════ UTILITIES ══════════════════════ */
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅';
+    btn.style.color = '#27500A';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1500);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  });
+}
+
+/* ① 공유 */
+function shareItem(title, url) {
+  if(navigator.share) {
+    navigator.share({ title, url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(() => showToast('🔗 링크가 복사됐어요!'));
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1'; t.style.transform = 'translateY(0)';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; }, 2200);
+}
+
+/* ② 최근 본 항목 */
+const RECENT_KEY = 'gynHub_recent';
+function addRecent(type, item) {
+  try {
+    let list = JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');
+    const entry = { type, title:item.title||item.name||'', url:item.url||item.doi||'', ts:Date.now() };
+    list = [entry, ...list.filter(r=>r.title!==entry.title)].slice(0,6);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+  } catch(e) {}
+}
+function getRecent() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]'); } catch(e) { return []; }
+}
+
+/* ③ URL 파라미터 연동 */
+function pushState(tab, filters={}) {
+  const p = new URLSearchParams();
+  p.set('tab', tab);
+  Object.entries(filters).forEach(([k,v]) => { if(v && v!=='all') p.set(k, v); });
+  history.replaceState({}, '', location.pathname + (p.toString() ? '?'+p.toString() : ''));
+}
+
+function readStateFromURL() {
+  const p = new URLSearchParams(location.search);
+  const tab = p.get('tab');
+  const tech = p.get('tech');
+  const indication = p.get('indication');
+  const category = p.get('category');
+  const hospital = p.get('hospital');
+  if(tab && ['video','kol','paper','cal'].includes(tab)) {
+    const el = document.getElementById('sub-'+tab);
+    if(el) { switchTab(tab, el); updateMobileTabs(tab); }
+  }
+  if(tech) kolFilters.tech = tech;
+  if(indication) kolFilters.indication = indication;
+  if(category) kolFilters.category = category;
+  if(hospital) {
+    const s = document.getElementById('kolSearch');
+    if(s) s.value = hospital;
+  }
+}
+
+/* ⑤ 병원 필터 클릭 */
+function filterByHospital(hospital) {
+  const el = document.getElementById('sub-kol');
+  if(el) { switchTab('kol', el); updateMobileTabs('kol'); }
+  const s = document.getElementById('kolSearch');
+  if(s) { s.value = hospital; renderKOL(); }
+  pushState('kol', { hospital });
+}
+
+/* ⑥ D-30 학회 배너 */
+function renderDdayBanner() {
+  const banner = document.getElementById('ddayBanner');
+  const textEl = document.getElementById('ddayText');
+  if(!banner || !textEl) return;
+  const cals = currentSpec==='cardiac' ? CARDIAC_CALS : CONFERENCES;
+  const upcoming = cals
+    .filter(c => { const du=daysUntil(c.start||''); return (c.name||c.학회명) && du>=0 && du<=30; })
+    .sort((a,b) => daysUntil(a.start||'')-daysUntil(b.start||''))
+    .slice(0,3);
+  if(!upcoming.length) { banner.style.display='none'; return; }
+  textEl.innerHTML = upcoming.map(c => {
+    const du = daysUntil(c.start||'');
+    const label = du===0?'오늘!':'D-'+du;
+    const color = du<=7?'#C0143C':du<=14?'#E8856A':'var(--primary)';
+    const name = c.name||c.학회명||'';
+    return `<span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap" onclick="switchTab('cal',document.getElementById('sub-cal'));updateMobileTabs('cal')">
+      <span style="font-size:11px;font-weight:700;color:${color};font-family:var(--mono)">${label}</span>
+      <span style="color:var(--text2);font-weight:500;font-size:12px">${name}</span>
+    </span>`;
+  }).join('<span style="color:var(--border);margin:0 6px">·</span>');
+  banner.style.display = 'flex';
+}
+
+/* ⑦ 태그 클릭 필터 */
+function filterByTag(tag) {
+  kolFilters.category = tag;
+  const el = document.getElementById('sub-kol');
+  if(el) { switchTab('kol', el); updateMobileTabs('kol'); }
+  renderKOL();
+  buildKolFilters();
+  pushState('kol', { category: tag });
+}
+
 /* ══════════════════════ MOBILE TAB SYNC ══════════════════════ */
 function updateMobileTabs(active) {
   ['video','kol','paper','cal'].forEach(t => {
@@ -3607,7 +3564,12 @@ loadPapersFromSheet();
 loadCardiacData();
 renderPapers();
 applyLang();
+readStateFromURL();
+setTimeout(renderDdayBanner, 1200);
 loadConferencesFromSheet();
 </script>
+
+<!-- Toast 알림 -->
+<div id="toast" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);background:#151826;color:white;font-family:var(--font);font-size:13px;font-weight:500;padding:9px 18px;border-radius:20px;z-index:999;opacity:0;transition:opacity 0.2s,transform 0.2s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.25)"></div>
 </body>
 </html>
