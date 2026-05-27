@@ -1431,11 +1431,11 @@ async function loadPapersFromSheet() {
         authors:  get(r,'authors','author','저자'),
         year:     get(r,'year','연도'),
         journal:  get(r,'journal','저널'),
-        hospital: get(r,'hospital','기관','institution'),
+        hospital: get(r,'hospital / country','hospital','기관','institution'),
         summary:  get(r,'summary','요약','abstract','desc'),
-        doi:      get(r,'doi','url','link'),
+        doi:      get(r,'doi / link','doi','url','link'),
         tech:     get(r,'tech','technique','기법'),
-        attach:   get(r,'첨부','attach','attachment','media'),
+        attach:   get(r,'attachment','첨부','attach','media'),
         chartData:null
       }))
       .filter(p => p.title);
@@ -3184,7 +3184,7 @@ async function loadCardiacData() {
             title: get(r,'title','제목'), authors: get(r,'authors','author','저자'),
             year: get(r,'year','연도'), journal: get(r,'journal','저널'),
             hospital: get(r,'hospital','기관'), summary: get(r,'summary','요약','desc'),
-            doi: get(r,'doi','url'), tech: get(r,'tech','기법'), attach: get(r,'첨부','attach','attachment','media'), chartData: null
+            doi: get(r,'doi / link','doi','url'), tech: get(r,'tech','기법'), attach: get(r,'attachment','첨부','attach','media'), chartData: null
           });
         } else if(s.type==='cal') {
           s.arr.push({
