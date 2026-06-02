@@ -1469,6 +1469,7 @@ async function loadPapersFromSheet() {
         tech:     get(r,'tech','technique','기법'),
         system:   get(r,'system','시스템','da vinci'),
         attach:   get(r,'attachment','첨부','attach','media'),
+        indication: get(r,'indication','인디케이션','disease'),
         evidence: get(r,'evidence level','evidence','study type','연구 디자인','study design'),
         keyMessage:   get(r,'key message','keymessage','clinical key message','임상 메시지'),
         talkingPoint: get(r,'talking point','talkingpoint','sales talking point','세일즈 포인트'),
@@ -2303,14 +2304,11 @@ const PF_CATEGORY = [
   {key:'sp',     label:'SP'},
 ];
 const PF_INDICATION = [
-  {key:'all',              label:'전체'},
-  {key:'endometriosis',    label:'Endometriosis'},
-  {key:'adenomyosis',      label:'Adenomyosis'},
-  {key:'myoma',            label:'Myoma'},
-  {key:'prolapse',         label:'Prolapse'},
-  {key:'endometrial_ca',   label:'Endometrial Cancer'},
-  {key:'borderline',       label:'Borderline Ovarian Tumor'},
-  {key:'ovarian_cyst',     label:'Ovarian Cyst'},
+  {key:'all',            label:'전체'},
+  {key:'hysterectomy',   label:'Hysterectomy'},
+  {key:'endometriosis',  label:'Endometriosis'},
+  {key:'myomectomy',     label:'Myomectomy'},
+  {key:'ovarian_cyst',   label:'Ovarian Cystectomy'},
 ];
 const PF_PLATFORM = [
   {key:'all',  label:'전체'},
@@ -2363,13 +2361,11 @@ function renderStars(n, total=5) {
 // ── Indication 정규화 ──
 function normIndication(v) {
   const s = (v||'').toLowerCase();
-  if(s.includes('endometrial cancer') || s.includes('endometrial carcinoma')) return 'endometrial_ca';
-  if(s.includes('endometriosis') || s.includes('die')) return 'endometriosis';
-  if(s.includes('adenomyo')) return 'adenomyosis';
-  if(s.includes('myoma') || s.includes('fibroid') || s.includes('leiomyoma')) return 'myoma';
-  if(s.includes('prolapse')) return 'prolapse';
-  if(s.includes('borderline')) return 'borderline';
-  if(s.includes('ovarian cyst') || s.includes('cystectomy')) return 'ovarian_cyst';
+  if(s.includes('ovarian cyst') || s.includes('cystectomy') || s.includes('borderline')) return 'ovarian_cyst';
+  if(s.includes('endometriosis') || s.includes('die') || s.includes('deep infiltrat')) return 'endometriosis';
+  if(s.includes('myomectomy') || s.includes('myoma') || s.includes('fibroid') || s.includes('leiomyo') || s.includes('adenomyo')) return 'myomectomy';
+  if(s.includes('hysterectomy') || s.includes('prolapse') || s.includes('uterosacral') || s.includes('uterine prolapse')) return 'hysterectomy';
+  if(s.includes('endometrial cancer') || s.includes('endometrial carcinoma')) return 'hysterectomy';
   return '';
 }
 
