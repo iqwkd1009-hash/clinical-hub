@@ -838,37 +838,64 @@ body.cardiac-mode.dark {
   <!-- 논문 사이드바: 수술기법 필터 -->
   <aside class="sidebar" id="sidebar-paper">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
+      <span style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
       <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
     </div>
+    <!-- 검색 -->
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="paperSearch" placeholder="Search title, author..." oninput="renderPapers()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
+      <input type="text" id="paperSearch" placeholder="제목, 저자, 키워드 검색..." oninput="renderPapers()" style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);width:100%;outline:none">
     </div>
     <div class="sidebar-inner">
       <!-- 논문 추가 버튼 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1951995012" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1951995012" target="_blank" rel="noopener" style="width:100%;margin-bottom:16px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         논문 추가하기
       </a>
+      <!-- 전체 초기화 -->
+      <button id="paperResetBtn" onclick="resetPaperFilters()" style="width:100%;margin-bottom:14px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.69"/></svg>
+        전체 초기화
+      </button>
+      <!-- 1. Category -->
       <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="paperTechFilters"></div>
+        <div class="filter-label">Category</div>
+        <div id="pf-category"></div>
+      </div>
+      <!-- 2. Indication -->
+      <div class="filter-section">
+        <div class="filter-label">Indication</div>
+        <div id="pf-indication"></div>
+      </div>
+      <!-- 3. Platform -->
+      <div class="filter-section">
+        <div class="filter-label">Platform</div>
+        <div id="pf-platform"></div>
+      </div>
+      <!-- 4. Evidence Level -->
+      <div class="filter-section">
+        <div class="filter-label">Evidence Level</div>
+        <div id="pf-evidence"></div>
+      </div>
+      <!-- 5. Year -->
+      <div class="filter-section">
+        <div class="filter-label">Year</div>
+        <div id="pf-year"></div>
       </div>
     </div>
   </aside>
   <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-paper')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="기법 필터">기법 필터</span>
+          필터
         </button>
         <div class="active-filters" id="paperActiveTags"></div>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="paperCount">0</span> papers</div>
+      <div style="font-size:12px;color:var(--text3);white-space:nowrap"><span id="paperCount">0</span> papers</div>
     </div>
-    <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px"></div>
+    <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px"></div>
   </div>
 </div>
 
@@ -1435,7 +1462,11 @@ async function loadPapersFromSheet() {
         summary:  get(r,'summary','요약','abstract','desc'),
         doi:      get(r,'doi / link','doi','url','link'),
         tech:     get(r,'tech','technique','기법'),
+        system:   get(r,'system','시스템','da vinci'),
         attach:   get(r,'attachment','첨부','attach','media'),
+        evidence: get(r,'evidence level','evidence','study type','연구 디자인','study design'),
+        keyMessage:   get(r,'key message','keymessage','clinical key message','임상 메시지'),
+        talkingPoint: get(r,'talking point','talkingpoint','sales talking point','세일즈 포인트'),
         chartData:null
       }))
       .filter(p => p.title);
@@ -2180,7 +2211,7 @@ const PAPERS = [
     authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy",
     hospital:"Eulji University Hospital, Korea",
     summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. 이소바릭(가스리스) 질식 접근법으로 흉터 없이 수술 가능함 입증. Console time 135min, EBL 50mL, 합병증 없음.",
-    doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", attach:"Photo",
+    doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo",
     chartData:{labels:["Op Time (min)","EBL (mL)"],values:[135,50],type:"bar"}
   },
   {
@@ -2188,7 +2219,7 @@ const PAPERS = [
     authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery",
     hospital:"Eulji University Hospital, Korea",
     summary:"35명 대상 로봇 글러브 포트 기법(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14). 전례 성공, 합병증 없음. Total OR time 160min.",
-    doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"SP", attach:"Video",
+    doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"SP", system:"da Vinci Xi", attach:"Video",
     chartData:{labels:["Myomectomy","Adenomyomectomy","Ovarian cystectomy","NOTES Hx"],values:[12,3,6,14],type:"donut"}
   },
   {
@@ -2196,7 +2227,7 @@ const PAPERS = [
     authors:"Zhang & Guan", year:"2021", journal:"JMIG",
     hospital:"China",
     summary:"33례 자궁내막증 환자 대상 RvNOTES 적용. 수술 후 VAS 통증 점수 유의미하게 감소. 재발 없음.",
-    doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES",
+    doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES", system:"da Vinci Xi",
     chartData:{labels:["Pre-op VAS","Post-op VAS","3M Follow-up"],values:[7.2,2.1,1.4],type:"line"}
   },
   {
@@ -2204,7 +2235,7 @@ const PAPERS = [
     authors:"Mei & Lin", year:"2023", journal:"Frontiers in Medicine",
     hospital:"China",
     summary:"가스리스 vs 기존 RvNOTES 비교. 수술시간·출혈량·입원기간 비교. 가스리스군 복부 팽만 부작용 유의하게 낮음.",
-    doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES",
+    doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi",
     chartData:{labels:["Op Time","EBL","LOS"],values:[95,80,2.1],type:"grouped"}
   },
   {
@@ -2212,7 +2243,7 @@ const PAPERS = [
     authors:"Guan X et al.", year:"2023", journal:"JMIG",
     hospital:"China",
     summary:"심부자궁내막증 RvNOTES 시 ICG 형광 역행 요관박리술 적용. 요관 손상 없이 전례 성공. 수술시간 단축.",
-    doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract", tech:"vNOTES",
+    doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract", tech:"vNOTES", system:"da Vinci Xi",
     chartData:{labels:["Success Rate (%)","Ureteral Injury (%)"],values:[100,0],type:"bar"}
   },
   // ── SP System vNOTES ──
@@ -2221,7 +2252,7 @@ const PAPERS = [
     authors:"et al.", year:"2025", journal:"JMIG",
     hospital:"",
     summary:"다빈치 SP를 이용한 대형 자궁 대상 vNOTES Hysterectomy 술기 보고. 복부 절개 없이 단일공 로봇으로 큰 자궁도 안전하게 제거 가능함을 입증.",
-    doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"SP",
+    doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"SP", system:"da Vinci SP",
     chartData:null
   },
   {
@@ -2229,7 +2260,7 @@ const PAPERS = [
     authors:"et al.", year:"2025", journal:"GYN Surgery / Case Report",
     hospital:"",
     summary:"다빈치 SP를 이용한 경질 로봇 병기 수술 증례. 의심 난소 경계성 종양에서 단일공 로봇 경질 접근법의 안전성 및 실현 가능성 확인.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"SP",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"SP", system:"da Vinci SP",
     chartData:null
   },
   {
@@ -2237,7 +2268,7 @@ const PAPERS = [
     authors:"et al.", year:"2022", journal:"GYN Oncology Reports",
     hospital:"",
     summary:"32세 조기 자궁내막암 환자에서 로봇 보조 경질 NOTES 수술 증례. 젊은 부인암 환자에서 단일공 로봇 경질 접근법으로 종양학적 안전성과 미용적 장점을 동시에 달성.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000795", tech:"SP",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000795", tech:"SP", system:"da Vinci Xi",
     chartData:null
   },
   {
@@ -2245,7 +2276,7 @@ const PAPERS = [
     authors:"et al.", year:"2022", journal:"GYN Surgery Reports",
     hospital:"",
     summary:"자궁탈출증에서 자궁 보존 유무에 따른 로봇 보조 경질 NOTES 고위자궁천골인대 현수술. 단일공 접근으로 복강경 대비 동등한 효과와 우수한 환자 만족도.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000473", tech:"SP",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000473", tech:"SP", system:"da Vinci Xi",
     chartData:null
   },
   {
@@ -2253,40 +2284,276 @@ const PAPERS = [
     authors:"et al.", year:"2022", journal:"GYN Surgery Reports",
     hospital:"",
     summary:"로봇 경질 NOTES 단계별 수술 술기 가이드. 포트 삽입부터 봉합까지 체계적인 기술 표준화 제시. For Intuitive internal use only.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000588", tech:"SP",
+    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000588", tech:"SP", system:"da Vinci Xi",
     chartData:null
   },
 ];
 
-// 수술기법 정의
-const PAPER_TECHS = [
+/* ══════════════════════ PAPER FILTERS ══════════════════════ */
+
+// ── 필터 정의 ──
+const PF_CATEGORY = [
   {key:'all',    label:'전체'},
   {key:'vnotes', label:'vNOTES'},
   {key:'sp',     label:'SP'},
 ];
+const PF_INDICATION = [
+  {key:'all',              label:'전체'},
+  {key:'endometriosis',    label:'Endometriosis'},
+  {key:'adenomyosis',      label:'Adenomyosis'},
+  {key:'myoma',            label:'Myoma'},
+  {key:'prolapse',         label:'Prolapse'},
+  {key:'endometrial_ca',   label:'Endometrial Cancer'},
+  {key:'borderline',       label:'Borderline Ovarian Tumor'},
+  {key:'ovarian_cyst',     label:'Ovarian Cyst'},
+];
+const PF_PLATFORM = [
+  {key:'all',  label:'전체'},
+  {key:'sp',   label:'da Vinci SP'},
+  {key:'xi',   label:'da Vinci Xi'},
+  {key:'dv5',  label:'da Vinci 5'},
+];
+const PF_EVIDENCE = [
+  {key:'all', label:'전체', stars:0},
+  {key:'1',   label:'Level 1', sub:'Meta-analysis / SR',  stars:5},
+  {key:'2',   label:'Level 2', sub:'RCT',                 stars:4},
+  {key:'3',   label:'Level 3', sub:'Prospective',         stars:3},
+  {key:'4',   label:'Level 4', sub:'Retrospective',       stars:2},
+  {key:'5',   label:'Level 5', sub:'Case Report / Tech',  stars:1},
+];
 
-let paperTechFilter = 'all';
+let pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all' };
 
+function resetPaperFilters() {
+  pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all' };
+  const s = document.getElementById('paperSearch'); if(s) s.value='';
+  renderPapers();
+}
+
+// ── Evidence Level 파싱 ──
+function parseEvidence(v) {
+  const s = (v||'').toLowerCase().trim();
+  if(!s || s==='-' || s==='—') return null;
+  if(s.includes('meta') || s.includes('systematic')) return {level:1, type:'Meta-analysis / SR', stars:5};
+  if(s.includes('rct') || s.includes('randomized')) return {level:2, type:'RCT', stars:4};
+  if(s.includes('prospective') || s.includes('registry') || s.includes('cohort')) return {level:3, type:'Prospective', stars:3};
+  if(s.includes('retrospective') || s.includes('comparative')) return {level:4, type:'Retrospective', stars:2};
+  if(s.includes('case') || s.includes('technical') || s.includes('video') || s.includes('series') || s.includes('surgical technique')) return {level:5, type:'Case Report / Tech', stars:1};
+  return null;
+}
+
+function renderStars(n, total=5) {
+  return Array.from({length:total}, (_,i) =>
+    `<span style="opacity:${i<n?'1':'0.18'}">⭐</span>`
+  ).join('');
+}
+
+// ── Indication 정규화 ──
+function normIndication(v) {
+  const s = (v||'').toLowerCase();
+  if(s.includes('endometrial cancer') || s.includes('endometrial carcinoma')) return 'endometrial_ca';
+  if(s.includes('endometriosis') || s.includes('die')) return 'endometriosis';
+  if(s.includes('adenomyo')) return 'adenomyosis';
+  if(s.includes('myoma') || s.includes('fibroid') || s.includes('leiomyoma')) return 'myoma';
+  if(s.includes('prolapse')) return 'prolapse';
+  if(s.includes('borderline')) return 'borderline';
+  if(s.includes('ovarian cyst') || s.includes('cystectomy')) return 'ovarian_cyst';
+  return '';
+}
+
+// ── Platform 정규화 ──
+function normPlatform(v) {
+  const s = (v||'').toLowerCase();
+  if(s.includes('sp')) return 'sp';
+  if(s.includes('5') || s.includes('dv5')) return 'dv5';
+  if(s.includes('xi')) return 'xi';
+  return '';
+}
+
+// ── Category 정규화 ──
+function normCategory(v) {
+  const s = (v||'').toLowerCase();
+  if(s.includes('vnotes') || s.includes('notes') || s.includes('vanh')) return 'vnotes';
+  if(s.includes('sp') || s.includes('single port') || s.includes('single-port')) return 'sp';
+  return '';
+}
+
+// ── 필터 빌드 ──
 function buildPaperFilters() {
-  const el = document.getElementById('paperTechFilters'); if(!el) return; el.innerHTML='';
-  PAPER_TECHS.forEach(t => {
-    const count = t.key==='all'
-      ? PAPERS.length
-      : PAPERS.filter(p => normPaperTech(p.tech) === t.key).length;
+  const makeFilter = (elId, defs, key, matchFn) => {
+    const el = document.getElementById(elId); if(!el) return; el.innerHTML='';
+    defs.forEach(d => {
+      const count = d.key==='all' ? PAPERS.length : PAPERS.filter(p => matchFn(p)===d.key).length;
+      if(d.key!=='all' && count===0) return;
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (pFilters[key]===d.key ? ' active' : '');
+      let labelHtml = d.label;
+      if(d.stars) labelHtml = renderStars(d.stars) + ' ' + d.label;
+      btn.innerHTML = `${labelHtml} <span class="btn-count">${count}</span>`;
+      btn.onclick = () => { pFilters[key]=d.key; renderPapers(); };
+      el.appendChild(btn);
+    });
+  };
+
+  makeFilter('pf-category',   PF_CATEGORY,   'category',   p => normCategory(p.tech||''));
+  makeFilter('pf-indication', PF_INDICATION, 'indication', p => normIndication(p.indication||p.title||''));
+  makeFilter('pf-platform',   PF_PLATFORM,   'platform',   p => normPlatform(p.system||p.sys||''));
+  makeFilter('pf-evidence',   PF_EVIDENCE,   'evidence',   p => { const ev=parseEvidence(p.evidence||p.evidenceLevel||''); return ev ? String(ev.level) : ''; });
+
+  // Year 필터 동적 생성
+  const years = [...new Set(PAPERS.map(p=>(p.year||'').trim()).filter(Boolean))].sort((a,b)=>b-a);
+  const yearEl = document.getElementById('pf-year'); if(!yearEl) return; yearEl.innerHTML='';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-btn' + (pFilters.year==='all'?' active':'');
+  allBtn.innerHTML = `최신순 <span class="btn-count">${PAPERS.length}</span>`;
+  allBtn.onclick = () => { pFilters.year='all'; renderPapers(); };
+  yearEl.appendChild(allBtn);
+  years.forEach(yr => {
+    const count = PAPERS.filter(p=>p.year===yr).length;
     const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (paperTechFilter===t.key ? ' active' : '');
-    btn.innerHTML = `${t.label} <span class="btn-count">${count}</span>`;
-    btn.onclick = () => { paperTechFilter = t.key; renderPapers(); };
-    el.appendChild(btn);
+    btn.className = 'filter-btn' + (pFilters.year===yr?' active':'');
+    btn.innerHTML = `${yr} <span class="btn-count">${count}</span>`;
+    btn.onclick = () => { pFilters.year=yr; renderPapers(); };
+    yearEl.appendChild(btn);
   });
 }
 
-function normPaperTech(v) {
-  const s = (v||'').toLowerCase().trim();
-  if(s === 'sp' || s === 'single port') return 'sp';
-  if(s === 'vnotes' || s === 'rvnotes') return 'vnotes';
-  return s;
+// ── 활성 필터 태그 ──
+function buildPaperActiveTags() {
+  const el = document.getElementById('paperActiveTags'); if(!el) return; el.innerHTML='';
+  const labelMap = {
+    category:   PF_CATEGORY,
+    indication: PF_INDICATION,
+    platform:   PF_PLATFORM,
+    evidence:   PF_EVIDENCE,
+  };
+  Object.entries(pFilters).forEach(([key, val]) => {
+    if(val==='all' || !val) return;
+    let label = val;
+    if(labelMap[key]) label = labelMap[key].find(d=>d.key===val)?.label || val;
+    const t = document.createElement('div'); t.className='active-tag';
+    t.innerHTML = `${label} <span style="margin-left:4px">×</span>`;
+    t.onclick = () => { pFilters[key]='all'; renderPapers(); };
+    el.appendChild(t);
+  });
+  if(pFilters.year!=='all') {
+    const t = document.createElement('div'); t.className='active-tag';
+    t.innerHTML = `${pFilters.year} <span style="margin-left:4px">×</span>`;
+    t.onclick = () => { pFilters.year='all'; renderPapers(); };
+    el.appendChild(t);
+  }
 }
+
+function getEvidenceLevel(v) { return parseEvidence(v); }
+function renderEvidenceDots(n) { return renderStars(n); }
+
+function renderPapers() {
+  buildPaperFilters();
+  buildPaperActiveTags();
+  const q = (document.getElementById('paperSearch')?.value||'').toLowerCase();
+  let items = PAPERS.filter(p => {
+    if(pFilters.category!=='all'   && normCategory(p.tech||'')!==pFilters.category) return false;
+    if(pFilters.indication!=='all' && normIndication(p.indication||p.title||'')!==pFilters.indication) return false;
+    if(pFilters.platform!=='all'   && normPlatform(p.system||p.sys||'')!==pFilters.platform) return false;
+    if(pFilters.evidence!=='all') {
+      const ev = parseEvidence(p.evidence||p.evidenceLevel||'');
+      if(!ev || String(ev.level)!==pFilters.evidence) return false;
+    }
+    if(pFilters.year!=='all' && (p.year||'')!==pFilters.year) return false;
+    if(q) {
+      const haystack = [(p.title||''),(p.authors||''),(p.summary||''),(p.tech||''),(p.indication||'')].join(' ').toLowerCase();
+      if(!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // 최신순 정렬
+  items = [...items].sort((a,b) => (b.year||'').localeCompare(a.year||''));
+
+  document.getElementById('paperCount').textContent = items.length;
+  document.getElementById('headerCount').textContent = items.length + ' papers';
+
+  const grid = document.getElementById('paperGrid'); grid.innerHTML='';
+  if(!items.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';
+    return;
+  }
+
+  items.forEach((p, i) => {
+    const doi   = p.doi||p.url||'';
+    const hosp  = p.hospital||p.affiliation||'';
+    const tech  = p.tech||'';
+    const ev    = parseEvidence(p.evidence||p.evidenceLevel||'');
+    const isVnotes = normCategory(tech)==='vnotes';
+    const techColor = isVnotes ? 'background:#E6F1FB;color:#0C447C' : 'background:#D1FAE5;color:#065F46';
+    const platLabel = (() => { const s=normPlatform(p.system||''); return s==='sp'?'da Vinci SP':s==='xi'?'da Vinci Xi':s==='dv5'?'da Vinci 5':''; })();
+
+    const card = document.createElement('div');
+    card.style.cssText = `background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:9px;transition:border-color 0.15s,box-shadow 0.15s`;
+    card.onmouseenter=()=>{card.style.borderColor='var(--primary-mid)';card.style.boxShadow='var(--shadow-hover)'};
+    card.onmouseleave=()=>{card.style.borderColor='var(--border)';card.style.boxShadow='var(--shadow)'};
+
+    card.innerHTML =
+      // ── 저널·연도 + DOI 버튼
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
+        '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
+          '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">' + (p.journal||'') + ' · ' + (p.year||'') + '</span>' +
+        '</div>' +
+        (doi ? '<a href="' + doi + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--primary);color:white;text-decoration:none">DOI / PDF</a>' : '') +
+      '</div>' +
+
+      // ── 뱃지 행: Category + Platform + Attach
+      '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
+        (tech ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;font-family:var(--mono);' + techColor + '">' + tech + '</span>' : '') +
+        (platLabel ? '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-family:var(--mono)">' + platLabel + '</span>' : '') +
+        (p.attach ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:' + (p.attach.toLowerCase()==='video'?'#FEF3C7':'#F3F4F6') + ';color:' + (p.attach.toLowerCase()==='video'?'#92400E':'#374151') + ';font-family:var(--mono)">' + (p.attach.toLowerCase()==='video'?'🎬 Video':'📷 Photo') + '</span>' : '') +
+      '</div>' +
+
+      // ── Evidence Level
+      (ev ?
+        '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:8px">' +
+          '<span style="letter-spacing:1px;font-size:11px">' + renderStars(ev.stars) + '</span>' +
+          '<span style="font-size:10px;font-weight:700;color:var(--text2);font-family:var(--mono)">Level ' + ev.level + '</span>' +
+          '<span style="font-size:10px;color:var(--text3)">' + ev.type + '</span>' +
+        '</div>'
+      : '') +
+
+      // ── 제목 + 복사
+      '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.45;display:flex;align-items:flex-start;gap:8px">' +
+        '<span style="flex:1">' + (p.title||'') + '</span>' +
+        '<button onclick="copyToClipboard(\''+((p.title||'').replace(/'/g,"\\'")+' ('+p.authors+', '+p.journal+' '+p.year+')')+'\', this)" style="flex-shrink:0;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px" title="복사"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+      '</div>' +
+
+      // ── 저자 / 기관
+      '<div style="font-size:11px;color:var(--text2)">' + (p.authors||'') + (hosp?' · <span style="color:var(--text3)">'+hosp+'</span>':'') + '</div>' +
+
+      // ── 요약 (Summary)
+      (p.summary ?
+        '<div style="font-size:11px;color:var(--text2);line-height:1.65;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">' + p.summary + '</div>'
+      : '') +
+
+      // ── Key Message
+      ((p.keyMessage||p.key_message) ?
+        '<div style="display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#F0FDF4;border-radius:8px;border-left:3px solid #22C55E">' +
+          '<span style="font-size:10px;font-weight:700;color:#166534;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0">📣 Key Message</span>' +
+          '<span style="font-size:11px;color:#166534;line-height:1.55">' + (p.keyMessage||p.key_message) + '</span>' +
+        '</div>'
+      : '') +
+
+      // ── Clinical Marketing Takeaway (Talking Point)
+      ((p.talkingPoint||p.talking_point) ?
+        '<div style="display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#FFF7ED;border-radius:8px;border-left:3px solid #F97316">' +
+          '<span style="font-size:10px;font-weight:700;color:#9A3412;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0">💬 Takeaway</span>' +
+          '<span style="font-size:11px;color:#9A3412;line-height:1.55">' + (p.talkingPoint||p.talking_point) + '</span>' +
+        '</div>'
+      : '');
+
+    grid.appendChild(card);
+  });
+}
+// normPaperTech merged into paper filters
+
+// normPaperSys merged into paper filters
 
 function drawChart(p, canvasId) {
   const c = document.getElementById(canvasId);
@@ -2415,11 +2682,30 @@ function drawChart(p, canvasId) {
   }
 }
 
+function getEvidenceLevel(v) {
+  const s = (v||'').toLowerCase().trim();
+  if(!s || s === '-' || s === '—') return null;
+  if(s.includes('meta') || s.includes('systematic')) return { level:1, label:'Meta-analysis / SR', dots:5 };
+  if(s.includes('rct') || s.includes('randomized')) return { level:2, label:'RCT', dots:4 };
+  if(s.includes('prospective') || s.includes('registry') || s.includes('cohort')) return { level:3, label:'Prospective', dots:3 };
+  if(s.includes('retrospective') || s.includes('comparative')) return { level:4, label:'Retrospective', dots:2 };
+  if(s.includes('case') || s.includes('technical') || s.includes('series')) return { level:5, label:'Case Report', dots:1 };
+  return null;
+}
+
+function renderEvidenceDots(dots) {
+  const total = 5;
+  return Array.from({length:total}, (_,i) =>
+    '<span style="font-size:10px;opacity:'+(i < dots ? '1' : '0.2')+'">🟢</span>'
+  ).join('');
+}
+
 function renderPapers() {
   buildPaperFilters();
   const q = document.getElementById('paperSearch').value.toLowerCase();
   const items = PAPERS.filter(p =>
     (paperTechFilter==='all' || normPaperTech(p.tech) === paperTechFilter) &&
+    (paperSysFilter==='all'  || normPaperSys(p.system||p.sys||'') === paperSysFilter) &&
     (!q || (p.title||'').toLowerCase().includes(q) || (p.authors||'').toLowerCase().includes(q) || (p.summary||'').toLowerCase().includes(q))
   );
   document.getElementById('paperCount').textContent = items.length;
@@ -2431,6 +2717,13 @@ function renderPapers() {
     const t=document.createElement('div'); t.className='active-tag';
     t.innerHTML=`${label} <span style="margin-left:4px">×</span>`;
     t.onclick=()=>{ paperTechFilter='all'; renderPapers(); };
+    tagsEl.appendChild(t);
+  }
+  if(paperSysFilter!=='all'){
+    const label = PAPER_SYSTEMS.find(s=>s.key===paperSysFilter)?.label || paperSysFilter;
+    const t=document.createElement('div'); t.className='active-tag';
+    t.innerHTML=`${label} <span style="margin-left:4px">×</span>`;
+    t.onclick=()=>{ paperSysFilter='all'; renderPapers(); };
     tagsEl.appendChild(t);
   }
 
@@ -2445,34 +2738,65 @@ function renderPapers() {
     const techColor = isVnotes ? 'background:#E6F1FB;color:#0C447C' : 'background:#D1FAE5;color:#065F46';
     const cid = `chart_paper_${i}`;
 
+    // Evidence Level
+    const ev = getEvidenceLevel(p.evidence || p.evidenceLevel || p.evidence_level || '');
+
     const card = document.createElement('div');
     card.style.cssText = `background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:${i*0.04}s;transition:border-color 0.15s,box-shadow 0.15s`;
     card.onmouseenter=()=>{card.style.borderColor='var(--primary-mid)';card.style.boxShadow='var(--shadow-hover)'};
     card.onmouseleave=()=>{card.style.borderColor='var(--border)';card.style.boxShadow='var(--shadow)'};
 
     card.innerHTML =
+      // ── 상단: 저널/연도 + 뱃지들 + DOI 버튼
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
           '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">' + (p.journal||'') + ' · ' + (p.year||'') + '</span>' +
           (tech ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;font-family:var(--mono);' + techColor + '">' + tech + '</span>' : '') +
           (p.attach ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:' + (p.attach.toLowerCase()==='video'?'#FEF3C7':'#F3F4F6') + ';color:' + (p.attach.toLowerCase()==='video'?'#92400E':'#374151') + ';font-family:var(--mono)">' + (p.attach.toLowerCase()==='video'?'🎬 Video':'📷 Photo') + '</span>' : '') +
         '</div>' +
-        (doi ? '<a href="' + doi + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none" onmouseover="this.style.background=\'#A01030\'" onmouseout="this.style.background=\'var(--primary)\'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF</a>' : '') +
+        (doi ? '<a href="' + doi + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF</a>' : '') +
       '</div>' +
+
+      // ── Evidence Level
+      (ev ?
+        '<div style="display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:7px;padding:5px 10px">' +
+          '<span style="font-size:10px;font-weight:600;color:var(--text3);font-family:var(--mono);white-space:nowrap">Level ' + ev.level + '</span>' +
+          '<span style="font-size:10px;color:var(--text3)">' + ev.label + '</span>' +
+          '<span style="margin-left:auto;letter-spacing:1px">' + renderEvidenceDots(ev.dots) + '</span>' +
+        '</div>'
+      : '') +
+
+      // ── 제목 + 복사 버튼
       '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
         '<span style="flex:1">' + (p.title||'') + '</span>' +
         '<button onclick="copyToClipboard(\''+((p.title||'').replace(/'/g,"\\'")+' ('+p.authors+', '+p.journal+' '+p.year+')')+'\', this)" style="flex-shrink:0;margin-top:1px;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px;font-size:11px" title="제목 복사"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
       '</div>' +
+
+      // ── 저자 / 기관
       '<div style="font-size:11px;color:var(--text2)">' + (p.authors||'') + '</div>' +
       (hosp ? '<div style="font-size:11px;color:var(--text3)">' + hosp + '</div>' : '') +
+
+      // ── 요약
       (p.summary ? '<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">' + p.summary + '</div>' : '') +
+
+      // ── Key Message + Talking Point
+      ((p.keyMessage || p.key_message) ?
+        '<div style="display:flex;gap:6px;align-items:flex-start;padding:7px 10px;background:#F0FDF4;border-radius:7px;border-left:3px solid #22C55E">' +
+          '<span style="font-size:10px;font-weight:700;color:#166534;white-space:nowrap;font-family:var(--mono);flex-shrink:0">📣 Key</span>' +
+          '<span style="font-size:11px;color:#166534;line-height:1.5">' + (p.keyMessage||p.key_message) + '</span>' +
+        '</div>'
+      : '') +
+      ((p.talkingPoint || p.talking_point) ?
+        '<div style="display:flex;gap:6px;align-items:flex-start;padding:7px 10px;background:#FFF7ED;border-radius:7px;border-left:3px solid #F97316">' +
+          '<span style="font-size:10px;font-weight:700;color:#9A3412;white-space:nowrap;font-family:var(--mono);flex-shrink:0">💬 Sales</span>' +
+          '<span style="font-size:11px;color:#9A3412;line-height:1.5">' + (p.talkingPoint||p.talking_point) + '</span>' +
+        '</div>'
+      : '') +
+
       (p.chartData ? '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><canvas id="' + cid + '" width="320" height="140" style="width:100%;height:auto;display:block"></canvas></div>' : '');
 
     grid.appendChild(card);
-
-    if(p.chartData) {
-      requestAnimationFrame(() => drawChart(p, cid));
-    }
+    if(p.chartData) requestAnimationFrame(() => drawChart(p, cid));
   });
 }
 
