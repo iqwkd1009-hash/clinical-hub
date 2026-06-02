@@ -2422,7 +2422,7 @@ function buildPaperFilters() {
   makeFilter('pf-country', PF_COUNTRY, 'country', p => normCountry(p.hospital||p.affiliation||''));
 
   // Year 필터 동적 생성
-  const years = [...new Set(PAPERS.map(p=>(p.year||'').trim()).filter(Boolean))].sort((a,b)=>b-a);
+  const years = [...new Set(PAPERS.map(p=>String(p.year||'').trim()).filter(Boolean))].sort((a,b)=>Number(b)-Number(a));
   const yearEl = document.getElementById('pf-year'); if(!yearEl) return; yearEl.innerHTML='';
   const allBtn = document.createElement('button');
   allBtn.className = 'filter-btn' + (pFilters.year==='all'?' active':'');
@@ -2430,7 +2430,7 @@ function buildPaperFilters() {
   allBtn.onclick = () => { pFilters.year='all'; renderPapers(); };
   yearEl.appendChild(allBtn);
   years.forEach(yr => {
-    const count = PAPERS.filter(p=>p.year===yr).length;
+    const count = PAPERS.filter(p=>String(p.year||'').trim()===yr).length;
     const btn = document.createElement('button');
     btn.className = 'filter-btn' + (pFilters.year===yr?' active':'');
     btn.innerHTML = `${yr} <span class="btn-count">${count}</span>`;
@@ -2481,7 +2481,7 @@ function renderPapers() {
       const ev = parseEvidence(p.evidence||p.evidenceLevel||'');
       if(!ev || String(ev.level)!==pFilters.evidence) return false;
     }
-    if(pFilters.year!=='all' && (p.year||'')!==pFilters.year) return false;
+    if(pFilters.year!=='all' && String(p.year||'').trim()!==pFilters.year) return false;
     if(pFilters.country!=='all' && normCountry(p.hospital||p.affiliation||'')!==pFilters.country) return false;
     if(q) {
       const haystack = [(p.title||''),(p.authors||''),(p.summary||''),(p.tech||''),(p.indication||'')].join(' ').toLowerCase();
@@ -2491,7 +2491,7 @@ function renderPapers() {
   });
 
   // 최신순 정렬
-  items = [...items].sort((a,b) => (b.year||'').localeCompare(a.year||''));
+  items = [...items].sort((a,b) => String(b.year||'').localeCompare(String(a.year||'')));
 
   document.getElementById('paperCount').textContent = items.length;
   document.getElementById('headerCount').textContent = items.length + ' papers';
