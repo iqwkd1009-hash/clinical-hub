@@ -882,6 +882,11 @@ body.cardiac-mode.dark {
         <div class="filter-label">Year</div>
         <div id="pf-year"></div>
       </div>
+      <!-- 6. Country -->
+      <div class="filter-section">
+        <div class="filter-label">Country</div>
+        <div id="pf-country"></div>
+      </div>
     </div>
   </aside>
   <div style="flex:1;padding:24px 28px;overflow-y:auto">
@@ -2321,11 +2326,18 @@ const PF_EVIDENCE = [
   {key:'4',   label:'Level 4', sub:'Retrospective',       stars:2},
   {key:'5',   label:'Level 5', sub:'Case Report / Tech',  stars:1},
 ];
+const PF_COUNTRY = [
+  {key:'all',   label:'전체'},
+  {key:'korea', label:'🇰🇷 Korea'},
+  {key:'japan', label:'🇯🇵 Japan'},
+  {key:'china', label:'🇨🇳 China'},
+  {key:'other', label:'🌏 Other'},
+];
 
-let pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all' };
+let pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
 
 function resetPaperFilters() {
-  pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all' };
+  pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
   const s = document.getElementById('paperSearch'); if(s) s.value='';
   renderPapers();
 }
@@ -2370,6 +2382,17 @@ function normPlatform(v) {
   return '';
 }
 
+function normCountry(v) {
+  const s = (v||'').toLowerCase();
+  if(s.includes('korea') || s.includes('한국') || s.includes('병원') || s.includes('대학') || s.includes('의원') || s.includes('센터')) return 'korea';
+  if(s.includes('japan') || s.includes('일본')) return 'japan';
+  if(s.includes('china') || s.includes('중국')) return 'china';
+  if(s === '') return '';
+  // 국문 병원명 = 한국
+  if(/[가-힣]/.test(s)) return 'korea';
+  return 'other';
+}
+
 // ── Category 정규화 ──
 function normCategory(v) {
   const s = (v||'').toLowerCase();
@@ -2400,6 +2423,8 @@ function buildPaperFilters() {
   makeFilter('pf-platform',   PF_PLATFORM,   'platform',   p => normPlatform(p.system||p.sys||''));
   makeFilter('pf-evidence',   PF_EVIDENCE,   'evidence',   p => { const ev=parseEvidence(p.evidence||p.evidenceLevel||''); return ev ? String(ev.level) : ''; });
 
+  makeFilter('pf-country', PF_COUNTRY, 'country', p => normCountry(p.hospital||p.affiliation||''));
+
   // Year 필터 동적 생성
   const years = [...new Set(PAPERS.map(p=>(p.year||'').trim()).filter(Boolean))].sort((a,b)=>b-a);
   const yearEl = document.getElementById('pf-year'); if(!yearEl) return; yearEl.innerHTML='';
@@ -2426,6 +2451,7 @@ function buildPaperActiveTags() {
     indication: PF_INDICATION,
     platform:   PF_PLATFORM,
     evidence:   PF_EVIDENCE,
+    country:    PF_COUNTRY,
   };
   Object.entries(pFilters).forEach(([key, val]) => {
     if(val==='all' || !val) return;
@@ -2460,6 +2486,7 @@ function renderPapers() {
       if(!ev || String(ev.level)!==pFilters.evidence) return false;
     }
     if(pFilters.year!=='all' && (p.year||'')!==pFilters.year) return false;
+    if(pFilters.country!=='all' && normCountry(p.hospital||p.affiliation||'')!==pFilters.country) return false;
     if(q) {
       const haystack = [(p.title||''),(p.authors||''),(p.summary||''),(p.tech||''),(p.indication||'')].join(' ').toLowerCase();
       if(!haystack.includes(q)) return false;
