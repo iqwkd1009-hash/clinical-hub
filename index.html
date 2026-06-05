@@ -1444,63 +1444,8 @@ async function loadArticlesFromSheet() {
 }
 
 async function loadPapersFromSheet() {
-  try {
-    const res = await fetch(PAPER_SHEET_URL, { cache: 'no-store' });
-    if(!res.ok) throw new Error('fetch failed');
-    const text = await res.text();
-    if(!text || text.toLowerCase().includes('<html')) throw new Error('invalid response');
-    const rows = parseCSV(text);
-    if(rows.length < 2) throw new Error('no data');
-
-    // 구글 시트 CSV는 앞에 빈 컬럼이 올 수 있음 → 헤더에서 첫 실제값 시작 오프셋 찾기
-    const rawHeaders = rows[0].map(h => String(h||'').trim().toLowerCase());
-    // 첫 번째 의미있는 헤더 찾기
-    const offset = rawHeaders.findIndex(h => h && h.length > 0 && h !== 'no' && h !== '#');
-    const headers = offset > 0 ? rawHeaders.slice(offset) : rawHeaders;
-
-    const get = (row, ...keys) => {
-      const r = offset > 0 ? row.slice(offset) : row;
-      for(const k of keys) {
-        const idx = headers.indexOf(k);
-        if(idx >= 0 && r[idx] !== undefined) return String(r[idx]||'').trim();
-      }
-      return '';
-    };
-
-    const items = rows.slice(1)
-      .filter(r => r.some(c => c && c.trim()))
-      .map(r => ({
-        title:       get(r,'title','제목'),
-        authors:     get(r,'authors','author','저자'),
-        year:        get(r,'year','연도'),
-        journal:     get(r,'journal','저널'),
-        hospital:    get(r,'hospital / country','hospital','기관','institution'),
-        summary:     get(r,'summary','요약','abstract','desc'),
-        doi:         get(r,'doi / link','doi','url','link'),
-        tech:        get(r,'tech','technique','기법'),
-        system:      get(r,'system','시스템','da vinci'),
-        attach:      get(r,'attachment','첨부','attach','media'),
-        indication:  get(r,'indication','인디케이션','disease'),
-        evidence:    get(r,'evidence level','evidence','study type','연구 디자인','study design'),
-        keyMessage:  get(r,'key message','keymessage','clinical key message','임상 메시지'),
-        talkingPoint:get(r,'talking point','talkingpoint','sales talking point','세일즈 포인트'),
-        chartData:null
-      }))
-      .filter(p => p.title);
-
-    console.log('Papers sheet parsed:', items.length, 'items, headers:', headers.slice(0,5));
-    if(items.length) {
-      PAPERS.length = 0;
-      items.forEach(p => PAPERS.push(p));
-      console.log('Papers replaced with sheet data:', PAPERS.length);
-    } else {
-      console.warn('Papers sheet: 0 valid items → keeping embedded data (' + PAPERS.length + ')');
-    }
-    renderPapers();
-  } catch(err) {
-    console.warn('Papers sheet loading failed:', err.message, '— using embedded data');
-    renderPapers();
-  }
+  // 시트 연동 비활성화 - 내장 데이터 사용
+  renderPapers();
 }
 
 function normalizeVideoRow(row, headers) {
@@ -2384,6 +2329,16 @@ function buildPFSection(elId, defs, key, matchFn) {
 
 /* ── 메인 렌더 ── */
 function renderPapers() {
+  // 안전 장치: PAPERS가 비어있으면 내장 데이터 복원
+  if(!PAPERS || PAPERS.length === 0) {
+    console.warn('[renderPapers] PAPERS empty! Reloading embedded data...');
+    PAPERS.push(
+      { title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery", authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy", hospital:"Eulji University Hospital, Korea", summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증.", doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"Robotic NOTES Hysterectomy 최초 보고", talkingPoint:"초기 vNOTES 도입 필요성 논의 시 활용" },
+      { title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience", authors:"Zhang X, Guan X et al.", year:"2021", journal:"JMIG", hospital:"China", summary:"33례 자궁내막증 환자 대상 Robotic vNOTES 적용. 통증 감소 및 재발 없음.", doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"vNOTES로 자궁내막증 33례 통증 감소 확인", talkingPoint:"Endometriosis 도입 타당성 논의 시 핵심 근거" },
+      { title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study", authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine", hospital:"China", summary:"Gasless vs 기존 vNOTES 비교. Gasless군 복부팽만 부작용 유의하게 감소.", doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Retrospective", keyMessage:"Gasless vNOTES 복부팽만 부작용 감소", talkingPoint:"환자 경험 개선 포인트" },
+      { title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor", authors:"Kanno et al.", year:"2025", journal:"Gynecologic Oncology Reports", hospital:"Japan", summary:"da Vinci SP 이용 transvaginal staging surgery. Borderline ovarian tumor 의심 환자에서 scarless 접근 입증.", doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Ovarian Cystectomy", evidence:"Case Report", keyMessage:"SP 경질 로봇수술 종양학적 안전성 확인", talkingPoint:"GYN Oncology SP 확장 근거" }
+    );
+  }
   buildPaperFilters();
 
   /* Active tag 표시 */
