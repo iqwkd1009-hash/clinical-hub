@@ -2504,6 +2504,7 @@ function getEvidenceLevel(v) { return parseEvidence(v); }
 function renderEvidenceDots(n) { return renderStars(n); }
 
 function renderPapers() {
+  console.error('[renderPapers] called, PAPERS.length=', PAPERS.length, 'pFilters=', JSON.stringify(pFilters));
   buildPaperFilters();
   buildPaperActiveTags();
   const q = (document.getElementById('paperSearch')?.value||'').toLowerCase();
@@ -2536,13 +2537,16 @@ function renderPapers() {
     return;
   }
 
+  console.log('[renderPapers] items to render:', items.length);
   items.forEach((p, i) => {
     const card = makePaperCard(p, i);
     grid.appendChild(card);
   });
+  console.log('[renderPapers] grid children:', grid.children.length);
 }
 
 function makePaperCard(p, i) {
+  console.log('[makePaperCard]', i, p.title?.slice(0,30));
   const doi       = p.doi || p.url || '';
   const hosp      = p.hospital || p.affiliation || '';
   const tech      = p.tech || '';
