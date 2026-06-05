@@ -1377,11 +1377,14 @@ async function loadArticlesFromSheet() {
     if(!text || text.toLowerCase().includes('<html')) throw new Error('invalid response');
     const rows = parseCSV(text);
     if(rows.length < 2) throw new Error('no data');
-    const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+    const rawH = rows[0].map(h => String(h||'').trim().toLowerCase());
+    const offset = rawH.findIndex(h => h && h.length > 1 && !/^[0-9\s]*$/.test(h));
+    const headers = offset > 0 ? rawH.slice(offset) : rawH;
     const get = (row, ...keys) => {
+      const r = offset > 0 ? row.slice(offset) : row;
       for(const k of keys) {
         const idx = headers.indexOf(k);
-        if(idx >= 0 && row[idx] !== undefined) return String(row[idx]||'').trim();
+        if(idx >= 0 && r[idx] !== undefined) return String(r[idx]||'').trim();
       }
       return '';
     };
@@ -1448,38 +1451,50 @@ async function loadPapersFromSheet() {
     if(!text || text.toLowerCase().includes('<html')) throw new Error('invalid response');
     const rows = parseCSV(text);
     if(rows.length < 2) throw new Error('no data');
-    const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+
+    // 구글 시트 CSV는 앞에 빈 컬럼이 올 수 있음 → 헤더에서 첫 실제값 시작 오프셋 찾기
+    const rawHeaders = rows[0].map(h => String(h||'').trim().toLowerCase());
+    // 첫 번째 의미있는 헤더 찾기
+    const offset = rawHeaders.findIndex(h => h && h.length > 0 && h !== 'no' && h !== '#');
+    const headers = offset > 0 ? rawHeaders.slice(offset) : rawHeaders;
+
     const get = (row, ...keys) => {
+      const r = offset > 0 ? row.slice(offset) : row;
       for(const k of keys) {
         const idx = headers.indexOf(k);
-        if(idx >= 0 && row[idx] !== undefined) return String(row[idx]||'').trim();
+        if(idx >= 0 && r[idx] !== undefined) return String(r[idx]||'').trim();
       }
       return '';
     };
+
     const items = rows.slice(1)
       .filter(r => r.some(c => c && c.trim()))
       .map(r => ({
-        title:    get(r,'title','제목'),
-        authors:  get(r,'authors','author','저자'),
-        year:     get(r,'year','연도'),
-        journal:  get(r,'journal','저널'),
-        hospital: get(r,'hospital / country','hospital','기관','institution'),
-        summary:  get(r,'summary','요약','abstract','desc'),
-        doi:      get(r,'doi / link','doi','url','link'),
-        tech:     get(r,'tech','technique','기법'),
-        system:   get(r,'system','시스템','da vinci'),
-        attach:   get(r,'attachment','첨부','attach','media'),
-        indication: get(r,'indication','인디케이션','disease'),
-        evidence: get(r,'evidence level','evidence','study type','연구 디자인','study design'),
-        keyMessage:   get(r,'key message','keymessage','clinical key message','임상 메시지'),
-        talkingPoint: get(r,'talking point','talkingpoint','sales talking point','세일즈 포인트'),
+        title:       get(r,'title','제목'),
+        authors:     get(r,'authors','author','저자'),
+        year:        get(r,'year','연도'),
+        journal:     get(r,'journal','저널'),
+        hospital:    get(r,'hospital / country','hospital','기관','institution'),
+        summary:     get(r,'summary','요약','abstract','desc'),
+        doi:         get(r,'doi / link','doi','url','link'),
+        tech:        get(r,'tech','technique','기법'),
+        system:      get(r,'system','시스템','da vinci'),
+        attach:      get(r,'attachment','첨부','attach','media'),
+        indication:  get(r,'indication','인디케이션','disease'),
+        evidence:    get(r,'evidence level','evidence','study type','연구 디자인','study design'),
+        keyMessage:  get(r,'key message','keymessage','clinical key message','임상 메시지'),
+        talkingPoint:get(r,'talking point','talkingpoint','sales talking point','세일즈 포인트'),
         chartData:null
       }))
       .filter(p => p.title);
+
     if(items.length) {
       PAPERS.length = 0;
       items.forEach(p => PAPERS.push(p));
       console.log('Papers loaded from sheet:', items.length);
+      renderPapers();
+    } else {
+      console.warn('Papers sheet: 0 items parsed, using embedded data');
       renderPapers();
     }
   } catch(err) {
@@ -3046,6 +3061,24 @@ function parseCSV(text) {
   return rows;
 }
 
+// 구글 시트 CSV 헤더 파싱 헬퍼 (앞 빈 컬럼 처리)
+function parseSheetRows(rows) {
+  if(!rows || rows.length < 2) return { headers:[], getData:(r,...k)=>'' };
+  const rawH = rows[0].map(h => String(h||'').trim().toLowerCase());
+  // 첫 의미있는 컬럼 찾기
+  const offset = rawH.findIndex(h => h && h.length > 1 && !/^[0-9,#\s]*$/.test(h));
+  const headers = offset > 0 ? rawH.slice(offset) : rawH;
+  const getData = (row, ...keys) => {
+    const r = offset > 0 ? row.slice(offset) : row;
+    for(const k of keys) {
+      const idx = headers.indexOf(String(k).toLowerCase().trim());
+      if(idx >= 0 && r[idx] !== undefined) return String(r[idx]||'').trim();
+    }
+    return '';
+  };
+  return { headers, getData };
+}
+
 function normalizeCalendarRow(row, headers) {
   const normalizedHeaders = headers.map(h => String(h || '').trim().toLowerCase());
   const get = (...keys) => {
@@ -3084,10 +3117,17 @@ async function loadConferencesFromSheet() {
     const rows = parseCSV(text);
     if (rows.length < 2) throw new Error('Sheet에 데이터가 없습니다.');
 
-    const headers = rows[0].map(h => h.trim());
+    // 빈 앞 컬럼 처리
+    const rawH = rows[0].map(h => String(h||'').trim());
+    const offset = rawH.findIndex(h => h && h.length > 1 && !/^[0-9\s]*$/.test(h));
+    const headers = offset > 0 ? rawH.slice(offset) : rawH;
+
     CONFERENCES = rows
       .slice(1)
-      .map(row => normalizeCalendarRow(row, headers))
+      .map(row => {
+        const r = offset > 0 ? row.slice(offset) : row;
+        return normalizeCalendarRow(r, headers);
+      })
       .filter(item => item.name && item.start)
       .sort((a, b) => new Date(a.start) - new Date(b.start));
 
@@ -3578,11 +3618,14 @@ async function loadCardiacData() {
     try {
       const rows = await fetchCSV(s.url);
       if(rows.length < 2) return;
-      const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+      const rawHC = rows[0].map(h => String(h||'').trim().toLowerCase());
+      const cOffset = rawHC.findIndex(h => h && h.length > 1 && !/^[0-9\s]*$/.test(h));
+      const headers = cOffset > 0 ? rawHC.slice(cOffset) : rawHC;
       const get = (row, ...keys) => {
+        const r = cOffset > 0 ? row.slice(cOffset) : row;
         for(const k of keys) {
           const idx = headers.indexOf(k);
-          if(idx >= 0 && row[idx] !== undefined) return String(row[idx]||'').trim();
+          if(idx >= 0 && r[idx] !== undefined) return String(r[idx]||'').trim();
         }
         return '';
       };
