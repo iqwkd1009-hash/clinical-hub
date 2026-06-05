@@ -2227,107 +2227,400 @@ function toggleArt(aid) {
 
 /* ══════════════════════ PAPERS ══════════════════════ */
 const PAPERS = [
-  {
-    title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery",
-    authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy",
-    hospital:"Eulji University Hospital, Korea",
-    summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증. Console time 135분, EBL 50mL, major complication 없음.",
-    doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Photo",
-    indication:"Hysterectomy", evidence:"Case Report",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery",
-    authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery",
-    hospital:"Eulji University Hospital, Korea",
-    summary:"35명 대상 Robotic Glove Port Technique(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14) 포함. 전례 성공, 합병증 없음.",
-    doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Video",
-    indication:"Myomectomy", evidence:"Case Series",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience and technical considerations",
-    authors:"Zhang X, Guan X et al.", year:"2021", journal:"JMIG",
-    hospital:"China",
-    summary:"33례 자궁내막증 환자 대상 Robotic vNOTES 적용. 수술 후 VAS pain score 유의미하게 감소. 재발 없음. DIE 적용 가능성 제시.",
-    doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Photo",
-    indication:"Endometriosis", evidence:"Prospective",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study",
-    authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine",
-    hospital:"China",
-    summary:"Gasless vs 기존 Robotic vNOTES Hysterectomy 비교. 수술시간·출혈량·입원기간 분석. Gasless군에서 복부팽만 부작용 유의하게 감소.",
-    doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Photo",
-    indication:"Hysterectomy", evidence:"Retrospective",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"ICG-assisted retrograde ureterolysis in robotic vNOTES for deep infiltrating endometriosis",
-    authors:"Guan X et al.", year:"2023", journal:"JMIG",
-    hospital:"China",
-    summary:"심부자궁내막증 Robotic vNOTES 시 ICG 형광 역행 요관박리술 적용. 요관 손상 없이 전례 성공. 수술시간 단축 및 operative efficiency 향상.",
-    doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Photo",
-    indication:"Endometriosis", evidence:"Prospective",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Vaginal-Assisted Natural Orifice Translumenal Endoscopic Surgery Hysterectomy for Large Uterus Using the da Vinci SP",
-    authors:"Kanno et al.", year:"2025", journal:"JMIG",
-    hospital:"Japan",
-    summary:"da Vinci SP 기반 VANH(Vaginal-Assisted NOTES Hysterectomy). 대형 자궁에서도 단일공 robotic transvaginal 접근 feasibility 및 ergonomics advantage 제시.",
-    doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract",
-    tech:"vNOTES", system:"da Vinci SP", attach:"Video",
-    indication:"Hysterectomy", evidence:"Case Report",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor: a case report",
-    authors:"Kanno et al.", year:"2025", journal:"Gynecologic Oncology Reports",
-    hospital:"Japan",
-    summary:"da Vinci SP 이용 transvaginal staging surgery case report. Borderline ovarian tumor 의심 환자에서 scarless 접근 feasibility와 oncologic applicability 제시.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121",
-    tech:"vNOTES", system:"da Vinci SP", attach:"Video",
-    indication:"Ovarian Cystectomy", evidence:"Case Report",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Robot-assisted transvaginal natural orifice transluminal endoscopic surgery for a 32-year-old patient with early-stage endometrial carcinoma (with video)",
-    authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports",
-    hospital:"China",
-    summary:"32세 조기 자궁내막암 환자에서 Robotic transvaginal NOTES 시행. 종양학적 안전성과 cosmetic benefit 동시 강조.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000795",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Video",
-    indication:"Hysterectomy", evidence:"Case Report",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Robotic assisted vaginal natural orifice transluminal endoscopic surgery high uterosacral ligament suspension (NOTES-HUS) for uterine prolapse",
-    authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports",
-    hospital:"China",
-    summary:"자궁탈출증 환자 대상 Robotic NOTES-HUS 적용. 단일공 transvaginal 접근 기반 pelvic floor reconstruction feasibility 보고.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000473",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Video",
-    indication:"Hysterectomy", evidence:"Case Series",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
-  {
-    title:"Robotic transvaginal NOTES: A step-by-step approach to surgical technique",
-    authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports",
-    hospital:"China",
-    summary:"Robotic transvaginal NOTES 수술 technique standardization 논문. Port insertion, docking, suturing workflow 단계별 소개. For Intuitive internal use only.",
-    doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000588",
-    tech:"vNOTES", system:"da Vinci Xi", attach:"Video",
-    indication:"Hysterectomy", evidence:"Technical Note",
-    keyMessage:"", talkingPoint:"", chartData:null
-  },
+  { title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery", authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy", hospital:"Eulji University Hospital, Korea", summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증. Console time 135분, EBL 50mL, major complication 없음.", doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"Robotic NOTES Hysterectomy 최초 보고 — Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증", talkingPoint:"초기 vNOTES 도입 필요성 논의 시 세계 최초 보고 근거로 활용" },
+  { title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery", authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery", hospital:"Eulji University Hospital, Korea", summary:"35명 대상 Robotic Glove Port Technique(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14) 포함. 전례 성공, 합병증 없음.", doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Myomectomy", evidence:"Case Series", keyMessage:"Robotic Glove Port Technique으로 다양한 부인과 수술에서 단일공 접근 실현", talkingPoint:"Myomectomy 및 복합 수술 케이스에서 SP 확장 가능성 강조 가능" },
+  { title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience and technical considerations", authors:"Zhang X, Guan X et al.", year:"2021", journal:"JMIG", hospital:"China", summary:"33례 자궁내막증 환자 대상 Robotic vNOTES 적용. 수술 후 VAS pain score 유의미하게 감소. 재발 없음. DIE 적용 가능성 제시.", doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"Robotic vNOTES로 자궁내막증 33례에서 통증 감소 및 재발 없음 확인", talkingPoint:"Endometriosis 환자 대상 vNOTES 도입 타당성 논의 시 핵심 근거" },
+  { title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study", authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine", hospital:"China", summary:"Gasless vs 기존 Robotic vNOTES Hysterectomy 비교. 수술시간, 출혈량, 입원기간 분석. Gasless군에서 복부팽만 부작용 유의하게 감소.", doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Retrospective", keyMessage:"Gasless Robotic vNOTES는 기존 방식 대비 복부 팽만 부작용 유의하게 낮음", talkingPoint:"Gasless 접근의 환자 경험 개선 효과로 차별화 포인트 제시 가능" },
+  { title:"ICG-assisted retrograde ureterolysis in robotic vNOTES for deep infiltrating endometriosis", authors:"Guan X et al.", year:"2023", journal:"JMIG", hospital:"China", summary:"심부자궁내막증 Robotic vNOTES 시 ICG 형광 역행 요관박리술 적용. 요관 손상 없이 전례 성공. 수술시간 단축.", doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"ICG 형광 요관박리술 적용으로 심부자궁내막증 vNOTES에서 요관 손상 없이 전례 성공", talkingPoint:"DIE 복잡 케이스에서 SP + ICG 조합의 안전성 강조 가능" },
+  { title:"Vaginal-Assisted Natural Orifice Translumenal Endoscopic Surgery Hysterectomy for Large Uterus Using the da Vinci SP", authors:"Kanno et al.", year:"2025", journal:"JMIG", hospital:"Japan", summary:"da Vinci SP 기반 VANH(Vaginal-Assisted NOTES Hysterectomy). 대형 자궁에서도 단일공 robotic transvaginal 접근 feasibility 및 ergonomics advantage 제시.", doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"da Vinci SP로 대형 자궁 VANH 수술 성공 — 크기 제한 없는 단일공 접근 가능성 입증", talkingPoint:"Large uterus 케이스에서 SP 도입 망설이는 술자 설득에 활용" },
+  { title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor: a case report", authors:"Kanno et al.", year:"2025", journal:"Gynecologic Oncology Reports", hospital:"Japan", summary:"da Vinci SP 이용 transvaginal staging surgery case report. Borderline ovarian tumor 의심 환자에서 scarless 접근 feasibility와 oncologic applicability 제시.", doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Ovarian Cystectomy", evidence:"Case Report", keyMessage:"da Vinci SP 경질 로봇수술로 난소 경계성 종양 병기 수술 성공 — 종양학적 안전성 확인", talkingPoint:"GYN Oncology 영역에서 SP 확장 가능성 논의 시 근거 자료" },
+  { title:"Robot-assisted transvaginal natural orifice transluminal endoscopic surgery for a 32-year-old patient with early-stage endometrial carcinoma (with video)", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"32세 조기 자궁내막암 환자에서 Robotic transvaginal NOTES 시행. 종양학적 안전성과 cosmetic benefit 동시 강조.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000795", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"32세 조기 자궁내막암 환자에서 vNOTES로 종양학적 안전성과 미용 효과 동시 달성", talkingPoint:"젊은 부인암 환자 대상 최소침습 접근 논의 시 감성적 설득 포인트" },
+  { title:"Robotic assisted vaginal natural orifice transluminal endoscopic surgery high uterosacral ligament suspension (NOTES-HUS) for uterine prolapse", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"자궁탈출증 환자 대상 Robotic NOTES-HUS 적용. 단일공 transvaginal 접근 기반 pelvic floor reconstruction feasibility 보고.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000473", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Case Series", keyMessage:"Robotic NOTES-HUS로 자궁탈출증 환자에서 자궁 보존 여부와 무관하게 골반저 재건 성공", talkingPoint:"Pelvic floor 전문 술자 대상 vNOTES 확장 적용 논의 시 활용" },
+  { title:"Robotic transvaginal NOTES: A step-by-step approach to surgical technique", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"Robotic transvaginal NOTES 수술 technique standardization 논문. Port insertion, docking, suturing workflow 단계별 소개.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000588", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Technical Note", keyMessage:"Robotic transvaginal NOTES 표준화 술기 단계별 정리 — 내부 교육 및 온보딩 자료로 활용 가능", talkingPoint:"신규 vNOTES 술자 교육 및 병원 내 확산 프로그램 지원 자료" },
 ];
+
+/* ── 필터 정의 ── */
+const PF = {
+  category: [
+    {k:'all', l:'전체'},
+    {k:'vnotes', l:'vNOTES'},
+    {k:'sp',     l:'SP'},
+  ],
+  indication: [
+    {k:'all',           l:'전체'},
+    {k:'Hysterectomy',  l:'Hysterectomy'},
+    {k:'Endometriosis', l:'Endometriosis'},
+    {k:'Myomectomy',    l:'Myomectomy'},
+    {k:'Ovarian Cystectomy', l:'Ovarian Cystectomy'},
+  ],
+  platform: [
+    {k:'all',        l:'전체'},
+    {k:'da Vinci SP',l:'da Vinci SP'},
+    {k:'da Vinci Xi',l:'da Vinci Xi'},
+    {k:'da Vinci 5', l:'da Vinci 5'},
+  ],
+  evidence: [
+    {k:'all', l:'전체', s:0},
+    {k:'1',   l:'Level 1', s:5},
+    {k:'2',   l:'Level 2', s:4},
+    {k:'3',   l:'Level 3', s:3},
+    {k:'4',   l:'Level 4', s:2},
+    {k:'5',   l:'Level 5', s:1},
+  ],
+  country: [
+    {k:'all',   l:'전체'},
+    {k:'Korea', l:'🇰🇷 Korea'},
+    {k:'Japan', l:'🇯🇵 Japan'},
+    {k:'China', l:'🇨🇳 China'},
+    {k:'Other', l:'🌏 Other'},
+  ],
+};
+
+let PF_active = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
+
+/* ── 헬퍼 함수 ── */
+function pEvidence(v) {
+  const s = (v||'').toLowerCase();
+  if(s.includes('meta') || s.includes('systematic')) return {lv:1, txt:'Meta-analysis', stars:5};
+  if(s.includes('rct') || s.includes('randomized'))  return {lv:2, txt:'RCT', stars:4};
+  if(s.includes('prospective') || s.includes('registry')) return {lv:3, txt:'Prospective', stars:3};
+  if(s.includes('retrospective') || s.includes('comparative')) return {lv:4, txt:'Retrospective', stars:2};
+  if(s.includes('case') || s.includes('technical') || s.includes('series') || s.includes('note') || s.includes('video')) return {lv:5, txt:v, stars:1};
+  return null;
+}
+
+function pStars(n) {
+  return '<span style="color:#F59E0B">' + '⭐'.repeat(n) + '</span>' +
+         '<span style="opacity:0.2">' + '⭐'.repeat(5-n) + '</span>';
+}
+
+function pCategory(tech) {
+  const s = (tech||'').toLowerCase();
+  return s.includes('sp') && !s.includes('notes') ? 'sp' : 'vnotes';
+}
+
+function pCountry(hospital) {
+  const s = (hospital||'').toLowerCase();
+  if(s.includes('korea') || s.includes('eulji') || /[가-힣]/.test(hospital)) return 'Korea';
+  if(s.includes('japan')) return 'Japan';
+  if(s.includes('china')) return 'China';
+  if(hospital) return 'Other';
+  return '';
+}
+
+/* ── 필터 초기화 ── */
+function resetPaperFilters() {
+  PF_active = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
+  const s = document.getElementById('paperSearch');
+  if(s) s.value = '';
+  renderPapers();
+}
+
+/* ── 필터 UI 빌드 ── */
+function buildPaperFilters() {
+  /* Category */
+  buildPFSection('pf-category', PF.category, 'category', p => pCategory(p.tech));
+
+  /* Indication */
+  buildPFSection('pf-indication', PF.indication, 'indication', p => p.indication||'');
+
+  /* Platform */
+  buildPFSection('pf-platform', PF.platform, 'platform', p => p.system||'');
+
+  /* Evidence Level */
+  const evEl = document.getElementById('pf-evidence');
+  if(evEl) {
+    evEl.innerHTML = '';
+    PF.evidence.forEach(d => {
+      const count = d.k === 'all' ? PAPERS.length
+        : PAPERS.filter(p => { const ev = pEvidence(p.evidence); return ev && String(ev.lv) === d.k; }).length;
+      if(d.k !== 'all' && count === 0) return;
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (PF_active.evidence === d.k ? ' active' : '');
+      btn.innerHTML = (d.s ? pStars(d.s) + ' ' : '') + d.l + ' <span class="btn-count">' + count + '</span>';
+      btn.onclick = () => { PF_active.evidence = d.k; renderPapers(); };
+      evEl.appendChild(btn);
+    });
+  }
+
+  /* Year — 동적 */
+  const years = [...new Set(PAPERS.map(p => p.year).filter(Boolean))].sort((a,b) => b-a);
+  const yrEl = document.getElementById('pf-year');
+  if(yrEl) {
+    yrEl.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (PF_active.year === 'all' ? ' active' : '');
+    allBtn.innerHTML = '최신순 <span class="btn-count">' + PAPERS.length + '</span>';
+    allBtn.onclick = () => { PF_active.year = 'all'; renderPapers(); };
+    yrEl.appendChild(allBtn);
+    years.forEach(yr => {
+      const count = PAPERS.filter(p => p.year === yr).length;
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (PF_active.year === yr ? ' active' : '');
+      btn.innerHTML = yr + ' <span class="btn-count">' + count + '</span>';
+      btn.onclick = () => { PF_active.year = yr; renderPapers(); };
+      yrEl.appendChild(btn);
+    });
+  }
+
+  /* Country */
+  buildPFSection('pf-country', PF.country, 'country', p => pCountry(p.hospital));
+}
+
+function buildPFSection(elId, defs, key, matchFn) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  el.innerHTML = '';
+  defs.forEach(d => {
+    const count = d.k === 'all' ? PAPERS.length : PAPERS.filter(p => matchFn(p) === d.k).length;
+    if(d.k !== 'all' && count === 0) return;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (PF_active[key] === d.k ? ' active' : '');
+    btn.innerHTML = d.l + ' <span class="btn-count">' + count + '</span>';
+    btn.onclick = () => { PF_active[key] = d.k; renderPapers(); };
+    el.appendChild(btn);
+  });
+}
+
+/* ── 메인 렌더 ── */
+function renderPapers() {
+  buildPaperFilters();
+
+  /* Active tag 표시 */
+  const tagEl = document.getElementById('paperActiveTags');
+  if(tagEl) {
+    tagEl.innerHTML = '';
+    const allDefs = { category: PF.category, indication: PF.indication, platform: PF.platform, evidence: PF.evidence, country: PF.country };
+    Object.entries(PF_active).forEach(([key, val]) => {
+      if(val === 'all' || !val) return;
+      let label = val;
+      if(allDefs[key]) label = allDefs[key].find(d => d.k === val)?.l || val;
+      const t = document.createElement('div');
+      t.className = 'active-tag';
+      t.innerHTML = label + ' <span style="margin-left:4px">×</span>';
+      t.onclick = () => { PF_active[key] = 'all'; renderPapers(); };
+      tagEl.appendChild(t);
+    });
+    if(PF_active.year !== 'all') {
+      const t = document.createElement('div');
+      t.className = 'active-tag';
+      t.innerHTML = PF_active.year + ' <span style="margin-left:4px">×</span>';
+      t.onclick = () => { PF_active.year = 'all'; renderPapers(); };
+      tagEl.appendChild(t);
+    }
+  }
+
+  const q = (document.getElementById('paperSearch')?.value || '').toLowerCase();
+
+  const items = [...PAPERS].filter(p => {
+    if(PF_active.category !== 'all' && pCategory(p.tech) !== PF_active.category) return false;
+    if(PF_active.indication !== 'all' && (p.indication||'') !== PF_active.indication) return false;
+    if(PF_active.platform !== 'all' && (p.system||'') !== PF_active.platform) return false;
+    if(PF_active.evidence !== 'all') {
+      const ev = pEvidence(p.evidence||'');
+      if(!ev || String(ev.lv) !== PF_active.evidence) return false;
+    }
+    if(PF_active.year !== 'all' && (p.year||'') !== PF_active.year) return false;
+    if(PF_active.country !== 'all' && pCountry(p.hospital) !== PF_active.country) return false;
+    if(q) {
+      const hay = [p.title, p.authors, p.summary, p.journal, p.indication].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => (b.year||'').localeCompare(a.year||''));
+
+  const countEl = document.getElementById('paperCount');
+  if(countEl) countEl.textContent = items.length;
+  const hdrEl = document.getElementById('headerCount');
+  if(hdrEl) hdrEl.textContent = items.length + ' papers';
+
+  const grid = document.getElementById('paperGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  if(!items.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';
+    return;
+  }
+
+  items.forEach(p => grid.appendChild(buildPaperCard(p)));
+}
+
+/* ── 카드 빌더 ── */
+function buildPaperCard(p) {
+  const ev      = pEvidence(p.evidence || '');
+  const doi     = p.doi || '';
+  const hosp    = p.hospital || '';
+  const attach  = (p.attach||'').toLowerCase();
+  const isSP    = (p.system||'').toLowerCase().includes('sp');
+  const techBg  = isSP ? '#D1FAE5' : '#E6F1FB';
+  const techClr = isSP ? '#065F46' : '#0C447C';
+
+  const card = document.createElement('div');
+  card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;transition:border-color 0.15s,box-shadow 0.15s;cursor:default';
+  card.onmouseenter = () => { card.style.borderColor='var(--primary-mid)'; card.style.boxShadow='var(--shadow-hover)'; };
+  card.onmouseleave = () => { card.style.borderColor='var(--border)';      card.style.boxShadow='var(--shadow)'; };
+
+  /* 저널·연도 + DOI 버튼 */
+  const row1 = document.createElement('div');
+  row1.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:8px';
+  const jrnl = document.createElement('span');
+  jrnl.style.cssText = 'font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)';
+  jrnl.textContent = (p.journal||'') + ' · ' + (p.year||'');
+  row1.appendChild(jrnl);
+  if(doi) {
+    const a = document.createElement('a');
+    a.href = doi; a.target = '_blank'; a.rel = 'noopener';
+    a.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--primary);color:white;text-decoration:none;white-space:nowrap';
+    a.textContent = 'DOI / PDF';
+    row1.appendChild(a);
+  }
+  card.appendChild(row1);
+
+  /* 뱃지 */
+  const badges = document.createElement('div');
+  badges.style.cssText = 'display:flex;align-items:center;gap:5px;flex-wrap:wrap';
+  if(p.tech) {
+    const b = document.createElement('span');
+    b.style.cssText = 'font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;font-family:var(--mono);background:'+techBg+';color:'+techClr;
+    b.textContent = p.tech; badges.appendChild(b);
+  }
+  if(p.system) {
+    const b = document.createElement('span');
+    b.style.cssText = 'font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-family:var(--mono)';
+    b.textContent = p.system; badges.appendChild(b);
+  }
+  if(attach && attach !== '-') {
+    const isVid = attach === 'video';
+    const b = document.createElement('span');
+    b.style.cssText = 'font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:'+(isVid?'#FEF3C7':'#F3F4F6')+';color:'+(isVid?'#92400E':'#374151')+';font-family:var(--mono)';
+    b.textContent = isVid ? '🎬 Video' : '📷 Photo';
+    badges.appendChild(b);
+  }
+  if(badges.children.length) card.appendChild(badges);
+
+  /* Evidence Level */
+  if(ev) {
+    const evRow = document.createElement('div');
+    evRow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:8px';
+    evRow.innerHTML = '<span style="font-size:11px;letter-spacing:1px">' + pStars(ev.stars) + '</span>' +
+      '<span style="font-size:10px;font-weight:700;color:var(--text2);font-family:var(--mono)">Level ' + ev.lv + '</span>' +
+      '<span style="font-size:10px;color:var(--text3)">' + ev.txt + '</span>';
+    card.appendChild(evRow);
+  }
+
+  /* 제목 + 복사 */
+  const titleRow = document.createElement('div');
+  titleRow.style.cssText = 'font-size:13px;font-weight:700;color:var(--text);line-height:1.45;display:flex;align-items:flex-start;gap:8px';
+  const titleSpan = document.createElement('span');
+  titleSpan.style.flex = '1';
+  titleSpan.textContent = p.title || '';
+  const copyBtn = document.createElement('button');
+  copyBtn.style.cssText = 'flex-shrink:0;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px';
+  copyBtn.title = '제목 복사';
+  copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  copyBtn.onclick = () => copyToClipboard((p.title||'') + ' (' + (p.authors||'') + ', ' + (p.journal||'') + ' ' + (p.year||'') + ')', copyBtn);
+  titleRow.appendChild(titleSpan); titleRow.appendChild(copyBtn);
+  card.appendChild(titleRow);
+
+  /* 저자 / 기관 */
+  const auth = document.createElement('div');
+  auth.style.cssText = 'font-size:11px;color:var(--text2)';
+  auth.textContent = (p.authors||'') + (hosp ? ' · ' + hosp : '');
+  card.appendChild(auth);
+
+  /* 요약 */
+  if(p.summary) {
+    const sum = document.createElement('div');
+    sum.style.cssText = 'font-size:11px;color:var(--text2);line-height:1.65;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)';
+    sum.textContent = p.summary;
+    card.appendChild(sum);
+  }
+
+  /* Key Message */
+  if(p.keyMessage) {
+    const km = document.createElement('div');
+    km.style.cssText = 'display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#F0FDF4;border-radius:8px;border-left:3px solid #22C55E';
+    const lbl = document.createElement('span');
+    lbl.style.cssText = 'font-size:10px;font-weight:700;color:#166534;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0';
+    lbl.textContent = '📣 Key Message';
+    const txt = document.createElement('span');
+    txt.style.cssText = 'font-size:11px;color:#166534;line-height:1.55';
+    txt.textContent = p.keyMessage;
+    km.appendChild(lbl); km.appendChild(txt);
+    card.appendChild(km);
+  }
+
+  /* Talking Point */
+  if(p.talkingPoint) {
+    const tp = document.createElement('div');
+    tp.style.cssText = 'display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#FFF7ED;border-radius:8px;border-left:3px solid #F97316';
+    const lbl = document.createElement('span');
+    lbl.style.cssText = 'font-size:10px;font-weight:700;color:#9A3412;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0';
+    lbl.textContent = '💬 Takeaway';
+    const txt = document.createElement('span');
+    txt.style.cssText = 'font-size:11px;color:#9A3412;line-height:1.55';
+    txt.textContent = p.talkingPoint;
+    tp.appendChild(lbl); tp.appendChild(txt);
+    card.appendChild(tp);
+  }
+
+  return card;
+}
+
+/* ── 시트 연동 ── */
+async function loadPapersFromSheet() {
+  try {
+    const res = await fetch(PAPER_SHEET_URL, { cache:'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    if(!text || text.toLowerCase().startsWith('<!')) throw new Error('HTML response');
+    const rows = parseCSV(text);
+    if(rows.length < 2) throw new Error('no rows');
+
+    /* 빈 앞 컬럼 스킵 */
+    const rawH = rows[0].map(h => String(h||'').trim());
+    const off = rawH.findIndex(h => /[a-zA-Z가-힣]/.test(h));
+    const H = rawH.slice(off < 0 ? 0 : off).map(h => h.toLowerCase());
+
+    function gv(row, ...keys) {
+      const r = off > 0 ? row.slice(off) : row;
+      for(const k of keys) {
+        const i = H.indexOf(k.toLowerCase());
+        if(i >= 0 && r[i] !== undefined && String(r[i]).trim()) return String(r[i]).trim();
+      }
+      return '';
+    }
+
+    const items = rows.slice(1)
+      .filter(r => r.some(c => c && c.trim()))
+      .map(r => ({
+        title:        gv(r,'title','제목'),
+        authors:      gv(r,'authors','author','저자'),
+        year:         gv(r,'year','연도'),
+        journal:      gv(r,'journal','저널'),
+        hospital:     gv(r,'hospital / country','hospital','기관'),
+        summary:      gv(r,'summary','요약','abstract'),
+        doi:          gv(r,'doi / link','doi','url','link'),
+        tech:         gv(r,'tech','기법'),
+        system:       gv(r,'system','시스템'),
+        attach:       gv(r,'attachment','첨부','attach'),
+        indication:   gv(r,'indication','인디케이션'),
+        evidence:     gv(r,'evidence level','evidence','study type'),
+        keyMessage:   gv(r,'key message','keymessage'),
+        talkingPoint: gv(r,'talking point','talkingpoint'),
+      }))
+      .filter(p => p.title);
+
+    if(items.length > 0) {
+      PAPERS.length = 0;
+      items.forEach(p => PAPERS.push(p));
+    }
+  } catch(e) {
+    console.warn('Papers sheet:', e.message, '— using embedded data (' + PAPERS.length + ')');
+  }
+  renderPapers();
+}
 
 /* ══════════════════════ PAPER FILTERS ══════════════════════ */
 
