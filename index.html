@@ -1488,15 +1488,15 @@ async function loadPapersFromSheet() {
       }))
       .filter(p => p.title);
 
+    console.log('Papers sheet parsed:', items.length, 'items, headers:', headers.slice(0,5));
     if(items.length) {
       PAPERS.length = 0;
       items.forEach(p => PAPERS.push(p));
-      console.log('Papers loaded from sheet:', items.length);
-      renderPapers();
+      console.log('Papers replaced with sheet data:', PAPERS.length);
     } else {
-      console.warn('Papers sheet: 0 items parsed, using embedded data');
-      renderPapers();
+      console.warn('Papers sheet: 0 valid items → keeping embedded data (' + PAPERS.length + ')');
     }
+    renderPapers();
   } catch(err) {
     console.warn('Papers sheet loading failed:', err.message, '— using embedded data');
     renderPapers();
@@ -2529,6 +2529,7 @@ function renderPapers() {
   document.getElementById('headerCount').textContent = items.length + ' papers';
 
   const grid = document.getElementById('paperGrid');
+  if(!grid) { console.warn('paperGrid not found'); return; }
   grid.innerHTML = '';
   if(!items.length) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';
@@ -4019,14 +4020,17 @@ function updateMobileTabs(active) {
 }
 
 /* ══════════════════════ INIT ══════════════════════ */
-loadVideosFromSheet();
-loadArticlesFromSheet();
-loadPapersFromSheet();
-loadCardiacData();
-renderPapers();
-applyLang();
-readStateFromURL();
-setTimeout(renderDdayBanner, 1200);
+window.addEventListener('DOMContentLoaded', () => {
+  loadVideosFromSheet();
+  loadArticlesFromSheet();
+  loadPapersFromSheet();
+  loadCardiacData();
+  renderPapers();
+  renderCal();
+  applyLang();
+  readStateFromURL();
+  setTimeout(renderDdayBanner, 1500);
+});
 </script>
 
 <!-- Toast 알림 -->
