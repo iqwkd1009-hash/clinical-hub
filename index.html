@@ -2883,109 +2883,72 @@ function renderEvidenceDots(dots) {
   ).join('');
 }
 
+/* ══════════════════════ PAPER RENDER ══════════════════════ */
 function renderPapers() {
   buildPaperFilters();
-  const q = document.getElementById('paperSearch').value.toLowerCase();
-  const items = PAPERS.filter(p =>
-    (paperTechFilter==='all' || normPaperTech(p.tech) === paperTechFilter) &&
-    (paperSysFilter==='all'  || normPaperSys(p.system||p.sys||'') === paperSysFilter) &&
-    (!q || (p.title||'').toLowerCase().includes(q) || (p.authors||'').toLowerCase().includes(q) || (p.summary||'').toLowerCase().includes(q))
-  );
-  document.getElementById('paperCount').textContent = items.length;
-  document.getElementById('headerCount').textContent = items.length + ' papers';
 
-  const tagsEl = document.getElementById('paperActiveTags'); tagsEl.innerHTML='';
-  if(paperTechFilter!=='all'){
-    const label = PAPER_TECHS.find(t=>t.key===paperTechFilter)?.label || paperTechFilter;
-    const t=document.createElement('div'); t.className='active-tag';
-    t.innerHTML=`${label} <span style="margin-left:4px">×</span>`;
-    t.onclick=()=>{ paperTechFilter='all'; renderPapers(); };
-    tagsEl.appendChild(t);
+  // 활성 필터 태그
+  const tagEl = document.getElementById('paperActiveTags');
+  if(tagEl) {
+    tagEl.innerHTML = '';
+    const allDefs = {
+      category: PF.category, indication: PF.indication,
+      platform: PF.platform, evidence: PF.evidence, country: PF.country
+    };
+    Object.entries(PF_active).forEach(([key, val]) => {
+      if(val === 'all' || !val) return;
+      const label = (allDefs[key]||[]).find(d => d.k === val)?.l || val;
+      const t = document.createElement('div');
+      t.className = 'active-tag';
+      t.innerHTML = label + ' <span style="margin-left:4px">×</span>';
+      t.onclick = () => { PF_active[key] = 'all'; renderPapers(); };
+      tagEl.appendChild(t);
+    });
+    if(PF_active.year !== 'all') {
+      const t = document.createElement('div');
+      t.className = 'active-tag';
+      t.innerHTML = PF_active.year + ' <span style="margin-left:4px">×</span>';
+      t.onclick = () => { PF_active.year = 'all'; renderPapers(); };
+      tagEl.appendChild(t);
+    }
   }
-  if(paperSysFilter!=='all'){
-    const label = PAPER_SYSTEMS.find(s=>s.key===paperSysFilter)?.label || paperSysFilter;
-    const t=document.createElement('div'); t.className='active-tag';
-    t.innerHTML=`${label} <span style="margin-left:4px">×</span>`;
-    t.onclick=()=>{ paperSysFilter='all'; renderPapers(); };
-    tagsEl.appendChild(t);
+
+  const q = (document.getElementById('paperSearch')?.value || '').toLowerCase();
+
+  const items = [...PAPERS].filter(p => {
+    if(PF_active.category !== 'all' && pCategory(p.tech) !== PF_active.category) return false;
+    if(PF_active.indication !== 'all' && (p.indication||'') !== PF_active.indication) return false;
+    if(PF_active.platform !== 'all' && (p.system||'') !== PF_active.platform) return false;
+    if(PF_active.evidence !== 'all') {
+      const ev = pEvidence(p.evidence||'');
+      if(!ev || String(ev.lv) !== PF_active.evidence) return false;
+    }
+    if(PF_active.year !== 'all' && (p.year||'') !== PF_active.year) return false;
+    if(PF_active.country !== 'all' && pCountry(p.hospital) !== PF_active.country) return false;
+    if(q) {
+      const hay = [p.title, p.authors, p.summary, p.indication].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b) => (b.year||'').localeCompare(a.year||''));
+
+  const countEl = document.getElementById('paperCount');
+  if(countEl) countEl.textContent = items.length;
+  const hdrEl = document.getElementById('headerCount');
+  if(hdrEl) hdrEl.textContent = items.length + ' papers';
+
+  const grid = document.getElementById('paperGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  if(!items.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3)">검색 결과가 없습니다</div>';
+    return;
   }
 
-  const grid = document.getElementById('paperGrid'); grid.innerHTML = '';
-  if(!items.length){ grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`; return; }
-
-  items.forEach((p, i) => {
-    const doi  = p.doi  || p.url  || '';
-    const hosp = p.hospital || p.affiliation || '';
-    const tech = p.tech || '';
-    const isVnotes = tech.toLowerCase().includes('vnotes');
-    const techColor = isVnotes ? 'background:#E6F1FB;color:#0C447C' : 'background:#D1FAE5;color:#065F46';
-    const cid = `chart_paper_${i}`;
-
-    // Evidence Level
-    const ev = getEvidenceLevel(p.evidence || p.evidenceLevel || p.evidence_level || '');
-
-    const card = document.createElement('div');
-    card.style.cssText = `background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.3s ease both;animation-delay:${i*0.04}s;transition:border-color 0.15s,box-shadow 0.15s`;
-    card.onmouseenter=()=>{card.style.borderColor='var(--primary-mid)';card.style.boxShadow='var(--shadow-hover)'};
-    card.onmouseleave=()=>{card.style.borderColor='var(--border)';card.style.boxShadow='var(--shadow)'};
-
-    card.innerHTML =
-      // ── 상단: 저널/연도 + 뱃지들 + DOI 버튼
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
-        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
-          '<span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)">' + (p.journal||'') + ' · ' + (p.year||'') + '</span>' +
-          (tech ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;font-family:var(--mono);' + techColor + '">' + tech + '</span>' : '') +
-          (p.attach ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:' + (p.attach.toLowerCase()==='video'?'#FEF3C7':'#F3F4F6') + ';color:' + (p.attach.toLowerCase()==='video'?'#92400E':'#374151') + ';font-family:var(--mono)">' + (p.attach.toLowerCase()==='video'?'🎬 Video':'📷 Photo') + '</span>' : '') +
-        '</div>' +
-        (doi ? '<a href="' + doi + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;background:var(--primary);color:white;text-decoration:none"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / PDF</a>' : '') +
-      '</div>' +
-
-      // ── Evidence Level
-      (ev ?
-        '<div style="display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:7px;padding:5px 10px">' +
-          '<span style="font-size:10px;font-weight:600;color:var(--text3);font-family:var(--mono);white-space:nowrap">Level ' + ev.level + '</span>' +
-          '<span style="font-size:10px;color:var(--text3)">' + ev.label + '</span>' +
-          '<span style="margin-left:auto;letter-spacing:1px">' + renderEvidenceDots(ev.dots) + '</span>' +
-        '</div>'
-      : '') +
-
-      // ── 제목 + 복사 버튼
-      '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.45;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
-        '<span style="flex:1">' + (p.title||'') + '</span>' +
-        '<button onclick="copyToClipboard(\''+((p.title||'').replace(/'/g,"\\'")+' ('+p.authors+', '+p.journal+' '+p.year+')')+'\', this)" style="flex-shrink:0;margin-top:1px;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px;font-size:11px" title="제목 복사"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
-      '</div>' +
-
-      // ── 저자 / 기관
-      '<div style="font-size:11px;color:var(--text2)">' + (p.authors||'') + '</div>' +
-      (hosp ? '<div style="font-size:11px;color:var(--text3)">' + hosp + '</div>' : '') +
-
-      // ── 요약
-      (p.summary ? '<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)">' + p.summary + '</div>' : '') +
-
-      // ── Key Message + Talking Point
-      ((p.keyMessage || p.key_message) ?
-        '<div style="display:flex;gap:6px;align-items:flex-start;padding:7px 10px;background:#F0FDF4;border-radius:7px;border-left:3px solid #22C55E">' +
-          '<span style="font-size:10px;font-weight:700;color:#166534;white-space:nowrap;font-family:var(--mono);flex-shrink:0">📣 Key</span>' +
-          '<span style="font-size:11px;color:#166534;line-height:1.5">' + (p.keyMessage||p.key_message) + '</span>' +
-        '</div>'
-      : '') +
-      ((p.talkingPoint || p.talking_point) ?
-        '<div style="display:flex;gap:6px;align-items:flex-start;padding:7px 10px;background:#FFF7ED;border-radius:7px;border-left:3px solid #F97316">' +
-          '<span style="font-size:10px;font-weight:700;color:#9A3412;white-space:nowrap;font-family:var(--mono);flex-shrink:0">💬 Sales</span>' +
-          '<span style="font-size:11px;color:#9A3412;line-height:1.5">' + (p.talkingPoint||p.talking_point) + '</span>' +
-        '</div>'
-      : '') +
-
-      (p.chartData ? '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><canvas id="' + cid + '" width="320" height="140" style="width:100%;height:auto;display:block"></canvas></div>' : '');
-
-    grid.appendChild(card);
-    if(p.chartData) requestAnimationFrame(() => drawChart(p, cid));
-  });
+  items.forEach(p => grid.appendChild(buildPaperCard(p)));
 }
 
-
-
-/* ══════════════════════ ENHANCED UX ══════════════════════ */
 function toggleTheme(){
   const isCardiac = document.body.classList.contains('cardiac-mode');
   document.body.classList.toggle('dark');
