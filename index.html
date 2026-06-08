@@ -1443,11 +1443,6 @@ async function loadArticlesFromSheet() {
   renderKOL();
 }
 
-async function loadPapersFromSheet() {
-  // 시트 연동 비활성화 - 내장 데이터 사용
-  renderPapers();
-}
-
 function normalizeVideoRow(row, headers) {
   const normalizedHeaders = headers.map(h => String(h || '').trim().toLowerCase());
   const get = (...keys) => {
@@ -2254,64 +2249,6 @@ function pCountry(hospital) {
 }
 
 /* ── 필터 초기화 ── */
-function resetPaperFilters() {
-  PF_active = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
-  const s = document.getElementById('paperSearch');
-  if(s) s.value = '';
-  renderPapers();
-}
-
-/* ── 필터 UI 빌드 ── */
-function buildPaperFilters() {
-  /* Category */
-  buildPFSection('pf-category', PF.category, 'category', p => pCategory(p.tech));
-
-  /* Indication */
-  buildPFSection('pf-indication', PF.indication, 'indication', p => p.indication||'');
-
-  /* Platform */
-  buildPFSection('pf-platform', PF.platform, 'platform', p => p.system||'');
-
-  /* Evidence Level */
-  const evEl = document.getElementById('pf-evidence');
-  if(evEl) {
-    evEl.innerHTML = '';
-    PF.evidence.forEach(d => {
-      const count = d.k === 'all' ? PAPERS.length
-        : PAPERS.filter(p => { const ev = pEvidence(p.evidence); return ev && String(ev.lv) === d.k; }).length;
-      if(d.k !== 'all' && count === 0) return;
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn' + (PF_active.evidence === d.k ? ' active' : '');
-      btn.innerHTML = (d.s ? pStars(d.s) + ' ' : '') + d.l + ' <span class="btn-count">' + count + '</span>';
-      btn.onclick = () => { PF_active.evidence = d.k; renderPapers(); };
-      evEl.appendChild(btn);
-    });
-  }
-
-  /* Year — 동적 */
-  const years = [...new Set(PAPERS.map(p => p.year).filter(Boolean))].sort((a,b) => b-a);
-  const yrEl = document.getElementById('pf-year');
-  if(yrEl) {
-    yrEl.innerHTML = '';
-    const allBtn = document.createElement('button');
-    allBtn.className = 'filter-btn' + (PF_active.year === 'all' ? ' active' : '');
-    allBtn.innerHTML = '최신순 <span class="btn-count">' + PAPERS.length + '</span>';
-    allBtn.onclick = () => { PF_active.year = 'all'; renderPapers(); };
-    yrEl.appendChild(allBtn);
-    years.forEach(yr => {
-      const count = PAPERS.filter(p => p.year === yr).length;
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn' + (PF_active.year === yr ? ' active' : '');
-      btn.innerHTML = yr + ' <span class="btn-count">' + count + '</span>';
-      btn.onclick = () => { PF_active.year = yr; renderPapers(); };
-      yrEl.appendChild(btn);
-    });
-  }
-
-  /* Country */
-  buildPFSection('pf-country', PF.country, 'country', p => pCountry(p.hospital));
-}
-
 function buildPFSection(elId, defs, key, matchFn) {
   const el = document.getElementById(elId);
   if(!el) return;
@@ -2328,80 +2265,6 @@ function buildPFSection(elId, defs, key, matchFn) {
 }
 
 /* ── 메인 렌더 ── */
-function renderPapers() {
-  // 안전 장치: PAPERS가 비어있으면 내장 데이터 복원
-  if(!PAPERS || PAPERS.length === 0) {
-    console.warn('[renderPapers] PAPERS empty! Reloading embedded data...');
-    PAPERS.push(
-      { title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery", authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy", hospital:"Eulji University Hospital, Korea", summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증.", doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"Robotic NOTES Hysterectomy 최초 보고", talkingPoint:"초기 vNOTES 도입 필요성 논의 시 활용" },
-      { title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience", authors:"Zhang X, Guan X et al.", year:"2021", journal:"JMIG", hospital:"China", summary:"33례 자궁내막증 환자 대상 Robotic vNOTES 적용. 통증 감소 및 재발 없음.", doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"vNOTES로 자궁내막증 33례 통증 감소 확인", talkingPoint:"Endometriosis 도입 타당성 논의 시 핵심 근거" },
-      { title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study", authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine", hospital:"China", summary:"Gasless vs 기존 vNOTES 비교. Gasless군 복부팽만 부작용 유의하게 감소.", doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Retrospective", keyMessage:"Gasless vNOTES 복부팽만 부작용 감소", talkingPoint:"환자 경험 개선 포인트" },
-      { title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor", authors:"Kanno et al.", year:"2025", journal:"Gynecologic Oncology Reports", hospital:"Japan", summary:"da Vinci SP 이용 transvaginal staging surgery. Borderline ovarian tumor 의심 환자에서 scarless 접근 입증.", doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Ovarian Cystectomy", evidence:"Case Report", keyMessage:"SP 경질 로봇수술 종양학적 안전성 확인", talkingPoint:"GYN Oncology SP 확장 근거" }
-    );
-  }
-  buildPaperFilters();
-
-  /* Active tag 표시 */
-  const tagEl = document.getElementById('paperActiveTags');
-  if(tagEl) {
-    tagEl.innerHTML = '';
-    const allDefs = { category: PF.category, indication: PF.indication, platform: PF.platform, evidence: PF.evidence, country: PF.country };
-    Object.entries(PF_active).forEach(([key, val]) => {
-      if(val === 'all' || !val) return;
-      let label = val;
-      if(allDefs[key]) label = allDefs[key].find(d => d.k === val)?.l || val;
-      const t = document.createElement('div');
-      t.className = 'active-tag';
-      t.innerHTML = label + ' <span style="margin-left:4px">×</span>';
-      t.onclick = () => { PF_active[key] = 'all'; renderPapers(); };
-      tagEl.appendChild(t);
-    });
-    if(PF_active.year !== 'all') {
-      const t = document.createElement('div');
-      t.className = 'active-tag';
-      t.innerHTML = PF_active.year + ' <span style="margin-left:4px">×</span>';
-      t.onclick = () => { PF_active.year = 'all'; renderPapers(); };
-      tagEl.appendChild(t);
-    }
-  }
-
-  const q = (document.getElementById('paperSearch')?.value || '').toLowerCase();
-
-  const items = [...PAPERS].filter(p => {
-    if(PF_active.category !== 'all' && pCategory(p.tech) !== PF_active.category) return false;
-    if(PF_active.indication !== 'all' && (p.indication||'') !== PF_active.indication) return false;
-    if(PF_active.platform !== 'all' && (p.system||'') !== PF_active.platform) return false;
-    if(PF_active.evidence !== 'all') {
-      const ev = pEvidence(p.evidence||'');
-      if(!ev || String(ev.lv) !== PF_active.evidence) return false;
-    }
-    if(PF_active.year !== 'all' && (p.year||'') !== PF_active.year) return false;
-    if(PF_active.country !== 'all' && pCountry(p.hospital) !== PF_active.country) return false;
-    if(q) {
-      const hay = [p.title, p.authors, p.summary, p.journal, p.indication].filter(Boolean).join(' ').toLowerCase();
-      if(!hay.includes(q)) return false;
-    }
-    return true;
-  }).sort((a, b) => (b.year||'').localeCompare(a.year||''));
-
-  const countEl = document.getElementById('paperCount');
-  if(countEl) countEl.textContent = items.length;
-  const hdrEl = document.getElementById('headerCount');
-  if(hdrEl) hdrEl.textContent = items.length + ' papers';
-
-  const grid = document.getElementById('paperGrid');
-  if(!grid) return;
-  grid.innerHTML = '';
-
-  if(!items.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';
-    return;
-  }
-
-  items.forEach(p => grid.appendChild(buildPaperCard(p)));
-}
-
-/* ── 카드 빌더 ── */
 function buildPaperCard(p) {
   const ev      = pEvidence(p.evidence || '');
   const doi     = p.doi || '';
@@ -2750,48 +2613,6 @@ function buildPaperActiveTags() {
 
 function getEvidenceLevel(v) { return parseEvidence(v); }
 function renderEvidenceDots(n) { return renderStars(n); }
-
-function renderPapers() {
-  console.error('[renderPapers] called, PAPERS.length=', PAPERS.length, 'pFilters=', JSON.stringify(pFilters));
-  buildPaperFilters();
-  buildPaperActiveTags();
-  const q = (document.getElementById('paperSearch')?.value||'').toLowerCase();
-  let items = PAPERS.filter(p => {
-    if(pFilters.category!=='all'   && normCategory(p.tech||'')!==pFilters.category) return false;
-    if(pFilters.indication!=='all' && normIndication(p.indication||p.title||'')!==pFilters.indication) return false;
-    if(pFilters.platform!=='all'   && normPlatform(p.system||p.sys||'')!==pFilters.platform) return false;
-    if(pFilters.evidence!=='all') {
-      const ev = parseEvidence(p.evidence||p.evidenceLevel||'');
-      if(!ev || String(ev.level)!==pFilters.evidence) return false;
-    }
-    if(pFilters.year!=='all' && (p.year||'')!==pFilters.year) return false;
-    if(pFilters.country!=='all' && normCountry(p.hospital||p.affiliation||'')!==pFilters.country) return false;
-    if(q) {
-      const hay = [(p.title||''),(p.authors||''),(p.summary||''),(p.tech||''),(p.indication||'')].join(' ').toLowerCase();
-      if(!hay.includes(q)) return false;
-    }
-    return true;
-  });
-
-  items = [...items].sort((a,b) => (b.year||'').localeCompare(a.year||''));
-  document.getElementById('paperCount').textContent = items.length;
-  document.getElementById('headerCount').textContent = items.length + ' papers';
-
-  const grid = document.getElementById('paperGrid');
-  if(!grid) { console.warn('paperGrid not found'); return; }
-  grid.innerHTML = '';
-  if(!items.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';
-    return;
-  }
-
-  console.log('[renderPapers] items to render:', items.length);
-  items.forEach((p, i) => {
-    const card = makePaperCard(p, i);
-    grid.appendChild(card);
-  });
-  console.log('[renderPapers] grid children:', grid.children.length);
-}
 
 function makePaperCard(p, i) {
   console.log('[makePaperCard]', i, p.title?.slice(0,30));
@@ -4273,15 +4094,22 @@ function updateMobileTabs(active) {
 
 /* ══════════════════════ INIT ══════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
+  applyLang();
   loadVideosFromSheet();
   loadArticlesFromSheet();
-  loadPapersFromSheet();
   loadCardiacData();
-  renderPapers();
+  loadPapersFromSheet();  // 내부에서 renderPapers() 호출
   renderCal();
-  applyLang();
   readStateFromURL();
   setTimeout(renderDdayBanner, 1500);
+  // 안전망: 500ms 후 논문 탭이 비어있으면 강제 렌더링
+  setTimeout(() => {
+    const grid = document.getElementById('paperGrid');
+    if(grid && grid.children.length === 0 && PAPERS.length > 0) {
+      console.warn('Safety render triggered');
+      renderPapers();
+    }
+  }, 500);
 });
 </script>
 
