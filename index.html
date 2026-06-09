@@ -2249,6 +2249,14 @@ function pCountry(hospital) {
 }
 
 /* ── 필터 초기화 ── */
+function resetPaperFilters() {
+  PF_active = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
+  const s = document.getElementById('paperSearch');
+  if (s) s.value = '';
+  renderPapers();
+}
+
+
 function buildPFSection(elId, defs, key, matchFn) {
   const el = document.getElementById(elId);
   if(!el) return;
@@ -2477,415 +2485,49 @@ const PF_COUNTRY = [
   {key:'other', label:'🌏 Other'},
 ];
 
-let pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
-
-function resetPaperFilters() {
-  pFilters = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
-  const s = document.getElementById('paperSearch'); if(s) s.value='';
-  renderPapers();
-}
-
-// ── Evidence Level 파싱 ──
-function parseEvidence(v) {
-  const s = (v||'').toLowerCase().trim();
-  if(!s || s==='-' || s==='—') return null;
-  if(s.includes('meta') || s.includes('systematic')) return {level:1, type:'Meta-analysis / SR', stars:5};
-  if(s.includes('rct') || s.includes('randomized')) return {level:2, type:'RCT', stars:4};
-  if(s.includes('prospective') || s.includes('registry') || s.includes('cohort')) return {level:3, type:'Prospective', stars:3};
-  if(s.includes('retrospective') || s.includes('comparative')) return {level:4, type:'Retrospective', stars:2};
-  if(s.includes('case') || s.includes('technical') || s.includes('video') || s.includes('series') || s.includes('surgical technique')) return {level:5, type:'Case Report / Tech', stars:1};
-  return null;
-}
-
-function renderStars(n, total=5) {
-  return Array.from({length:total}, (_,i) =>
-    `<span style="opacity:${i<n?'1':'0.18'}">⭐</span>`
-  ).join('');
-}
-
-// ── Indication 정규화 ──
-function normIndication(v) {
-  const s = (v||'').toLowerCase();
-  if(s.includes('ovarian cyst') || s.includes('cystectomy') || s.includes('borderline')) return 'ovarian_cyst';
-  if(s.includes('endometriosis') || s.includes('die') || s.includes('deep infiltrat')) return 'endometriosis';
-  if(s.includes('myomectomy') || s.includes('myoma') || s.includes('fibroid') || s.includes('leiomyo') || s.includes('adenomyo')) return 'myomectomy';
-  if(s.includes('hysterectomy') || s.includes('prolapse') || s.includes('uterosacral') || s.includes('uterine prolapse')) return 'hysterectomy';
-  if(s.includes('endometrial cancer') || s.includes('endometrial carcinoma')) return 'hysterectomy';
-  return '';
-}
-
-// ── Platform 정규화 ──
-function normPlatform(v) {
-  const s = (v||'').toLowerCase();
-  if(s.includes('sp')) return 'sp';
-  if(s.includes('5') || s.includes('dv5')) return 'dv5';
-  if(s.includes('xi')) return 'xi';
-  return '';
-}
-
-function normCountry(v) {
-  const s = (v||'').toLowerCase();
-  if(s.includes('korea') || s.includes('한국') || s.includes('병원') || s.includes('대학') || s.includes('의원') || s.includes('센터')) return 'korea';
-  if(s.includes('japan') || s.includes('일본')) return 'japan';
-  if(s.includes('china') || s.includes('중국')) return 'china';
-  if(s === '') return '';
-  // 국문 병원명 = 한국
-  if(/[가-힣]/.test(s)) return 'korea';
-  return 'other';
-}
-
-// ── Category 정규화 ──
-function normCategory(v) {
-  const s = (v||'').toLowerCase();
-  if(s.includes('vnotes') || s.includes('notes') || s.includes('vanh')) return 'vnotes';
-  if(s.includes('sp') || s.includes('single port') || s.includes('single-port')) return 'sp';
-  return '';
-}
-
-// ── 필터 빌드 ──
-function buildPaperFilters() {
-  const makeFilter = (elId, defs, key, matchFn) => {
-    const el = document.getElementById(elId); if(!el) return; el.innerHTML='';
-    defs.forEach(d => {
-      const count = d.key==='all' ? PAPERS.length : PAPERS.filter(p => matchFn(p)===d.key).length;
-      if(d.key!=='all' && count===0) return;
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn' + (pFilters[key]===d.key ? ' active' : '');
-      let labelHtml = d.label;
-      if(d.stars) labelHtml = renderStars(d.stars) + ' ' + d.label;
-      btn.innerHTML = `${labelHtml} <span class="btn-count">${count}</span>`;
-      btn.onclick = () => { pFilters[key]=d.key; renderPapers(); };
-      el.appendChild(btn);
-    });
-  };
-
-  makeFilter('pf-category',   PF_CATEGORY,   'category',   p => normCategory(p.tech||''));
-  makeFilter('pf-indication', PF_INDICATION, 'indication', p => normIndication(p.indication||p.title||''));
-  makeFilter('pf-platform',   PF_PLATFORM,   'platform',   p => normPlatform(p.system||p.sys||''));
-  makeFilter('pf-evidence',   PF_EVIDENCE,   'evidence',   p => { const ev=parseEvidence(p.evidence||p.evidenceLevel||''); return ev ? String(ev.level) : ''; });
-
-  makeFilter('pf-country', PF_COUNTRY, 'country', p => normCountry(p.hospital||p.affiliation||''));
-
-  // Year 필터 동적 생성
-  const years = [...new Set(PAPERS.map(p=>(p.year||'').trim()).filter(Boolean))].sort((a,b)=>b-a);
-  const yearEl = document.getElementById('pf-year'); if(!yearEl) return; yearEl.innerHTML='';
-  const allBtn = document.createElement('button');
-  allBtn.className = 'filter-btn' + (pFilters.year==='all'?' active':'');
-  allBtn.innerHTML = `최신순 <span class="btn-count">${PAPERS.length}</span>`;
-  allBtn.onclick = () => { pFilters.year='all'; renderPapers(); };
-  yearEl.appendChild(allBtn);
-  years.forEach(yr => {
-    const count = PAPERS.filter(p=>p.year===yr).length;
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (pFilters.year===yr?' active':'');
-    btn.innerHTML = `${yr} <span class="btn-count">${count}</span>`;
-    btn.onclick = () => { pFilters.year=yr; renderPapers(); };
-    yearEl.appendChild(btn);
-  });
-}
-
-// ── 활성 필터 태그 ──
-function buildPaperActiveTags() {
-  const el = document.getElementById('paperActiveTags'); if(!el) return; el.innerHTML='';
-  const labelMap = {
-    category:   PF_CATEGORY,
-    indication: PF_INDICATION,
-    platform:   PF_PLATFORM,
-    evidence:   PF_EVIDENCE,
-    country:    PF_COUNTRY,
-  };
-  Object.entries(pFilters).forEach(([key, val]) => {
-    if(val==='all' || !val) return;
-    let label = val;
-    if(labelMap[key]) label = labelMap[key].find(d=>d.key===val)?.label || val;
-    const t = document.createElement('div'); t.className='active-tag';
-    t.innerHTML = `${label} <span style="margin-left:4px">×</span>`;
-    t.onclick = () => { pFilters[key]='all'; renderPapers(); };
-    el.appendChild(t);
-  });
-  if(pFilters.year!=='all') {
-    const t = document.createElement('div'); t.className='active-tag';
-    t.innerHTML = `${pFilters.year} <span style="margin-left:4px">×</span>`;
-    t.onclick = () => { pFilters.year='all'; renderPapers(); };
-    el.appendChild(t);
-  }
-}
-
-function getEvidenceLevel(v) { return parseEvidence(v); }
-function renderEvidenceDots(n) { return renderStars(n); }
-
-function makePaperCard(p, i) {
-  console.log('[makePaperCard]', i, p.title?.slice(0,30));
-  const doi       = p.doi || p.url || '';
-  const hosp      = p.hospital || p.affiliation || '';
-  const tech      = p.tech || '';
-  const ev        = parseEvidence(p.evidence || p.evidenceLevel || '');
-  const isVnotes  = normCategory(tech) === 'vnotes';
-  const techColor = isVnotes ? 'background:#E6F1FB;color:#0C447C' : 'background:#D1FAE5;color:#065F46';
-  const platMap   = {sp:'da Vinci SP', xi:'da Vinci Xi', dv5:'da Vinci 5'};
-  const platLabel = platMap[normPlatform(p.system||p.sys||'')] || '';
-  const attach    = (p.attach||'').toLowerCase();
-  const km        = p.keyMessage || p.key_message || '';
-  const tp        = p.talkingPoint || p.talking_point || '';
-
-  const card = document.createElement('div');
-  card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;transition:border-color 0.15s,box-shadow 0.15s';
-  card.onmouseenter = () => { card.style.borderColor='var(--primary-mid)'; card.style.boxShadow='var(--shadow-hover)'; };
-  card.onmouseleave = () => { card.style.borderColor='var(--border)';      card.style.boxShadow='var(--shadow)'; };
-
-  // ── 저널·연도 행
-  const row1 = el('div', 'display:flex;align-items:flex-start;justify-content:space-between;gap:8px');
-  const jrnl = el('span', 'font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)');
-  jrnl.textContent = (p.journal||'') + ' · ' + (p.year||'');
-  row1.appendChild(jrnl);
-  if(doi) {
-    const a = document.createElement('a');
-    a.href = doi; a.target = '_blank'; a.rel = 'noopener';
-    a.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--primary);color:white;text-decoration:none';
-    a.textContent = 'DOI / PDF';
-    row1.appendChild(a);
-  }
-  card.appendChild(row1);
-
-  // ── 뱃지 행
-  const badges = el('div', 'display:flex;align-items:center;gap:5px;flex-wrap:wrap');
-  if(tech) {
-    const b = el('span', 'font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;font-family:var(--mono);' + techColor);
-    b.textContent = tech; badges.appendChild(b);
-  }
-  if(platLabel) {
-    const b = el('span', 'font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-family:var(--mono)');
-    b.textContent = platLabel; badges.appendChild(b);
-  }
-  if(attach && attach !== '-') {
-    const isVid = attach === 'video';
-    const b = el('span', 'font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:' + (isVid?'#FEF3C7':'#F3F4F6') + ';color:' + (isVid?'#92400E':'#374151') + ';font-family:var(--mono)');
-    b.textContent = isVid ? '🎬 Video' : '📷 Photo';
-    badges.appendChild(b);
-  }
-  if(badges.children.length) card.appendChild(badges);
-
-  // ── Evidence Level
-  if(ev) {
-    const evRow = el('div', 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:8px');
-    const stars = el('span', 'letter-spacing:1px;font-size:11px');
-    stars.innerHTML = renderStars(ev.stars);
-    const lvl = el('span', 'font-size:10px;font-weight:700;color:var(--text2);font-family:var(--mono)');
-    lvl.textContent = 'Level ' + ev.level;
-    const typ = el('span', 'font-size:10px;color:var(--text3)');
-    typ.textContent = ev.type;
-    evRow.appendChild(stars); evRow.appendChild(lvl); evRow.appendChild(typ);
-    card.appendChild(evRow);
-  }
-
-  // ── 제목 + 복사 버튼
-  const titleRow = el('div', 'font-size:13px;font-weight:700;color:var(--text);line-height:1.45;display:flex;align-items:flex-start;gap:8px');
-  const titleSpan = el('span', 'flex:1');
-  titleSpan.textContent = p.title || '';
-  const copyBtn = document.createElement('button');
-  copyBtn.style.cssText = 'flex-shrink:0;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px';
-  copyBtn.title = '복사';
-  copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-  copyBtn.onclick = () => copyToClipboard((p.title||'') + ' (' + (p.authors||'') + ', ' + (p.journal||'') + ' ' + (p.year||'') + ')', copyBtn);
-  titleRow.appendChild(titleSpan); titleRow.appendChild(copyBtn);
-  card.appendChild(titleRow);
-
-  // ── 저자 / 기관
-  const authRow = el('div', 'font-size:11px;color:var(--text2)');
-  authRow.textContent = (p.authors||'') + (hosp ? ' · ' + hosp : '');
-  card.appendChild(authRow);
-
-  // ── 요약
-  if(p.summary) {
-    const sumDiv = el('div', 'font-size:11px;color:var(--text2);line-height:1.65;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)');
-    sumDiv.textContent = p.summary;
-    card.appendChild(sumDiv);
-  }
-
-  // ── Key Message
-  if(km) {
-    const kmDiv = el('div', 'display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#F0FDF4;border-radius:8px;border-left:3px solid #22C55E');
-    const kmLabel = el('span', 'font-size:10px;font-weight:700;color:#166534;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0');
-    kmLabel.textContent = '📣 Key Message';
-    const kmText = el('span', 'font-size:11px;color:#166534;line-height:1.55');
-    kmText.textContent = km;
-    kmDiv.appendChild(kmLabel); kmDiv.appendChild(kmText);
-    card.appendChild(kmDiv);
-  }
-
-  // ── Clinical Marketing Takeaway
-  if(tp) {
-    const tpDiv = el('div', 'display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#FFF7ED;border-radius:8px;border-left:3px solid #F97316');
-    const tpLabel = el('span', 'font-size:10px;font-weight:700;color:#9A3412;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0');
-    tpLabel.textContent = '💬 Takeaway';
-    const tpText = el('span', 'font-size:11px;color:#9A3412;line-height:1.55');
-    tpText.textContent = tp;
-    tpDiv.appendChild(tpLabel); tpDiv.appendChild(tpText);
-    card.appendChild(tpDiv);
-  }
-
-  return card;
-}
-
-// 헬퍼: 스타일 있는 엘리먼트 생성
-function el(tag, style) {
-  const e = document.createElement(tag);
-  if(style) e.style.cssText = style;
-  return e;
-}
-
-// normPaperTech merged into paper filters
-
-// normPaperSys merged into paper filters
-
-function drawChart(p, canvasId) {
-  const c = document.getElementById(canvasId);
-  if(!c) return;
-  const ctx = c.getContext('2d');
-  const W = c.width, H = c.height;
-  ctx.clearRect(0,0,W,H);
-
-  if(p.chartData.type==='bar') {
-    const vals = p.chartData.values, labs = p.chartData.labels, cols = p.chartData.colors;
-    const max = Math.max(...vals)*1.2;
-    const pad={t:10,r:10,b:36,l:38}, bw=Math.floor((W-pad.l-pad.r)/vals.length*0.55), gap=Math.floor((W-pad.l-pad.r)/vals.length);
-    // grid
-    ctx.strokeStyle='#E2DED9'; ctx.lineWidth=0.5;
-    for(let i=0;i<=4;i++){
-      const y=pad.t+(H-pad.t-pad.b)*i/4;
-      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-      ctx.fillStyle='#9E9894';ctx.font='9px DM Sans';ctx.textAlign='right';
-      ctx.fillText(Math.round(max*(4-i)/4),pad.l-3,y+3);
-    }
-    vals.forEach((v,i)=>{
-      const x=pad.l+i*gap+gap/2-bw/2;
-      const bh=(v/max)*(H-pad.t-pad.b);
-      const y=H-pad.b-bh;
-      ctx.fillStyle=cols[i%cols.length];
-      ctx.beginPath();ctx.roundRect(x,y,bw,bh,3);ctx.fill();
-      ctx.fillStyle='#1A1714';ctx.font='bold 9px DM Sans';ctx.textAlign='center';
-      ctx.fillText(v,x+bw/2,y-4);
-      ctx.fillStyle='#6B6460';ctx.font='9px DM Sans';
-      const lb=labs[i]; const lines=lb.split(' ');
-      lines.forEach((ln,li)=>ctx.fillText(ln,x+bw/2,H-pad.b+10+li*10));
-    });
-
-  } else if(p.chartData.type==='line') {
-    const vals=p.chartData.values, labs=p.chartData.labels;
-    const max=Math.max(...vals)*1.15, min=0;
-    const pad={t:10,r:16,b:32,l:36};
-    const xStep=(W-pad.l-pad.r)/(vals.length-1);
-    // grid
-    ctx.strokeStyle='#E2DED9';ctx.lineWidth=0.5;
-    for(let i=0;i<=4;i++){
-      const y=pad.t+(H-pad.t-pad.b)*i/4;
-      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-      ctx.fillStyle='#9E9894';ctx.font='9px DM Sans';ctx.textAlign='right';
-      ctx.fillText((max*(4-i)/4).toFixed(1),pad.l-3,y+3);
-    }
-    // area
-    ctx.beginPath();
-    ctx.moveTo(pad.l,H-pad.b-(vals[0]-min)/(max-min)*(H-pad.t-pad.b));
-    vals.forEach((v,i)=>ctx.lineTo(pad.l+i*xStep,H-pad.b-(v-min)/(max-min)*(H-pad.t-pad.b)));
-    ctx.lineTo(pad.l+(vals.length-1)*xStep,H-pad.b);ctx.lineTo(pad.l,H-pad.b);ctx.closePath();
-    ctx.fillStyle='rgba(192,20,60,0.1)';ctx.fill();
-    // line
-    ctx.beginPath();ctx.strokeStyle='#C0143C';ctx.lineWidth=2;
-    vals.forEach((v,i)=>{
-      const x=pad.l+i*xStep, y=H-pad.b-(v-min)/(max-min)*(H-pad.t-pad.b);
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    });ctx.stroke();
-    // dots + labels
-    vals.forEach((v,i)=>{
-      const x=pad.l+i*xStep, y=H-pad.b-(v-min)/(max-min)*(H-pad.t-pad.b);
-      ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fillStyle='#C0143C';ctx.fill();
-      ctx.fillStyle='#1A1714';ctx.font='bold 9px DM Sans';ctx.textAlign='center';ctx.fillText(v.toFixed(1),x,y-7);
-      ctx.fillStyle='#6B6460';ctx.font='9px DM Sans';ctx.fillText(labs[i],x,H-pad.b+11);
-    });
-
-  } else if(p.chartData.type==='donut') {
-    const vals=p.chartData.values, labs=p.chartData.labels, cols=p.chartData.colors;
-    const total=vals.reduce((a,b)=>a+b,0);
-    const cx=W/2-20, cy=H/2+4, r=Math.min(cx,cy)*0.72, ir=r*0.52;
-    let angle=-Math.PI/2;
-    vals.forEach((v,i)=>{
-      const slice=v/total*Math.PI*2;
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,angle,angle+slice);ctx.closePath();
-      ctx.fillStyle=cols[i];ctx.fill();
-      ctx.beginPath();ctx.arc(cx,cy,ir,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();
-      angle+=slice;
-    });
-    // center
-    ctx.fillStyle='#1A1714';ctx.font='bold 13px DM Sans';ctx.textAlign='center';
-    ctx.fillText('n='+total,cx,cy-2);ctx.font='9px DM Sans';ctx.fillStyle='#6B6460';ctx.fillText('total',cx,cy+11);
-    // legend
-    const lx=W-78, ly=18;
-    vals.forEach((v,i)=>{
-      const pct=Math.round(v/total*100);
-      ctx.fillStyle=cols[i];ctx.fillRect(lx,ly+i*18,10,10);
-      ctx.fillStyle='#1A1714';ctx.font='9px DM Sans';ctx.textAlign='left';
-      ctx.fillText(`${labs[i]} (${pct}%)`,lx+13,ly+i*18+9);
-    });
-
-  } else if(p.chartData.type==='grouped') {
-    const labs=p.chartData.labels, A=p.chartData.groupA, B=p.chartData.groupB;
-    const max=Math.max(...A.values,...B.values)*1.25;
-    const pad={t:10,r:10,b:42,l:38};
-    const slotW=(W-pad.l-pad.r)/labs.length, bw=Math.floor(slotW*0.28);
-    // grid
-    ctx.strokeStyle='#E2DED9';ctx.lineWidth=0.5;
-    for(let i=0;i<=4;i++){
-      const y=pad.t+(H-pad.t-pad.b)*i/4;
-      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-      ctx.fillStyle='#9E9894';ctx.font='9px DM Sans';ctx.textAlign='right';
-      ctx.fillText(Math.round(max*(4-i)/4),pad.l-3,y+3);
-    }
-    labs.forEach((lb,i)=>{
-      const cx=pad.l+i*slotW+slotW/2;
-      [[A,0],[B,1]].forEach(([g,gi])=>{
-        const x=cx+(gi===0?-bw-1:1), bh=(g.values[i]/max)*(H-pad.t-pad.b), y=H-pad.b-bh;
-        ctx.fillStyle=g.color;ctx.beginPath();ctx.roundRect(x,y,bw,bh,2);ctx.fill();
-        ctx.fillStyle='#1A1714';ctx.font='bold 8px DM Sans';ctx.textAlign='center';ctx.fillText(g.values[i],x+bw/2,y-3);
-      });
-      ctx.fillStyle='#6B6460';ctx.font='9px DM Sans';ctx.textAlign='center';
-      lb.split(' ').forEach((ln,li)=>ctx.fillText(ln,cx,H-pad.b+11+li*10));
-    });
-    // legend
-    [[A,0],[B,1]].forEach(([g,gi])=>{
-      const lx=pad.l+gi*90+4, ly=H-8;
-      ctx.fillStyle=g.color;ctx.fillRect(lx,ly-7,8,8);
-      ctx.fillStyle='#1A1714';ctx.font='9px DM Sans';ctx.textAlign='left';ctx.fillText(g.label,lx+10,ly);
-    });
-  }
-
-  // note
-  if(p.chartData.note){
-    ctx.fillStyle='#9E9894';ctx.font='8px DM Sans';ctx.textAlign='right';
-    ctx.fillText(p.chartData.note,W-6,H-2);
-  }
-}
-
-function getEvidenceLevel(v) {
-  const s = (v||'').toLowerCase().trim();
-  if(!s || s === '-' || s === '—') return null;
-  if(s.includes('meta') || s.includes('systematic')) return { level:1, label:'Meta-analysis / SR', dots:5 };
-  if(s.includes('rct') || s.includes('randomized')) return { level:2, label:'RCT', dots:4 };
-  if(s.includes('prospective') || s.includes('registry') || s.includes('cohort')) return { level:3, label:'Prospective', dots:3 };
-  if(s.includes('retrospective') || s.includes('comparative')) return { level:4, label:'Retrospective', dots:2 };
-  if(s.includes('case') || s.includes('technical') || s.includes('series')) return { level:5, label:'Case Report', dots:1 };
-  return null;
-}
-
-function renderEvidenceDots(dots) {
-  const total = 5;
-  return Array.from({length:total}, (_,i) =>
-    '<span style="font-size:10px;opacity:'+(i < dots ? '1' : '0.2')+'">🟢</span>'
-  ).join('');
-}
-
 /* ══════════════════════ PAPER RENDER ══════════════════════ */
 function renderPapers() {
-  buildPaperFilters();
+  // 필터 UI 빌드
+  if(typeof buildPaperFilters === 'function') buildPaperFilters();
+  else if(typeof buildPFSection === 'function') {
+    buildPFSection('pf-category',   PF.category,   'category',   p => pCategory(p.tech));
+    buildPFSection('pf-indication', PF.indication, 'indication', p => p.indication||'');
+    buildPFSection('pf-platform',   PF.platform,   'platform',   p => p.system||'');
+    buildPFSection('pf-country',    PF.country,    'country',    p => pCountry(p.hospital));
+    // Evidence Level
+    const evEl = document.getElementById('pf-evidence');
+    if(evEl) {
+      evEl.innerHTML = '';
+      PF.evidence.forEach(d => {
+        const count = d.k==='all' ? PAPERS.length : PAPERS.filter(p=>{const ev=pEvidence(p.evidence||'');return ev&&String(ev.lv)===d.k;}).length;
+        if(d.k!=='all'&&count===0) return;
+        const btn=document.createElement('button');
+        btn.className='filter-btn'+(PF_active.evidence===d.k?' active':'');
+        btn.innerHTML=(d.s?pStars(d.s)+' ':'')+d.l+' <span class="btn-count">'+count+'</span>';
+        btn.onclick=()=>{PF_active.evidence=d.k;renderPapers();};
+        evEl.appendChild(btn);
+      });
+    }
+    // Year
+    const yrEl=document.getElementById('pf-year');
+    if(yrEl){
+      yrEl.innerHTML='';
+      const years=[...new Set(PAPERS.map(p=>p.year).filter(Boolean))].sort((a,b)=>b-a);
+      const allBtn=document.createElement('button');
+      allBtn.className='filter-btn'+(PF_active.year==='all'?' active':'');
+      allBtn.innerHTML='최신순 <span class="btn-count">'+PAPERS.length+'</span>';
+      allBtn.onclick=()=>{PF_active.year='all';renderPapers();};
+      yrEl.appendChild(allBtn);
+      years.forEach(yr=>{
+        const count=PAPERS.filter(p=>p.year===yr).length;
+        const btn=document.createElement('button');
+        btn.className='filter-btn'+(PF_active.year===yr?' active':'');
+        btn.innerHTML=yr+' <span class="btn-count">'+count+'</span>';
+        btn.onclick=()=>{PF_active.year=yr;renderPapers();};
+        yrEl.appendChild(btn);
+      });
+    }
+  }
 
   // 활성 필터 태그
   const tagEl = document.getElementById('paperActiveTags');
@@ -3146,41 +2788,41 @@ function normalizeCalendarRow(row, headers) {
 }
 
 async function loadConferencesFromSheet() {
+  const FALLBACK = [
+    { name:'KSGO(부인종양학회) International Conference', start:'2026-04-03', end:'2026-04-04', loc:'COEX Magok', tag:'conference', note:'Cervical cancer, Stapler, Robotic VNOTES' },
+    { name:'KSOG(산부인과학회) 통합학술대회', start:'2026-04-25', end:'2026-04-26', loc:'부산 롯데호텔', tag:'conference', note:'SP, SimNow2, dV5 symposium 운영' },
+    { name:'KSGE(산부인과내시경학회) 학회', start:'2026-05-09', end:'2026-05-09', loc:'강릉 스카이베이호텔', tag:'conference', note:'VSC, dV5, Digital 발표' },
+    { name:'SKRGS(산부인과로봇) 춘계학술대회', start:'2026-05-16', end:'2026-05-16', loc:'세종대학교', tag:'conference', url:'http://www.skrgs.org/en/download/2026_5th_SKRGS.pdf', note:'다빈치5, FFB, SP, Endometriosis 발표' },
+    { name:'SERGS', start:'2026-05-28', end:'2026-05-30', loc:'Stockholm, Sweden', tag:'conference', note:'조치흠, 백지흠, 이근호 교수님 참석 예정' },
+    { name:'ASGRS', start:'2026-06-27', end:'2026-06-28', loc:'Taipei, Taiwan', tag:'conference', note:'VoC Test Drive, WIDVS' },
+    { name:'대한비뇨부인과학회', start:'2026-07-05', end:'2026-07-05', loc:'세종대학교 대양AI센터', tag:'conference' },
+    { name:'대한단일공수술학회(KSPS)', start:'2026-07-11', end:'2026-07-11', loc:'삼성서울병원', tag:'conference' },
+    { name:'제 8회 대한골반신경연구회 심포지엄', start:'2026-07-12', end:'2026-07-12', loc:'일원역 삼성생명빌딩 B동 9층', tag:'conference' },
+    { name:'다톡(Datalk) 심포지엄 w/개원의', start:'2026-07-29', end:'2026-07-29', loc:'조선 팰리스 강남', tag:'symposium', note:'개원의 대상 GYN 프로그램' },
+  ];
   try {
     const res = await fetch(SHEET_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
     const rows = parseCSV(text);
-    if (rows.length < 2) throw new Error('Sheet에 데이터가 없습니다.');
-
-    // 빈 앞 컬럼 처리
+    if (rows.length < 2) throw new Error('no data');
     const rawH = rows[0].map(h => String(h||'').trim());
-    const offset = rawH.findIndex(h => h && h.length > 1 && !/^[0-9\s]*$/.test(h));
+    const offset = rawH.findIndex(h => /[a-zA-Z가-힣]/.test(h));
     const headers = offset > 0 ? rawH.slice(offset) : rawH;
-
-    CONFERENCES = rows
-      .slice(1)
-      .map(row => {
-        const r = offset > 0 ? row.slice(offset) : row;
-        return normalizeCalendarRow(r, headers);
-      })
+    const loaded = rows.slice(1)
+      .map(row => { const r = offset > 0 ? row.slice(offset) : row; return normalizeCalendarRow(r, headers); })
       .filter(item => item.name && item.start)
       .sort((a, b) => new Date(a.start) - new Date(b.start));
-
-    sheetLoaded = true;
-    renderCal();
+    if (loaded.length > 0) { CONFERENCES = loaded; sheetLoaded = true; }
+    else throw new Error('0 rows parsed');
   } catch (err) {
-    console.error('Google Sheet loading failed:', err);
+    console.warn('Calendar sheet failed:', err.message, '— using fallback');
     sheetLoaded = false;
-    CONFERENCES = [];
-    renderCal();
-    const calGrid = document.getElementById('calGrid');
-    if (calGrid) {
-      calGrid.innerHTML = `<div class="empty-state">Google Sheet 데이터를 불러오지 못했습니다.<br><span style="font-size:12px;color:var(--text3)">${err.message}</span></div>`;
-    }
+    if (CONFERENCES.length === 0) CONFERENCES = FALLBACK;
   }
+  renderCal();
 }
+
 
 let calTagFilter = 'all';
 let expandedCal = null;
@@ -4060,19 +3702,17 @@ window.addEventListener('DOMContentLoaded', () => {
   applyLang();
   loadVideosFromSheet();
   loadArticlesFromSheet();
+  loadConferencesFromSheet();
   loadCardiacData();
-  loadPapersFromSheet();  // 내부에서 renderPapers() 호출
-  renderCal();
+  loadPapersFromSheet();
   readStateFromURL();
   setTimeout(renderDdayBanner, 1500);
-  // 안전망: 500ms 후 논문 탭이 비어있으면 강제 렌더링
   setTimeout(() => {
     const grid = document.getElementById('paperGrid');
-    if(grid && grid.children.length === 0 && PAPERS.length > 0) {
-      console.warn('Safety render triggered');
-      renderPapers();
-    }
-  }, 500);
+    if(grid && grid.children.length === 0 && PAPERS.length > 0) renderPapers();
+    const calGrid = document.getElementById('calGrid');
+    if(calGrid && calGrid.children.length === 0 && CONFERENCES.length > 0) renderCal();
+  }, 800);
 });
 </script>
 
