@@ -5882,11 +5882,21 @@ function openPaperModal(p) {
   // 하단 버튼
   const footer = document.createElement('div');
   footer.style.cssText = 'display:flex;gap:8px;margin-top:18px;flex-wrap:wrap';
-  if(p.doi) {
+  const validDoi = p.doi && (p.doi.startsWith('http') || p.doi.startsWith('https'));
+  if(validDoi) {
     const a = document.createElement('a');
     a.href = p.doi; a.target = '_blank'; a.rel = 'noopener';
     a.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:var(--primary);color:white;text-decoration:none;font-size:12px;font-weight:600';
     a.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>DOI / 원문 보기';
+    footer.appendChild(a);
+  } else {
+    // DOI 없으면 PubMed 검색 링크
+    const searchQ = encodeURIComponent((p.title||'').slice(0,80));
+    const a = document.createElement('a');
+    a.href = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + searchQ;
+    a.target = '_blank'; a.rel = 'noopener';
+    a.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);text-decoration:none;font-size:12px;font-weight:600';
+    a.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>PubMed에서 검색';
     footer.appendChild(a);
   }
   const copyBtn = document.createElement('button');
