@@ -811,10 +811,7 @@ body.cardiac-mode.dark {
 
     <!-- 그리드 -->
     <div style="flex:1;overflow-y:auto;padding:20px 24px">
-      <div class="tab-disclaimer">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>본 영상은 <strong>YouTube 등 외부 플랫폼의 공개 콘텐츠</strong> 링크를 모아둔 것입니다. 해당 영상의 저작권은 원 제작자에게 있으며, Intuitive의 공식 입장이나 Clinical Evidence를 대표하지 않습니다. 비공개 수술 영상은 게시하지 않아야 합니다.</span>
-      </div>
+      <div class="tab-disclaimer" id="disc-video"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>본 영상은 <b>YouTube 등 외부 공개 콘텐츠</b>의 링크를 모아둔 참고 자료입니다. 저작권은 원 제작자에게 있으며, Intuitive의 공식 입장을 대표하지 않습니다. 비공개 수술 영상은 게시하지 마십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
       <div class="yt-grid" id="grid"></div>
     </div>
   </div>
@@ -878,10 +875,7 @@ body.cardiac-mode.dark {
   </aside>
 
   <div class="kol-main" style="padding:24px 28px;flex:1;overflow-y:auto">
-<div class="tab-disclaimer" style="margin:0 28px 14px">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>본 정보는 <strong>공개된 병원 홈페이지, 학회 발표, 언론 보도</strong> 등을 기반으로 정리한 참고 자료입니다. 개인정보 및 비공개 정보는 포함하지 않아야 하며, 교수님 직접 공유 전 사전 확인이 필요합니다.</span>
-      </div>    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+<div class="tab-disclaimer" id="disc-kol"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>본 정보는 <b>공개된 병원 홈페이지·학회 발표·언론 보도</b> 기반의 내부 참고 자료입니다. 비공개 정보를 포함하지 않도록 주의하고, 교수님께 직접 공유 전 반드시 사전 확인하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-kol')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
@@ -964,10 +958,7 @@ body.cardiac-mode.dark {
       </div>
       <div style="font-size:12px;color:var(--text3);white-space:nowrap"><span id="paperCount">0</span> papers</div>
     </div>
-    <div class="tab-disclaimer">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>본 탭의 논문 요약은 <strong>PubMed 등 공개 학술 데이터베이스의 peer-reviewed 논문</strong>을 참고하여 작성된 내부 정리 자료입니다. 원 저작권은 해당 학술지 및 저자에게 있으며, 외부 배포 또는 고객 제공 시 원문 링크(DOI)를 함께 제공하십시오. Key Message 및 Talking Point는 Clinical Marketing 관점의 내부 해석이며 공식 Publication이 아닙니다.</span>
-      </div>
+    <div class="tab-disclaimer" id="disc-paper"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>논문 요약은 <b>PubMed 등 공개 학술지의 peer-reviewed 논문</b>을 내부적으로 정리한 자료입니다. 저작권은 해당 저자·학술지에 있습니다. 외부 제공 시 반드시 DOI 원문 링크를 함께 제공하십시오. Key Message·Talking Point는 Clinical Marketing 관점의 내부 해석이며 공식 publication이 아닙니다.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
     <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px"></div>
   </div>
 </div>
@@ -1163,10 +1154,7 @@ body.cardiac-mode.dark {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
     </div>
-        <div class="tab-disclaimer">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>학회 일정은 <strong>각 학회 공식 홈페이지 및 공개 안내문</strong>을 기반으로 합니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 반드시 재확인하십시오. Duty, System 정보 등 내부 운영 내용은 사내용으로만 활용하십시오.</span>
-      </div>
+        <div class="tab-disclaimer" id="disc-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
     <div id="calUpcomingSection">
           <div class="cal-upcoming-header">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -3227,6 +3215,25 @@ function submitPaper() {
 }
 
 /* ══════════════════════ LANGUAGE TOGGLE ══════════════════════ */
+
+const DISC_TEXT = {
+  'disc-video': {
+    ko: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>본 영상은 <b>YouTube 등 외부 공개 콘텐츠</b>의 링크를 모아둔 참고 자료입니다. 저작권은 원 제작자에게 있으며, Intuitive의 공식 입장을 대표하지 않습니다. 비공개 수술 영상은 게시하지 마십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+    en: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Videos are <b>publicly available external content</b> (e.g. YouTube). Copyright belongs to original creators and does not represent Intuitive's official position. Do not post non-public surgical footage.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+  },
+  'disc-kol': {
+    ko: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>본 정보는 <b>공개된 병원 홈페이지·학회 발표·언론 보도</b> 기반의 내부 참고 자료입니다. 비공개 정보를 포함하지 않도록 주의하고, 교수님께 직접 공유 전 반드시 사전 확인하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+    en: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Information compiled from <b>public hospital websites, conference presentations, and press releases</b> for internal reference only. Verify before sharing directly with surgeons.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+  },
+  'disc-paper': {
+    ko: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>논문 요약은 <b>PubMed 등 공개 학술지의 peer-reviewed 논문</b>을 내부적으로 정리한 자료입니다. 저작권은 해당 저자·학술지에 있습니다. 외부 제공 시 DOI 원문 링크를 반드시 함께 제공하십시오. Key Message·Talking Point는 Clinical Marketing 관점의 내부 해석이며 공식 publication이 아닙니다.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+    en: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Summaries are internal interpretations of <b>peer-reviewed publications</b> (PubMed etc.). Copyright belongs to respective authors and journals. Always include DOI when sharing externally. Key Messages and Talking Points are internal Clinical Marketing perspectives, not official publications.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+  },
+  'disc-cal': {
+    ko: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+    en: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Schedules sourced from <b>official society websites and public announcements</b>. Dates may change — always verify via official channels. Duty and System information is for internal use only.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>`,
+  },
+};
 const TRANSLATIONS = {
   ko: {},  // ko는 원본 HTML 그대로
   en: {
@@ -3341,6 +3348,12 @@ function applyLang() {
   // 결과 카운트 단위
   const rcEl = document.getElementById('resultCount');
   if(rcEl) rcEl.nextSibling && (rcEl.parentElement.childNodes[rcEl.parentElement.childNodes.length-1].textContent = isEn ? ' videos' : '개 영상');
+
+  // Disclaimer 언어 전환
+  Object.entries(DISC_TEXT).forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = isEn ? text.en : text.ko;
+  });
 
   // 필터 재렌더 (필터 버튼 텍스트 반영)
   buildKolFilters();
