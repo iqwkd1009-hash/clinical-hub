@@ -146,6 +146,7 @@ body {
   flex-direction: column;
   height: 100%;
 }
+.drawer-close { display:none; }
   .filter-section {
   margin-bottom: 4px;
 }
@@ -829,7 +830,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
     }
     .sidebar.drawer-open { transform:translateX(0); }
     .sidebar-inner { display:block !important; }
-    .drawer-close { display:flex !important; }
+    .sidebar.drawer-open .drawer-close { display:flex !important; }
 
     /* ── 필터 버튼 ── */
     .mobile-filter-btn {
@@ -859,6 +860,146 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
     #paperGrid { grid-template-columns:1fr !important; }
     .yt-title { font-size:12px; }
   }
+
+/* ══ PHONE MODE (≤ 430px) ══ */
+@media (max-width: 430px) {
+
+  /* ── Nav 상단 완전 재설계 ── */
+  .nav-top {
+    height: 52px !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .nav-top-left { gap: 8px !important; }
+  .logo-mark { width: 26px !important; height: 26px !important; border-radius: 7px !important; }
+  .brand-name { font-size: 15px !important; }
+
+  /* spec 버튼들 숨기고 현재 과만 표시 */
+  .specialty-tabs { display: none !important; }
+  .nav-right { gap: 3px !important; }
+  .icon-btn { padding: 4px 8px !important; font-size: 11px !important; }
+
+  /* ── 현재 과 표시 pill (JS로 제어) ── */
+  #phoneSpecPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: var(--primary-soft);
+    border: 1px solid var(--primary-mid);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    font-family: var(--font);
+    letter-spacing: -0.01em;
+  }
+  #phoneSpecPill svg { width: 10px; height: 10px; }
+
+  /* ── Spec Bottom Sheet ── */
+  #phoneSpecSheet {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+  }
+  #phoneSpecSheet.open { display: block; }
+  #phoneSpecSheetOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+  }
+  #phoneSpecSheetPanel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 12px 0 env(safe-area-inset-bottom, 16px);
+    box-shadow: 0 -4px 40px rgba(0,0,0,0.15);
+    animation: slideUp 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .spec-sheet-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .spec-sheet-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--mono);
+    padding: 0 20px 12px;
+  }
+  .spec-sheet-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 16px 8px;
+  }
+  .spec-sheet-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .spec-sheet-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .spec-sheet-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── 하단 탭바 개선 ── */
+  .mobile-tab-bar { height: 58px !important; }
+  .mobile-tab-item {
+    font-size: 9px !important;
+    gap: 2px !important;
+  }
+  .mobile-tab-item svg { width: 20px !important; height: 20px !important; }
+  .mobile-tab-label { font-size: 9px !important; }
+
+  /* ── 콘텐츠 여백 ── */
+  .sidebar-inner { padding: 0 12px !important; }
+  #paperGrid { padding: 0 !important; gap: 12px !important; }
+  .yt-grid { gap: 10px !important; }
+
+  /* ── D-day 배너 ── */
+  #ddayBanner { font-size: 11px !important; padding: 5px 16px !important; gap: 8px !important; overflow-x: auto; }
+  .dday-pill { font-size: 10px !important; padding: 2px 8px !important; white-space: nowrap; }
+
+  /* ── 페이지 상단 패딩 ── */
+  .page.active > div:last-child { padding: 14px 14px 0 !important; }
+
+  /* ── 카드 내부 ── */
+  #paperGrid > div { border-radius: 12px !important; }
+}
 
 
 /* ── Paper Modal ── */
@@ -1288,6 +1429,11 @@ body.dark #paperGrid > div {
       <svg viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="11" height="11" rx="3" fill="white" fill-opacity="0.9"/><rect x="15" y="2" width="11" height="11" rx="3" fill="white" fill-opacity="0.6"/><rect x="2" y="15" width="11" height="11" rx="3" fill="white" fill-opacity="0.6"/><rect x="15" y="15" width="11" height="11" rx="3" fill="white" fill-opacity="0.3"/></svg>
     </div>
     <div class="brand-name">Clinical<span style="font-weight:300;margin-left:2px">Hub</span></div>
+    <button id="phoneSpecPill" onclick="openPhoneSpecSheet()" style="display:none;align-items:center;gap:5px;padding:4px 10px;background:var(--primary-soft);border:1px solid var(--primary-mid);border-radius:20px;font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;font-family:var(--font)">
+      <span id="phoneSpecDot" style="width:6px;height:6px;border-radius:50%;background:#0071E3;flex-shrink:0;display:inline-block"></span>
+      <span id="phoneSpecLabel">GYN</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
     <div class="specialty-tabs">
       <button class="spec-btn active" id="spec-gyn" onclick="switchSpec('gyn',this)">
         <span class="spec-dot" style="background:#0071E3"></span> GYN
@@ -1542,7 +1688,7 @@ body.dark #paperGrid > div {
       <div style="font-size:12px;color:var(--text3);white-space:nowrap"><span id="paperCount">0</span> papers</div>
     </div>
     <div class="tab-disclaimer" id="disc-paper"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>논문 요약은 <b>PubMed 등 공개 학술지의 peer-reviewed 논문</b>을 내부적으로 정리한 자료입니다. 저작권은 해당 저자·학술지에 있습니다. 외부 제공 시 반드시 DOI 원문 링크를 함께 제공하십시오. Key Message·Talking Point는 Clinical Marketing 관점의 내부 해석이며 공식 publication이 아닙니다.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px"></div>
+    <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
   </div>
 </div>
 
@@ -3582,80 +3728,56 @@ const KOLS = [
 let currentSpec = 'gyn';
 
 function switchSpec(spec, el) {
+  closeDrawer();
+  updatePhoneSpecPill(spec);  // 모바일 drawer 항상 닫기
   currentSpec = spec;
   document.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('sub-video').classList.add('active');
-
-  // 모바일 탭바 — 영상 탭으로 리셋
   updateMobileTabs('video');
 
-  // 테마 전환
-  if(spec === 'cardiac') {
+  // 모든 mode 클래스 제거 후 해당 mode 추가
+  const allModes = ['cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode'];
+  document.body.classList.remove(...allModes);
+
+  if(spec === 'gyn') {
+    document.getElementById('page-video').classList.add('active');
+    renderVideos();
+  } else if(spec === 'cardiac') {
     document.body.classList.add('cardiac-mode');
     document.getElementById('page-cardiac-video').classList.add('active');
     document.getElementById('headerCount').textContent = 'Cardiac';
     renderCardiacVideos();
-  } else if(spec === 'uro') {
-    document.body.classList.add('uro-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-uro-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'URO';
-  } else if(spec === 'cr') {
-    document.body.classList.add('cr-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-cr-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'CR';
-  } else if(spec === 'thoracic') {
-    document.body.classList.add('thoracic-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-thoracic-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'Thoracic';
-  } else if(spec === 'stomach') {
-    document.body.classList.add('stomach-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-stomach-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'Stomach';
-  } else if(spec === 'breast') {
-    document.body.classList.add('breast-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-breast-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'Breast';
-  } else if(spec === 'hn') {
-    document.body.classList.add('hn-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-hn-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'H&N';
-  } else if(spec === 'hbp') {
-    document.body.classList.add('hbp-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-hbp-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'HBP';
-  } else if(spec === 'hernia') {
-    document.body.classList.add('hernia-mode');
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-hernia-video').classList.add('active');
-    document.getElementById('headerCount').textContent = 'Hernia';
   } else {
-    document.body.classList.remove('cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode');
-    document.getElementById('page-video').classList.add('active');
-    renderVideos();
+    const modeMap = { uro:'uro-mode', cr:'cr-mode', thoracic:'thoracic-mode', stomach:'stomach-mode', breast:'breast-mode', hn:'hn-mode', hbp:'hbp-mode', hernia:'hernia-mode' };
+    const labelMap = { uro:'URO', cr:'CR', thoracic:'Thoracic', stomach:'Stomach', breast:'Breast', hn:'H&N', hbp:'HBP', hernia:'Hernia' };
+    if(modeMap[spec]) document.body.classList.add(modeMap[spec]);
+    const pageEl = document.getElementById(`page-${spec}-video`);
+    if(pageEl) pageEl.classList.add('active');
+    document.getElementById('headerCount').textContent = labelMap[spec] || spec.toUpperCase();
   }
 }
 
 function switchTab(tab, el) {
+  closeDrawer();  // 모바일 drawer 항상 닫기
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   updateMobileTabs(tab);
 
-  if(currentSpec === 'cardiac') {
-    document.getElementById('page-cardiac-' + tab).classList.add('active');
-    document.getElementById('headerCount').textContent = 'Cardiac';
+  const spec = currentSpec;
+  if(spec !== 'gyn') {
+    const pageId = `page-${spec}-${tab}`;
+    const pageEl = document.getElementById(pageId);
+    if(pageEl) {
+      pageEl.classList.add('active');
+      document.getElementById('headerCount').textContent = spec.toUpperCase();
+    }
   } else {
-    document.getElementById('page-' + tab).classList.add('active');
+    const pageEl = document.getElementById('page-' + tab);
+    if(pageEl) pageEl.classList.add('active');
     if(tab === 'video') renderVideos();
     else if(tab === 'kol') renderKOL();
     else if(tab === 'paper') renderPapers();
@@ -4369,214 +4491,198 @@ function buildPFSection(elId, defs, key, matchFn) {
 
 /* ── 메인 렌더 ── */
 function buildPaperCard(p) {
-  const ev      = pEvidence(p.evidence || '');
-  const doi     = p.doi || '';
-  const hosp    = p.hospital || '';
-  const attach  = (p.attach||'').toLowerCase();
-  const isSP    = (p.system||'').toLowerCase().includes('sp');
-  const techBg  = isSP ? '#D1FAE5' : '#E6F1FB';
-  const techClr = isSP ? '#065F46' : '#0C447C';
+  const ev       = pEvidence(p.evidence || '');
+  const doi      = p.doi || '';
+  const validDoi = doi.startsWith('http');
+  const hosp     = p.hospital || '';
+  const km       = p.keyMessage || p.key_message || '';
+  const tp       = p.talkingPoint || p.talking_point || '';
+  const attach   = (p.attach || '').toLowerCase();
+  const imgUrl   = p.image || p.img || '';   // 시트에 image 컬럼 추가 시 사용
 
+  // ── 저널별 컬러 팔레트
+  const JOURNAL_COLORS = {
+    'jmig':                      { from:'#185FA5', to:'#378ADD', text:'#B5D4F4' },
+    'journal of minimally':      { from:'#185FA5', to:'#378ADD', text:'#B5D4F4' },
+    'frontiers':                 { from:'#0F6E56', to:'#1D9E75', text:'#9FE1CB' },
+    'surgical endoscopy':        { from:'#3C3489', to:'#7F77DD', text:'#CECBF6' },
+    'journal of robotic':        { from:'#3C3489', to:'#534AB7', text:'#CECBF6' },
+    'gynecologic oncology':      { from:'#993556', to:'#D4537E', text:'#F4C0D1' },
+    'asian journal':             { from:'#854F0B', to:'#BA7517', text:'#FAC775' },
+  };
+  function getJournalColor(journal) {
+    const j = (journal || '').toLowerCase();
+    for (const [key, val] of Object.entries(JOURNAL_COLORS)) {
+      if (j.includes(key)) return val;
+    }
+    return { from:'#444441', to:'#888780', text:'#D3D1C7' };
+  }
+  const jColor = getJournalColor(p.journal);
+
+  // ── Evidence Level 컬러
+  const EV_COLORS = { 1:'#534AB7', 2:'#0F6E56', 3:'#185FA5', 4:'#BA7517', 5:'#888780' };
+  const evColor = ev ? (EV_COLORS[ev.lv] || '#888780') : '#888780';
+
+  // ── 카드
   const card = document.createElement('div');
-  card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;transition:border-color 0.15s,box-shadow 0.15s;cursor:default';
-  card.onmouseenter = () => { card.style.borderColor='var(--primary-mid)'; card.style.boxShadow='var(--shadow-hover)'; };
-  card.onmouseleave = () => { card.style.borderColor='var(--border)';      card.style.boxShadow='var(--shadow)'; };
+  card.style.cssText = 'background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 0 0 0.5px rgba(0,0,0,0.07),0 2px 8px rgba(0,0,0,0.05);display:flex;flex-direction:column;transition:transform 0.18s ease,box-shadow 0.18s ease;cursor:default';
+  card.onmouseenter = () => { card.style.transform='translateY(-3px)'; card.style.boxShadow='0 0 0 0.5px rgba(0,0,0,0.07),0 8px 24px rgba(0,0,0,0.12)'; };
+  card.onmouseleave = () => { card.style.transform=''; card.style.boxShadow='0 0 0 0.5px rgba(0,0,0,0.07),0 2px 8px rgba(0,0,0,0.05)'; };
 
-  /* 저널·연도 + 상세보기 버튼 */
-  const row1 = document.createElement('div');
-  row1.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:8px';
-  const jrnl = document.createElement('span');
-  jrnl.style.cssText = 'font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);font-family:var(--mono)';
-  jrnl.textContent = (p.journal||'') + ' · ' + (p.year||'');
-  row1.appendChild(jrnl);
-  const detailBtn = document.createElement('button');
-  detailBtn.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--primary);color:white;border:none;cursor:pointer;white-space:nowrap;font-family:var(--font)';
-  detailBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> 상세 보기';
-  detailBtn.onclick = (e) => { e.stopPropagation(); openPaperModal(p); };
-  row1.appendChild(detailBtn);
-  card.appendChild(row1);
+  // ── 상단 이미지/컬러 배너
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:relative;height:96px;overflow:hidden;flex-shrink:0';
 
-  /* 뱃지 */
-  const badges = document.createElement('div');
-  badges.style.cssText = 'display:flex;align-items:center;gap:5px;flex-wrap:wrap';
-  if(p.tech) {
-    const b = document.createElement('span');
-    b.style.cssText = 'font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;font-family:var(--mono);background:'+techBg+';color:'+techClr;
-    b.textContent = p.tech; badges.appendChild(b);
+  if (imgUrl) {
+    // 실제 이미지가 있으면 표시
+    banner.style.background = '#111';
+    const img = document.createElement('img');
+    img.src = imgUrl;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.75';
+    img.onerror = () => { img.style.display='none'; banner.style.background=`linear-gradient(135deg,${jColor.from},${jColor.to})`; };
+    banner.appendChild(img);
+  } else {
+    // 저널 컬러 그라디언트
+    banner.style.background = `linear-gradient(135deg,${jColor.from} 0%,${jColor.to} 100%)`;
+    // 배경 패턴 (subtle)
+    const pattern = document.createElement('div');
+    pattern.style.cssText = 'position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:20px 20px';
+    banner.appendChild(pattern);
   }
-  if(p.system) {
-    const b = document.createElement('span');
-    b.style.cssText = 'font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-family:var(--mono)';
-    b.textContent = p.system; badges.appendChild(b);
-  }
-  if(attach && attach !== '-') {
-    const isVid = attach === 'video';
-    const b = document.createElement('span');
-    b.style.cssText = 'font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:'+(isVid?'#FEF3C7':'#F3F4F6')+';color:'+(isVid?'#92400E':'#374151')+';font-family:var(--mono)';
-    b.textContent = isVid ? '🎬 Video' : '📷 Photo';
-    badges.appendChild(b);
-  }
-  if(badges.children.length) card.appendChild(badges);
 
-  /* Evidence Level */
-  if(ev) {
+  // Evidence dot 배지 (우상단)
+  if (ev) {
+    const evBadge = document.createElement('div');
+    evBadge.style.cssText = 'position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);border-radius:20px;padding:3px 8px;z-index:2';
+    const dotsHtml = Array.from({length:5},(_,i)=>`<span style="width:6px;height:6px;border-radius:50%;background:${i<ev.stars?'#F59E0B':'rgba(255,255,255,0.25)'};display:inline-block"></span>`).join('');
+    evBadge.innerHTML = dotsHtml + `<span style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.9);font-family:var(--mono);margin-left:3px">Lv.${ev.lv}</span>`;
+    banner.appendChild(evBadge);
+  }
+
+  // 연도 배지 (좌상단)
+  if (p.year) {
+    const yrBadge = document.createElement('div');
+    yrBadge.style.cssText = 'position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);border-radius:20px;padding:3px 9px;font-size:9px;font-weight:600;color:rgba(255,255,255,0.9);font-family:var(--mono);z-index:2';
+    yrBadge.textContent = p.year;
+    banner.appendChild(yrBadge);
+  }
+
+  // 저널명 (하단)
+  const jrnlLabel = document.createElement('div');
+  jrnlLabel.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:20px 12px 8px;background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 100%);z-index:2';
+  jrnlLabel.innerHTML = `<span style="font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:${jColor.text};font-family:var(--mono)">${p.journal||''}</span>`;
+  banner.appendChild(jrnlLabel);
+  card.appendChild(banner);
+
+  // ── 카드 바디
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex:1';
+
+  // 뱃지 행
+  const badgeRow = document.createElement('div');
+  badgeRow.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;align-items:center';
+  const techBadges = [
+    p.tech   ? { text:p.tech,   bg:'#E6F1FB', color:'#0C447C' } : null,
+    p.system ? { text:p.system, bg:'#F1EFE8', color:'#444441' } : null,
+    attach && attach!=='-' ? {
+      text: attach==='video' ? '🎬 Video' : '📷 Photo',
+      bg: attach==='video' ? '#FAEEDA' : '#F1EFE8',
+      color: attach==='video' ? '#854F0B' : '#444441'
+    } : null,
+  ].filter(Boolean);
+  techBadges.forEach(b => {
+    const s = document.createElement('span');
+    s.style.cssText = `font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:${b.bg};color:${b.color};font-family:var(--mono)`;
+    s.textContent = b.text;
+    badgeRow.appendChild(s);
+  });
+  if (badgeRow.children.length) body.appendChild(badgeRow);
+
+  // Evidence Level 텍스트
+  if (ev) {
     const evRow = document.createElement('div');
-    evRow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:8px';
-    evRow.innerHTML = '<span style="font-size:11px;letter-spacing:1px">' + pStars(ev.stars) + '</span>' +
-      '<span style="font-size:10px;font-weight:700;color:var(--text2);font-family:var(--mono)">Level ' + ev.lv + '</span>' +
-      '<span style="font-size:10px;color:var(--text3)">' + ev.txt + '</span>';
-    card.appendChild(evRow);
+    evRow.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:var(--surface2);border-left:3px solid ${evColor}`;
+    evRow.innerHTML = `<span style="font-size:10px;font-weight:700;color:${evColor};font-family:var(--mono)">Level ${ev.lv}</span><span style="font-size:10px;color:var(--text3)">${ev.type}</span>`;
+    body.appendChild(evRow);
   }
 
-  /* 제목 + 복사 */
+  // 제목 + 복사
   const titleRow = document.createElement('div');
-  titleRow.style.cssText = 'font-size:13px;font-weight:700;color:var(--text);line-height:1.45;display:flex;align-items:flex-start;gap:8px';
-  const titleSpan = document.createElement('span');
-  titleSpan.style.flex = '1';
-  titleSpan.textContent = p.title || '';
+  titleRow.style.cssText = 'display:flex;gap:6px;align-items:flex-start';
+  const titleEl = document.createElement('div');
+  titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text);line-height:1.45;flex:1;letter-spacing:-0.01em';
+  titleEl.textContent = p.title || '';
   const copyBtn = document.createElement('button');
-  copyBtn.style.cssText = 'flex-shrink:0;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px';
-  copyBtn.title = '제목 복사';
-  copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  copyBtn.style.cssText = 'flex-shrink:0;border:none;background:transparent;cursor:pointer;color:var(--text3);padding:2px;border-radius:4px;margin-top:1px';
+  copyBtn.title = '복사';
+  copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
   copyBtn.onclick = () => copyToClipboard((p.title||'') + ' (' + (p.authors||'') + ', ' + (p.journal||'') + ' ' + (p.year||'') + ')', copyBtn);
-  titleRow.appendChild(titleSpan); titleRow.appendChild(copyBtn);
-  card.appendChild(titleRow);
+  titleRow.appendChild(titleEl);
+  titleRow.appendChild(copyBtn);
+  body.appendChild(titleRow);
 
-  /* 저자 / 기관 */
-  const auth = document.createElement('div');
-  auth.style.cssText = 'font-size:11px;color:var(--text2)';
-  auth.textContent = (p.authors||'') + (hosp ? ' · ' + hosp : '');
-  card.appendChild(auth);
+  // 저자 / 기관
+  const authEl = document.createElement('div');
+  authEl.style.cssText = 'font-size:11px;color:var(--text3)';
+  authEl.textContent = (p.authors||'') + (hosp ? ' · ' + hosp : '');
+  body.appendChild(authEl);
 
-  /* 요약 */
-  if(p.summary) {
-    const sum = document.createElement('div');
-    sum.style.cssText = 'font-size:11px;color:var(--text2);line-height:1.65;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid var(--primary-mid)';
-    sum.textContent = p.summary;
-    card.appendChild(sum);
+  // Key Message
+  if (km) {
+    const kmDiv = document.createElement('div');
+    kmDiv.style.cssText = 'display:flex;gap:6px;align-items:flex-start;padding:7px 10px;background:#F0FDF4;border-radius:8px';
+    const kmLabel = document.createElement('span');
+    kmLabel.style.cssText = 'font-size:9px;font-weight:700;color:#166534;white-space:nowrap;font-family:var(--mono);flex-shrink:0;margin-top:2px;background:#D1FAE5;padding:1px 5px;border-radius:4px';
+    kmLabel.textContent = 'KEY';
+    const kmText = document.createElement('span');
+    kmText.style.cssText = 'font-size:11px;color:#166534;line-height:1.5';
+    kmText.textContent = km;
+    kmDiv.appendChild(kmLabel); kmDiv.appendChild(kmText);
+    body.appendChild(kmDiv);
   }
 
-  /* Key Message */
-  if(p.keyMessage) {
-    const km = document.createElement('div');
-    km.style.cssText = 'display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#F0FDF4;border-radius:8px;border-left:3px solid #22C55E';
-    const lbl = document.createElement('span');
-    lbl.style.cssText = 'font-size:10px;font-weight:700;color:#166534;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0';
-    lbl.textContent = '📣 Key Message';
-    const txt = document.createElement('span');
-    txt.style.cssText = 'font-size:11px;color:#166534;line-height:1.55';
-    txt.textContent = p.keyMessage;
-    km.appendChild(lbl); km.appendChild(txt);
-    card.appendChild(km);
+  // Talking Point
+  if (tp) {
+    const tpDiv = document.createElement('div');
+    tpDiv.style.cssText = 'display:flex;gap:6px;align-items:flex-start;padding:7px 10px;background:#FFF7ED;border-radius:8px';
+    const tpLabel = document.createElement('span');
+    tpLabel.style.cssText = 'font-size:9px;font-weight:700;color:#9A3412;white-space:nowrap;font-family:var(--mono);flex-shrink:0;margin-top:2px;background:#FED7AA;padding:1px 5px;border-radius:4px';
+    tpLabel.textContent = 'SALES';
+    const tpText = document.createElement('span');
+    tpText.style.cssText = 'font-size:11px;color:#9A3412;line-height:1.5';
+    tpText.textContent = tp;
+    tpDiv.appendChild(tpLabel); tpDiv.appendChild(tpText);
+    body.appendChild(tpDiv);
   }
 
-  /* Talking Point */
-  if(p.talkingPoint) {
-    const tp = document.createElement('div');
-    tp.style.cssText = 'display:flex;gap:7px;align-items:flex-start;padding:8px 10px;background:#FFF7ED;border-radius:8px;border-left:3px solid #F97316';
-    const lbl = document.createElement('span');
-    lbl.style.cssText = 'font-size:10px;font-weight:700;color:#9A3412;white-space:nowrap;font-family:var(--mono);margin-top:1px;flex-shrink:0';
-    lbl.textContent = '💬 Takeaway';
-    const txt = document.createElement('span');
-    txt.style.cssText = 'font-size:11px;color:#9A3412;line-height:1.55';
-    txt.textContent = p.talkingPoint;
-    tp.appendChild(lbl); tp.appendChild(txt);
-    card.appendChild(tp);
+  card.appendChild(body);
+
+  // ── 카드 푸터 (DOI 버튼)
+  const footer = document.createElement('div');
+  footer.style.cssText = 'padding:8px 14px 12px;display:flex;gap:6px';
+
+  const detailBtn = document.createElement('button');
+  detailBtn.style.cssText = 'flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border-radius:8px;background:var(--primary);color:white;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font);letter-spacing:-0.01em;transition:opacity 0.15s';
+  detailBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> 상세 보기';
+  detailBtn.onmouseenter = () => detailBtn.style.opacity='0.85';
+  detailBtn.onmouseleave = () => detailBtn.style.opacity='1';
+  detailBtn.onclick = (e) => { e.stopPropagation(); openPaperModal(p); };
+  footer.appendChild(detailBtn);
+
+  if (validDoi) {
+    const doiBtn = document.createElement('a');
+    doiBtn.href = doi; doiBtn.target='_blank'; doiBtn.rel='noopener';
+    doiBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:7px 12px;border-radius:8px;background:var(--surface2);color:var(--text2);border:0.5px solid var(--border);text-decoration:none;font-size:11px;font-weight:600;font-family:var(--font);transition:background 0.15s';
+    doiBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> DOI';
+    doiBtn.onmouseenter = () => doiBtn.style.background='var(--border)';
+    doiBtn.onmouseleave = () => doiBtn.style.background='var(--surface2)';
+    footer.appendChild(doiBtn);
   }
 
+  card.appendChild(footer);
   return card;
 }
 
-/* ── 시트 연동 ── */
-async function loadPapersFromSheet() {
-  try {
-    const res = await fetch(PAPER_SHEET_URL, { cache:'no-store' });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    if(!text || text.toLowerCase().startsWith('<!')) throw new Error('HTML response');
-    const rows = parseCSV(text);
-    if(rows.length < 2) throw new Error('no rows');
-
-    /* 빈 앞 컬럼 스킵 */
-    const rawH = rows[0].map(h => String(h||'').trim());
-    const off = rawH.findIndex(h => /[a-zA-Z가-힣]/.test(h));
-    const H = rawH.slice(off < 0 ? 0 : off).map(h => h.toLowerCase());
-
-    function gv(row, ...keys) {
-      const r = off > 0 ? row.slice(off) : row;
-      for(const k of keys) {
-        const i = H.indexOf(k.toLowerCase());
-        if(i >= 0 && r[i] !== undefined && String(r[i]).trim()) return String(r[i]).trim();
-      }
-      return '';
-    }
-
-    const items = rows.slice(1)
-      .filter(r => r.some(c => c && c.trim()))
-      .map(r => ({
-        title:        gv(r,'title','제목'),
-        authors:      gv(r,'authors','author','저자'),
-        year:         gv(r,'year','연도'),
-        journal:      gv(r,'journal','저널'),
-        hospital:     gv(r,'hospital / country','hospital','기관'),
-        summary:      gv(r,'summary','요약','abstract'),
-        doi:          gv(r,'doi / link','doi','url','link'),
-        tech:         gv(r,'tech','기법'),
-        system:       gv(r,'system','시스템'),
-        attach:       gv(r,'attachment','첨부','attach'),
-        indication:   gv(r,'indication','인디케이션'),
-        evidence:     gv(r,'evidence level','evidence','study type'),
-        keyMessage:   gv(r,'key message','keymessage'),
-        talkingPoint: gv(r,'talking point','talkingpoint'),
-      }))
-      .filter(p => p.title);
-
-    if(items.length > 0) {
-      PAPERS.length = 0;
-      items.forEach(p => PAPERS.push(p));
-    }
-  } catch(e) {
-    console.warn('Papers sheet:', e.message, '— using embedded data (' + PAPERS.length + ')');
-  }
-  renderPapers();
-}
-
-/* ══════════════════════ PAPER FILTERS ══════════════════════ */
-
-// ── 필터 정의 ──
-const PF_CATEGORY = [
-  {key:'all',    label:'전체'},
-  {key:'vnotes', label:'vNOTES'},
-  {key:'sp',     label:'SP'},
-];
-const PF_INDICATION = [
-  {key:'all',            label:'전체'},
-  {key:'hysterectomy',   label:'Hysterectomy'},
-  {key:'endometriosis',  label:'Endometriosis'},
-  {key:'myomectomy',     label:'Myomectomy'},
-  {key:'ovarian_cyst',   label:'Ovarian Cystectomy'},
-];
-const PF_PLATFORM = [
-  {key:'all',  label:'전체'},
-  {key:'sp',   label:'da Vinci SP'},
-  {key:'xi',   label:'da Vinci Xi'},
-  {key:'dv5',  label:'da Vinci 5'},
-];
-const PF_EVIDENCE = [
-  {key:'all', label:'전체', stars:0},
-  {key:'1',   label:'Level 1', sub:'Meta-analysis / SR',  stars:5},
-  {key:'2',   label:'Level 2', sub:'RCT',                 stars:4},
-  {key:'3',   label:'Level 3', sub:'Prospective',         stars:3},
-  {key:'4',   label:'Level 4', sub:'Retrospective',       stars:2},
-  {key:'5',   label:'Level 5', sub:'Case Report / Tech',  stars:1},
-];
-const PF_COUNTRY = [
-  {key:'all',   label:'전체'},
-  {key:'korea', label:'🇰🇷 Korea'},
-  {key:'japan', label:'🇯🇵 Japan'},
-  {key:'china', label:'🇨🇳 China'},
-  {key:'other', label:'🌏 Other'},
-];
 
 /* ══════════════════════ PAPER RENDER ══════════════════════ */
 function renderPapers() {
@@ -5974,6 +6080,41 @@ function renderUpcomingConferences() {
   section.classList.add('visible');
 }
 
+
+/* PHONE SPEC */
+const SPEC_META2 = {gyn:{l:'GYN',c:'#0071E3'},cardiac:{l:'Cardiac',c:'#C0143C'},uro:{l:'URO',c:'#7C3AED'},cr:{l:'CR',c:'#059669'},thoracic:{l:'Thoracic',c:'#0891B2'},stomach:{l:'Stomach',c:'#EA580C'},breast:{l:'Breast',c:'#DB2777'},hn:{l:'H&N',c:'#D97706'},hbp:{l:'HBP',c:'#65A30D'},hernia:{l:'Hernia',c:'#9333EA'}};
+function updatePhoneSpecPill(spec){
+  const m=SPEC_META2[spec]||SPEC_META2.gyn;
+  const dot=document.getElementById('phoneSpecDot');
+  const lbl=document.getElementById('phoneSpecLabel');
+  if(dot) dot.style.background=m.c;
+  if(lbl) lbl.textContent=m.l;
+  document.querySelectorAll('.spec-sheet-btn').forEach(b=>b.style.cssText='display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);font-family:var(--font);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;width:100%');
+  const ab=document.getElementById('sheet-btn-'+spec);
+  if(ab) ab.style.cssText='display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--primary);background:var(--primary-soft);font-family:var(--font);font-size:13px;font-weight:600;color:var(--primary);cursor:pointer;width:100%';
+}
+function openPhoneSpecSheet(){
+  const s=document.getElementById('phoneSpecSheet');
+  if(s){s.style.display='block';document.body.style.overflow='hidden';}
+}
+function closePhoneSpecSheet(){
+  const s=document.getElementById('phoneSpecSheet');
+  if(s){s.style.display='none';document.body.style.overflow='';}
+}
+function selectPhoneSpec(spec){
+  closePhoneSpecSheet();
+  const btn=document.getElementById('spec-'+spec);
+  if(btn) switchSpec(spec,btn);
+  updatePhoneSpecPill(spec);
+}
+function checkPhoneMode(){
+  const isPhone=window.innerWidth<=430;
+  const pill=document.getElementById('phoneSpecPill');
+  const tabs=document.querySelector('.specialty-tabs');
+  if(pill) pill.style.display=isPhone?'inline-flex':'none';
+  if(tabs) tabs.style.display=isPhone?'none':'';
+}
+window.addEventListener('resize',checkPhoneMode);
 /* ══════════════════════ MOBILE TAB SYNC ══════════════════════ */
 function updateMobileTabs(active) {
   ['video','kol','paper','cal'].forEach(t => {
@@ -5985,6 +6126,8 @@ function updateMobileTabs(active) {
 /* ══════════════════════ INIT ══════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
   applyLang();
+  checkPhoneMode();
+  updatePhoneSpecPill('gyn');
   loadVideosFromSheet();
   loadArticlesFromSheet();
   loadConferencesFromSheet();
@@ -6016,6 +6159,26 @@ window.addEventListener('DOMContentLoaded', () => {
       <button onclick="closePaperModal()" style="flex-shrink:0;border:none;background:var(--surface2);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--text2);display:flex;align-items:center;justify-content:center">✕</button>
     </div>
     <div id="paperModalBody"></div>
+  </div>
+</div>
+
+<div id="phoneSpecSheet" style="display:none;position:fixed;inset:0;z-index:500">
+  <div onclick="closePhoneSpecSheet()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px)"></div>
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;padding:12px 0 calc(env(safe-area-inset-bottom,0px) + 16px);box-shadow:0 -4px 40px rgba(0,0,0,0.15)">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;font-family:var(--mono);padding:0 20px 12px">진료과 선택</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 8px">
+        <button class="spec-sheet-btn" id="sheet-btn-gyn" onclick="selectPhoneSpec('gyn')"><span class="spec-sheet-dot" style="background:#0071E3;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>GYN</button>
+        <button class="spec-sheet-btn" id="sheet-btn-cardiac" onclick="selectPhoneSpec('cardiac')"><span class="spec-sheet-dot" style="background:#C0143C;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>Cardiac</button>
+        <button class="spec-sheet-btn" id="sheet-btn-uro" onclick="selectPhoneSpec('uro')"><span class="spec-sheet-dot" style="background:#7C3AED;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>URO</button>
+        <button class="spec-sheet-btn" id="sheet-btn-cr" onclick="selectPhoneSpec('cr')"><span class="spec-sheet-dot" style="background:#059669;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>CR</button>
+        <button class="spec-sheet-btn" id="sheet-btn-thoracic" onclick="selectPhoneSpec('thoracic')"><span class="spec-sheet-dot" style="background:#0891B2;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>Thoracic</button>
+        <button class="spec-sheet-btn" id="sheet-btn-stomach" onclick="selectPhoneSpec('stomach')"><span class="spec-sheet-dot" style="background:#EA580C;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>Stomach</button>
+        <button class="spec-sheet-btn" id="sheet-btn-breast" onclick="selectPhoneSpec('breast')"><span class="spec-sheet-dot" style="background:#DB2777;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>Breast</button>
+        <button class="spec-sheet-btn" id="sheet-btn-hn" onclick="selectPhoneSpec('hn')"><span class="spec-sheet-dot" style="background:#D97706;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>H&N</button>
+        <button class="spec-sheet-btn" id="sheet-btn-hbp" onclick="selectPhoneSpec('hbp')"><span class="spec-sheet-dot" style="background:#65A30D;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>HBP</button>
+        <button class="spec-sheet-btn" id="sheet-btn-hernia" onclick="selectPhoneSpec('hernia')"><span class="spec-sheet-dot" style="background:#9333EA;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>Hernia</button>
+    </div>
   </div>
 </div>
 </body>
