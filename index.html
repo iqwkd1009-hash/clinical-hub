@@ -1413,6 +1413,96 @@ body.dark .cal-card {
 body.dark #paperGrid > div {
   box-shadow: 0 0 0 0.5px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.4) !important;
 }
+
+/* ── Article Card Grid ── */
+#kolCards { display: flex; flex-direction: column; }
+.art-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.art-thumb-card {
+  background: var(--surface);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: flex; flex-direction: column;
+}
+.art-thumb-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.12);
+}
+.art-thumb { position: relative; aspect-ratio: 16/9; background: #111; overflow: hidden; }
+.art-thumb img { width:100%; height:100%; object-fit:cover; transition: transform 0.3s; display:block; }
+.art-thumb-card:hover .art-thumb img { transform: scale(1.03); }
+.art-thumb-fallback { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:32px; }
+.art-thumb-badge {
+  position:absolute; top:8px; left:8px;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+  border-radius: 20px; padding: 2px 8px;
+  font-size: 9px; font-weight: 700; color: white;
+  font-family: var(--mono); letter-spacing: 0.05em;
+}
+.art-thumb-date {
+  position:absolute; top:8px; right:8px;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  border-radius: 20px; padding: 2px 8px;
+  font-size: 9px; color: rgba(255,255,255,0.85);
+  font-family: var(--mono);
+}
+.art-card-body { padding: 11px 13px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.art-card-title { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.45; letter-spacing: -0.01em; }
+.art-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.art-card-hospital { font-size: 11px; font-weight: 600; color: var(--text2); }
+.art-card-surgeon { font-size: 11px; color: var(--text3); }
+.art-card-desc { font-size: 11px; color: var(--text3); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ── Calendar Card Grid ── */
+.cal-grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.cal-thumb-card {
+  background: var(--surface);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.05);
+  display: flex; flex-direction: column;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.cal-thumb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.12);
+}
+.cal-thumb-card.past { opacity: 0.55; }
+.cal-banner {
+  height: 80px; display: flex; align-items: flex-end; padding: 8px 12px;
+  position: relative; overflow: hidden;
+}
+.cal-banner-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 36px; opacity: 0.25; }
+.cal-dday {
+  font-size: 15px; font-weight: 800; font-family: var(--mono);
+  color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  position: relative; z-index: 1;
+}
+.cal-card-body { padding: 10px 13px 12px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.cal-card-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.4; letter-spacing: -0.01em; }
+.cal-card-date { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.cal-card-loc { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
+.cal-card-footer { padding: 8px 13px; border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+
+@media (max-width: 520px) {
+  .art-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .cal-grid-view { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+}
+@media (max-width: 380px) {
+  .art-grid { grid-template-columns: 1fr !important; }
+  .cal-grid-view { grid-template-columns: 1fr !important; }
+}
+
+/* ── Paper card grid alignment fix ── */
+#paperGrid {
+  align-items: start !important;
+}
+/* 펼쳐진 카드가 다른 카드 높이에 영향 안 주도록 */
+#paperGrid > div {
+  break-inside: avoid;
+}
 </style>
 </head>
 <body>
@@ -1703,7 +1793,7 @@ body.dark #paperGrid > div {
       <div style="font-size:12px;color:var(--text3);white-space:nowrap"><span id="paperCount">0</span> papers</div>
     </div>
     <div class="tab-disclaimer" id="disc-paper"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>논문 요약은 <b>PubMed 등 공개 학술지의 peer-reviewed 논문</b>을 내부적으로 정리한 자료입니다. 저작권은 해당 저자·학술지에 있습니다. 외부 제공 시 반드시 DOI 원문 링크를 함께 제공하십시오. Key Message·Talking Point는 Clinical Marketing 관점의 내부 해석이며 공식 publication이 아닙니다.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="paperGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
+    <div id="paperGrid" style="align-items:start;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
   </div>
 </div>
 
@@ -4265,13 +4355,12 @@ function renderKOL() {
       (kolFilters.category==='all'   || a.tag===kolFilters.category) &&
       (!q || a.hospital.toLowerCase().includes(q) || a.surgeon.toLowerCase().includes(q) || a.title.toLowerCase().includes(q))
     )
-    .sort((a,b) => (b.date || '0000-00-00').localeCompare(a.date || '0000-00-00'));
+    .sort((a,b) => (b.date||'0000-00-00').localeCompare(a.date||'0000-00-00'));
 
   document.getElementById('kolCount').textContent = items.length;
   document.getElementById('headerCount').textContent = items.length + (currentLang==='en' ? ' articles' : ' 기사');
   buildKolFilters();
 
-  // Active tag chips
   const tagsEl = document.getElementById('kolActiveTags'); tagsEl.innerHTML='';
   const labelMap = {
     tech: Object.fromEntries(TECH_DEFS.map(d=>[d.key,defLabel(d)])),
@@ -4289,53 +4378,130 @@ function renderKOL() {
   const container = document.getElementById('kolCards'); container.innerHTML='';
   if(!items.length){ container.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`; return; }
 
-  const thisYear = String(new Date().getFullYear());
+  // 태그별 배너 색상
+  const TAG_BANNER = {
+    vnotes:       { from:'#0F6E56', to:'#1D9E75', icon:'🔬' },
+    milestone:    { from:'#854F0B', to:'#BA7517', icon:'🏆' },
+    dv5:          { from:'#185FA5', to:'#378ADD', icon:'🤖' },
+    myoma:        { from:'#993556', to:'#D4537E', icon:'🏥' },
+    endometriosis:{ from:'#3C3489', to:'#7F77DD', icon:'🔴' },
+    gyn:          { from:'#0F6E56', to:'#1D9E75', icon:'⚕️' },
+  };
+
+  // 연도별 그룹
   const years = [...new Set(items.map(a => a.date.slice(0,4)))].sort((a,b)=>b-a);
-  const autoExpandAll = items.length < 10; // 전체 10개 미만이면 모두 펼침
 
   years.forEach(yr => {
     const grp = items.filter(a => a.date.startsWith(yr));
-    const isOpen = autoExpandAll || (yr === thisYear);
-    const sid = 'art_yr_'+yr;
+    const isThisYear = yr === String(new Date().getFullYear());
 
-    const yrHeader = document.createElement('div');
-    yrHeader.style.cssText='display:flex;align-items:center;gap:10px;margin:12px 0 5px;cursor:pointer;user-select:none';
-    yrHeader.onclick=()=>toggleArtYear(yr);
-    yrHeader.innerHTML=`
+    // 연도 헤더
+    const yrHdr = document.createElement('div');
+    yrHdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:4px 0 10px';
+    yrHdr.innerHTML = `
       <span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>
-      ${yr===thisYear?'<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
+      ${isThisYear?'<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
       <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>
-      <span id="art_yarr_${yr}" style="font-size:14px;color:var(--text3);transition:transform 0.2s">${isOpen?'⌄':'›'}</span>`;
-    container.appendChild(yrHeader);
+      <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>`;
+    container.appendChild(yrHdr);
 
-    const section = document.createElement('div');
-    section.id = sid;
-    section.style.cssText = 'overflow:hidden;transition:max-height 0.3s ease;max-height:'+(isOpen?'9999px':'0px');
+    // 카드 그리드
+    const grid = document.createElement('div');
+    grid.className = 'art-grid';
 
-    grp.forEach((a,i) => {
-      const aid = 'art_'+yr+'_'+i;
-      const row = document.createElement('div');
-      row.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;animation:fadeUp 0.2s ease both;animation-delay:'+(i*0.02)+'s;transition:border-color 0.15s;margin-bottom:4px';
-      row.onmouseenter=()=>row.style.borderColor='var(--primary-mid)';
-      row.onmouseleave=()=>row.style.borderColor='var(--border)';
+    grp.forEach(a => {
+      const tag = (a.tag||'').toLowerCase();
+      const banner = TAG_BANNER[tag] || { from:'#444441', to:'#888780', icon:'📰' };
+      const faviconUrl = a.link_url ? 'https://www.google.com/s2/favicons?domain='+encodeURIComponent(new URL(a.link_url).hostname)+'&sz=32' : '';
 
-      const tagColor = a.tag==='vnotes' ? 'background:#E6F1FB;color:#0C447C' : (a.tag==='milestone' ? 'background:#FAEEDA;color:#633806' : 'background:#EDEAE6;color:#4A4642');
-      const tagLabel = a.tag==='vnotes' ? 'vNOTES' : (a.tag==='milestone' ? '🏆' : 'Robot');
-      const dateStr = a.date ? a.date.slice(5,10) : '확인';
-      const linkHtml = a.links.length
-        ? a.links.map(l=>`<a href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--primary);text-decoration:none;padding:2px 8px;border-radius:5px;background:var(--primary-soft);white-space:nowrap;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${l.label}</a>`).join('')
-        : '<span style="font-size:11px;color:var(--text3)">—</span>';
+      const card = document.createElement('div');
+      card.className = 'art-thumb-card';
+      card.onclick = () => { if(a.link_url) window.open(a.link_url,'_blank'); };
 
-      const domain = a.links.length ? (()=>{try{return new URL(a.links[0].url).hostname;}catch(e){return '';}})() : '';
-      const faviconUrl = domain ? 'https://www.google.com/s2/favicons?domain='+domain+'&sz=64' : '';
+      // 썸네일 배너
+      const thumb = document.createElement('div');
+      thumb.className = 'art-thumb';
 
-      row.innerHTML = makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, domain);
-      section.appendChild(row);
+      if(a.image && a.image !== '이미지 확인 필요') {
+        thumb.style.background = '#111';
+        const img = document.createElement('img');
+        img.src = a.image;
+        img.alt = a.title;
+        img.loading = 'lazy';
+        img.onerror = () => { img.style.display='none'; thumb.style.background=`linear-gradient(135deg,${banner.from},${banner.to})`; };
+        thumb.appendChild(img);
+      } else {
+        thumb.style.background = `linear-gradient(135deg,${banner.from},${banner.to})`;
+        const pat = document.createElement('div');
+        pat.style.cssText = 'position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:18px 18px';
+        thumb.appendChild(pat);
+        const icon = document.createElement('div');
+        icon.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:40px;opacity:0.2;line-height:1';
+        icon.textContent = banner.icon;
+        thumb.appendChild(icon);
+        // 병원 파비콘 좌하단
+        if(faviconUrl) {
+          const fav = document.createElement('img');
+          fav.src = faviconUrl;
+          fav.style.cssText = 'position:absolute;bottom:8px;left:10px;width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,0.3);z-index:2';
+          fav.onerror = () => fav.style.display='none';
+          thumb.appendChild(fav);
+        }
+      }
+
+      // 태그 배지 (좌상단)
+      const tagBadge = document.createElement('div');
+      tagBadge.className = 'art-thumb-badge';
+      tagBadge.textContent = (a.tag||'').toUpperCase();
+      thumb.appendChild(tagBadge);
+
+      // 날짜 배지 (우상단)
+      const dateBadge = document.createElement('div');
+      dateBadge.className = 'art-thumb-date';
+      dateBadge.textContent = (a.date||'').slice(5); // MM-DD
+      thumb.appendChild(dateBadge);
+
+      card.appendChild(thumb);
+
+      // 카드 바디
+      const body = document.createElement('div');
+      body.className = 'art-card-body';
+
+      const meta = document.createElement('div');
+      meta.className = 'art-card-meta';
+      meta.innerHTML = `
+        <span class="art-card-hospital">${a.hospital||''}</span>
+        ${a.surgeon ? `<span style="color:var(--text3);font-size:11px">·</span><span class="art-card-surgeon">${a.surgeon}</span>` : ''}`;
+      body.appendChild(meta);
+
+      const title = document.createElement('div');
+      title.className = 'art-card-title';
+      title.textContent = a.title||'';
+      body.appendChild(title);
+
+      if(a.desc && a.desc !== a.title) {
+        const desc = document.createElement('div');
+        desc.className = 'art-card-desc';
+        desc.textContent = a.desc;
+        body.appendChild(desc);
+      }
+
+      // 푸터 (링크)
+      if(a.link_url) {
+        const footer = document.createElement('div');
+        footer.style.cssText = 'padding:6px 13px 10px;';
+        footer.innerHTML = `<span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${a.link_label||''}</span>`;
+        body.appendChild(footer);
+      }
+
+      card.appendChild(body);
+      grid.appendChild(card);
     });
-    container.appendChild(section);
+
+    container.appendChild(grid);
   });
 }
+
 
 function makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, domain) {
   const fav = faviconUrl
@@ -4398,11 +4564,30 @@ function toggleArt(aid) {
 }
 
 /* ══════════════════════ PAPERS ══════════════════════ */
+
+/* ── 논문 DOI/제목 기반 이미지 매핑 ── */
+const PAPER_IMAGE_MAP = {
+  '10.3389/fmed.2023.1117158':    'https://www.frontiersin.org/files/Articles/1117158/fmed-10-1117158-HTML/image_m/fmed-10-1117158-g001.jpg',
+  '10.3389/fsurg.2026.1820180':   'https://www.frontiersin.org/files/Articles/1820180/fsurg-13-1820180-HTML/image_m/fsurg-13-1820180-g001.jpg',
+  '10.3389/fmed.2020.583147':     'https://www.frontiersin.org/files/Articles/583147/fmed-07-583147-HTML/image_m/fmed-07-583147-g001.jpg',
+  'gasless versus traditional':   'https://www.frontiersin.org/files/Articles/1117158/fmed-10-1117158-HTML/image_m/fmed-10-1117158-g001.jpg',
+  'comparative outcomes of robotic single-port': 'https://www.frontiersin.org/files/Articles/1820180/fsurg-13-1820180-HTML/image_m/fsurg-13-1820180-g001.jpg',
+  'hysterectomy and adnexal procedures by vaginal': 'https://www.frontiersin.org/files/Articles/583147/fmed-07-583147-HTML/image_m/fmed-07-583147-g001.jpg',
+};
+function getPaperImage(p) {
+  if(p.image) return p.image;
+  const doi = (p.doi||'').toLowerCase();
+  const title = (p.title||'').toLowerCase();
+  for(const [key, url] of Object.entries(PAPER_IMAGE_MAP)) {
+    if(doi.includes(key) || title.startsWith(key)) return url;
+  }
+  return '';
+}
 const PAPERS = [
   { title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery", authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy", hospital:"Eulji University Hospital, Korea", summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증. Console time 135분, EBL 50mL, major complication 없음.", doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"Robotic NOTES Hysterectomy 최초 보고 — Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증", talkingPoint:"초기 vNOTES 도입 필요성 논의 시 세계 최초 보고 근거로 활용" },
   { title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery", authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery", hospital:"Eulji University Hospital, Korea", summary:"35명 대상 Robotic Glove Port Technique(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14) 포함. 전례 성공, 합병증 없음.", doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Myomectomy", evidence:"Case Series", keyMessage:"Robotic Glove Port Technique으로 다양한 부인과 수술에서 단일공 접근 실현", talkingPoint:"Myomectomy 및 복합 수술 케이스에서 SP 확장 가능성 강조 가능" },
   { title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience and technical considerations", authors:"Zhang X, Guan X et al.", year:"2021", journal:"JMIG", hospital:"China", summary:"33례 자궁내막증 환자 대상 Robotic vNOTES 적용. 수술 후 VAS pain score 유의미하게 감소. 재발 없음. DIE 적용 가능성 제시.", doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"Robotic vNOTES로 자궁내막증 33례에서 통증 감소 및 재발 없음 확인", talkingPoint:"Endometriosis 환자 대상 vNOTES 도입 타당성 논의 시 핵심 근거" },
-  { title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study", authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine", hospital:"China", summary:"Gasless vs 기존 Robotic vNOTES Hysterectomy 비교. 수술시간, 출혈량, 입원기간 분석. Gasless군에서 복부팽만 부작용 유의하게 감소.", doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Retrospective", keyMessage:"Gasless Robotic vNOTES는 기존 방식 대비 복부 팽만 부작용 유의하게 낮음", talkingPoint:"Gasless 접근의 환자 경험 개선 효과로 차별화 포인트 제시 가능" },
+  { title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study", authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine", hospital:"China", summary:"Gasless vs 기존 Robotic vNOTES Hysterectomy 비교. 수술시간, 출혈량, 입원기간 분석. Gasless군에서 복부팽만 부작용 유의하게 감소.", doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Retrospective", keyMessage:"Gasless Robotic vNOTES는 기존 방식 대비 복부 팽만 부작용 유의하게 낮음", talkingPoint:"Gasless 접근의 환자 경험 개선 효과로 차별화 포인트 제시 가능", image:"https://www.frontiersin.org/files/Articles/1117158/fmed-10-1117158-HTML/image_m/fmed-10-1117158-g001.jpg" },
   { title:"ICG-assisted retrograde ureterolysis in robotic vNOTES for deep infiltrating endometriosis", authors:"Guan X et al.", year:"2023", journal:"JMIG", hospital:"China", summary:"심부자궁내막증 Robotic vNOTES 시 ICG 형광 역행 요관박리술 적용. 요관 손상 없이 전례 성공. 수술시간 단축.", doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"ICG 형광 요관박리술 적용으로 심부자궁내막증 vNOTES에서 요관 손상 없이 전례 성공", talkingPoint:"DIE 복잡 케이스에서 SP + ICG 조합의 안전성 강조 가능" },
   { title:"Vaginal-Assisted Natural Orifice Translumenal Endoscopic Surgery Hysterectomy for Large Uterus Using the da Vinci SP", authors:"Kanno et al.", year:"2025", journal:"JMIG", hospital:"Japan", summary:"da Vinci SP 기반 VANH(Vaginal-Assisted NOTES Hysterectomy). 대형 자궁에서도 단일공 robotic transvaginal 접근 feasibility 및 ergonomics advantage 제시.", doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"da Vinci SP로 대형 자궁 VANH 수술 성공 — 크기 제한 없는 단일공 접근 가능성 입증", talkingPoint:"Large uterus 케이스에서 SP 도입 망설이는 술자 설득에 활용" },
   { title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor: a case report", authors:"Kanno et al.", year:"2025", journal:"Gynecologic Oncology Reports", hospital:"Japan", summary:"da Vinci SP 이용 transvaginal staging surgery case report. Borderline ovarian tumor 의심 환자에서 scarless 접근 feasibility와 oncologic applicability 제시.", doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Ovarian Cystectomy", evidence:"Case Report", keyMessage:"da Vinci SP 경질 로봇수술로 난소 경계성 종양 병기 수술 성공 — 종양학적 안전성 확인", talkingPoint:"GYN Oncology 영역에서 SP 확장 가능성 논의 시 근거 자료" },
@@ -4545,7 +4730,7 @@ function buildPaperCard(p) {
     banner.style.background = '#111';
     const img = document.createElement('img');
     img.src = imgUrl;
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.75';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.6';
     img.onerror = () => { img.style.display='none'; banner.style.background=`linear-gradient(135deg,${jc.from},${jc.to})`; };
     banner.appendChild(img);
   } else {
@@ -4596,7 +4781,7 @@ function buildPaperCard(p) {
   if(ev) {
     const evRow = document.createElement('div');
     evRow.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:var(--surface2);border-left:3px solid ${evColor}`;
-    evRow.innerHTML = `<span style="font-size:10px;font-weight:700;color:${evColor};font-family:var(--mono)">Level ${ev.lv}</span><span style="font-size:10px;color:var(--text3)">${ev.type}</span>`;
+    evRow.innerHTML = `<span style="font-size:10px;font-weight:700;color:${evColor};font-family:var(--mono);letter-spacing:0.02em">Lv.${ev.lv}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">${ev.txt}</span>`;
     body.appendChild(evRow);
   }
 
@@ -4666,7 +4851,7 @@ function buildPaperCard(p) {
 
   /* 확장 토글 버튼 */
   const toggleBtn = document.createElement('button');
-  toggleBtn.style.cssText = 'flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border-radius:8px;background:var(--surface2);color:var(--text2);border:0.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font);letter-spacing:-0.01em;transition:all 0.15s';
+  toggleBtn.style.cssText = 'flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border-radius:8px;background:transparent;color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:11px;font-weight:500;font-family:var(--font);letter-spacing:-0.01em;transition:all 0.15s';
   const toggleIcon = document.createElement('svg');
   toggleIcon.setAttribute('width','11'); toggleIcon.setAttribute('height','11');
   toggleIcon.setAttribute('viewBox','0 0 24 24');
@@ -5169,33 +5354,40 @@ function renderCal() {
 
   let items=CONFERENCES
     .filter(c=>{
-      const haystack = [c.name, c.loc, c.note, c.organizer, c.system, c.duty, c.url].join(' ').toLowerCase();
+      const haystack=[c.name,c.loc,c.note,c.organizer,c.system,c.duty,c.url].join(' ').toLowerCase();
       return (calTagFilter==='all'||c.tag===calTagFilter)&&(!q||haystack.includes(q));
     })
-    .sort(sortCalendarByDday); // D-day 가까운 순, 종료 일정은 하단
+    .sort(sortCalendarByDday);
 
   document.getElementById('calCount').textContent=items.length;
-  document.getElementById('headerCount').textContent=items.length+' '+(currentLang==='en'?'events':'개 일정');
+  document.getElementById('headerCount').textContent=items.length+(currentLang==='en'?' events':' 일정');
 
   const grid=document.getElementById('calGrid'); grid.innerHTML='';
   if(!items.length){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';return;}
 
-  // 연도별 그룹
   const years=[...new Set(items.map(c=>c.start.slice(0,4)))];
   const collapsedYears=new Set();
+
+  const CAL_BANNER_BG = {
+    conference:{ from:'#185FA5', to:'#378ADD' },
+    symposium: { from:'#3C3489', to:'#7F77DD' },
+    workshop:  { from:'#0F6E56', to:'#1D9E75' },
+    webinar:   { from:'#854F0B', to:'#BA7517' },
+    roadshow:  { from:'#993556', to:'#D4537E' },
+  };
+  const CAL_ICON = { conference:'🏛️', symposium:'🎤', workshop:'🔬', webinar:'💻', roadshow:'🚗' };
 
   function makeYearSection(yr) {
     const grp=items.filter(c=>c.start.startsWith(yr));
     const isCurrentYear=yr===String(new Date().getFullYear());
     const sid=`yr_${yr}`;
 
-    // 연도 헤더 (클릭 시 접기)
     const hdr=document.createElement('div');
-    hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:14px 0 6px;cursor:pointer;user-select:none';
+    hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:14px 0 10px;cursor:pointer;user-select:none';
     hdr.onclick=()=>toggleYear(yr);
     hdr.innerHTML=`
       <div style="display:flex;align-items:center;gap:8px;flex:1">
-        <span style="font-size:15px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>
         ${isCurrentYear?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
         <div style="flex:1;height:1px;background:var(--border)"></div>
         <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>
@@ -5207,68 +5399,111 @@ function renderCal() {
     section.id=sid;
     section.style.cssText='overflow:hidden;transition:max-height 0.3s ease';
 
+    // 카드 그리드
+    const secGrid=document.createElement('div');
+    secGrid.className='cal-grid-view';
+
     grp.forEach((c,i)=>{
       const isPast=effectiveEndTime(c)<today.getTime();
       const du=daysUntil(c.start);
       const duLabel=isPast?(currentLang==='en'?'Ended':'종료'):du===0?(currentLang==='en'?'Today!':'오늘!'):du>0?`D-${du}`:`D+${Math.abs(du)}`;
-      const duColor=isPast?'var(--text3)':du<=7?'#C0143C':du<=30?'#E8856A':'var(--primary)';
+      const duColor=isPast?'rgba(255,255,255,0.5)':du<=7?'#FFD700':du<=30?'#FFA07A':'rgba(255,255,255,0.92)';
       const tc=CAL_TAG_COLOR[c.tag]||'background:#F1EFE8;color:#444441';
       const tl=calTagLabel(c.tag);
       const dateRange=c.end&&c.end!==c.start?`${c.start} ~ ${c.end.slice(5)}`:c.start;
-      const metaParts = [];
-      if (c.loc) metaParts.push(`📍 ${c.loc}`);
-      if (c.organizer) metaParts.push(`주최: ${c.organizer}`);
-      if (c.system) metaParts.push(`System: ${c.system}`);
-      const dutyHtml = c.duty ? `<div style="font-size:10px;color:var(--text2);margin-top:3px;white-space:pre-line">👥 ${c.duty}</div>` : '';
-      const rid=`cal_${yr}_${i}`;
+      const bgInfo=CAL_BANNER_BG[c.tag]||{from:'#444441',to:'#888780'};
+      const icon=CAL_ICON[c.tag]||'📅';
 
-      const linkBtn=c.url
-        ?`<a href="${c.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:5px;background:var(--primary-soft);color:var(--primary);text-decoration:none;font-weight:500;white-space:nowrap"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>공식 사이트</a>`
-        :`<span style="font-size:11px;color:var(--text3)">—</span>`;
+      const card=document.createElement('div');
+      card.className='cal-thumb-card'+(isPast?' past':'');
 
-      const bgTc=tc.split(';')[0].replace('background:','');
-      const colorTc=tc.includes('color:')?tc.split('color:')[1]:'#444441';
+      // 배너
+      const bannerEl=document.createElement('div');
+      bannerEl.className='cal-banner';
+      bannerEl.style.background=`linear-gradient(135deg,${bgInfo.from},${bgInfo.to})`;
+      bannerEl.style.cssText+=';position:relative;height:80px;display:flex;align-items:flex-end;padding:8px 12px;overflow:hidden';
 
-      const row=document.createElement('div');
-      row.id=rid;
-      row.style.cssText=`background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;overflow:hidden;transition:border-color 0.15s;opacity:${isPast?0.55:1}`;
-      row.onmouseenter=()=>row.style.borderColor='var(--primary-mid)';
-      row.onmouseleave=()=>row.style.borderColor='var(--border)';
-      // find index in CONFERENCES
-      const confIdx = CONFERENCES.indexOf(c);
-      row.innerHTML=`
-        <div style="padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleCal('${rid}')">
-          <div style="min-width:42px;text-align:center;flex-shrink:0">
-            <div style="font-size:11px;font-weight:700;color:${duColor};font-family:var(--mono);line-height:1.2">${duLabel}</div>
-          </div>
-          <div style="width:1px;height:28px;background:var(--border);flex-shrink:0"></div>
-          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;background:${bgTc};color:${colorTc};font-family:var(--mono);white-space:nowrap;flex-shrink:0">${tl}</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:1px">${dateRange}${metaParts.length ? ' · ' + metaParts.join('  |  ') : ''}</div>
-            ${dutyHtml}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            ${linkBtn}
-            <span id="arr_${rid}" style="font-size:14px;color:var(--text3);transition:transform 0.2s">›</span>
-          </div>
-        </div>
-        <div id="detail_${rid}" style="display:none;padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface2)">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;margin-bottom:8px">
-            ${c.organizer ? `<div style="font-size:11px;color:var(--text2);line-height:1.5"><b style="color:var(--text)">주최</b><br>${c.organizer}</div>` : ''}
-            ${c.system ? `<div style="font-size:11px;color:var(--text2);line-height:1.5"><b style="color:var(--text)">System</b><br>${c.system}</div>` : ''}
-            ${c.duty ? `<div style="font-size:11px;color:var(--text2);line-height:1.5;white-space:pre-line"><b style="color:var(--text)">Duty</b><br>${c.duty}</div>` : ''}
-          </div>
-          <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:${c.agendaData?'10px':'0'}">${c.note||'메모 없음'}</div>
-          ${c.agendaData ? calAgendaHtml(c) : ''}
-        </div>`;
-      section.appendChild(row);
+      const pat=document.createElement('div');
+      pat.style.cssText='position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:16px 16px';
+      bannerEl.appendChild(pat);
+
+      const iconEl=document.createElement('div');
+      iconEl.style.cssText='position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:36px;opacity:0.2;line-height:1;z-index:1';
+      iconEl.textContent=icon;
+      bannerEl.appendChild(iconEl);
+
+      const ddayEl=document.createElement('div');
+      ddayEl.style.cssText=`font-size:15px;font-weight:800;font-family:var(--mono);color:${duColor};position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.3)`;
+      ddayEl.textContent=duLabel;
+      bannerEl.appendChild(ddayEl);
+
+      const tagBadge=document.createElement('div');
+      tagBadge.style.cssText='position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);font-family:var(--mono);z-index:2';
+      tagBadge.textContent=tl;
+      bannerEl.appendChild(tagBadge);
+      card.appendChild(bannerEl);
+
+      // URL 있으면 비동기로 og:image 가져와서 배너에 삽입
+      if(c.url) {
+        injectCalCardImage(bannerEl, c.url, `linear-gradient(135deg,${bgInfo.from},${bgInfo.to})`);
+      }
+
+      // 바디
+      const body=document.createElement('div');
+      body.style.cssText='padding:10px 13px 8px;display:flex;flex-direction:column;gap:5px;flex:1';
+
+      const nameEl=document.createElement('div');
+      nameEl.style.cssText='font-size:12px;font-weight:600;color:var(--text);line-height:1.4;letter-spacing:-0.01em';
+      nameEl.textContent=c.name||'';
+      body.appendChild(nameEl);
+
+      const dateEl=document.createElement('div');
+      dateEl.style.cssText='font-size:10px;color:var(--text3);font-family:var(--mono);display:flex;align-items:center;gap:4px';
+      dateEl.innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${dateRange}`;
+      body.appendChild(dateEl);
+
+      if(c.loc){
+        const locEl=document.createElement('div');
+        locEl.style.cssText='font-size:10px;color:var(--text3);display:flex;align-items:center;gap:3px';
+        locEl.innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${c.loc}`;
+        body.appendChild(locEl);
+      }
+
+      if(c.system){
+        const sysEl=document.createElement('div');
+        sysEl.style.cssText='font-size:10px;color:var(--primary);font-family:var(--mono);font-weight:600';
+        sysEl.textContent=c.system;
+        body.appendChild(sysEl);
+      }
+      card.appendChild(body);
+
+      // 푸터
+      const foot=document.createElement('div');
+      foot.style.cssText='padding:6px 13px 10px;display:flex;align-items:center;justify-content:space-between;border-top:0.5px solid var(--border)';
+
+      const dutyEl=document.createElement('div');
+      dutyEl.style.cssText='font-size:10px;color:var(--text3)';
+      dutyEl.textContent=c.duty?'👥 '+c.duty:'';
+      foot.appendChild(dutyEl);
+
+      if(c.url){
+        const linkBtn=document.createElement('a');
+        linkBtn.href=c.url; linkBtn.target='_blank'; linkBtn.rel='noopener';
+        linkBtn.style.cssText='display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:3px 9px;border-radius:6px;background:var(--primary-soft);color:var(--primary);text-decoration:none;font-weight:600;font-family:var(--mono)';
+        linkBtn.innerHTML='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>사이트';
+        foot.appendChild(linkBtn);
+      }
+      card.appendChild(foot);
+      secGrid.appendChild(card);
     });
+
+    section.appendChild(secGrid);
     grid.appendChild(section);
   }
 
   years.forEach(yr=>makeYearSection(yr));
 }
+
 
 function toggleYear(yr) {
   const sec=document.getElementById('yr_'+yr);
@@ -6173,6 +6408,66 @@ function checkPhoneMode(){
   if(tabs) tabs.style.display=isPhone?'none':'';
 }
 window.addEventListener('resize',checkPhoneMode);
+
+/* ── Conference OG Image Fetcher ── */
+const _ogCache = {};  // url → image URL 캐시
+
+async function fetchOgImage(url) {
+  if(!url) return null;
+  if(_ogCache[url] !== undefined) return _ogCache[url];
+  _ogCache[url] = null; // 중복 요청 방지
+
+  // CORS 프록시 목록 (순서대로 시도)
+  const proxies = [
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  ];
+
+  for(const makeProxy of proxies) {
+    try {
+      const res = await fetch(makeProxy(url), {
+        signal: AbortSignal.timeout(5000),
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      if(!res.ok) continue;
+      const html = await res.text();
+
+      // og:image 추출
+      const m =
+        html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+        html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
+        html.match(/name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
+
+      if(m && m[1]) {
+        // 상대 URL → 절대 URL 변환
+        let imgUrl = m[1];
+        if(imgUrl.startsWith('//')) imgUrl = 'https:' + imgUrl;
+        else if(imgUrl.startsWith('/')) {
+          const base = new URL(url);
+          imgUrl = base.origin + imgUrl;
+        }
+        _ogCache[url] = imgUrl;
+        return imgUrl;
+      }
+    } catch(e) { /* 다음 프록시 시도 */ }
+  }
+  _ogCache[url] = '';
+  return null;
+}
+
+async function injectCalCardImage(cardBannerEl, url, bgGradient) {
+  const imgUrl = await fetchOgImage(url);
+  if(!imgUrl) return;
+  // 배너에 이미지 삽입
+  const img = document.createElement('img');
+  img.src = imgUrl;
+  img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.55;z-index:0';
+  img.onerror = () => img.remove();
+  img.onload = () => {
+    cardBannerEl.insertBefore(img, cardBannerEl.firstChild);
+  };
+}
 /* ══════════════════════ MOBILE TAB SYNC ══════════════════════ */
 function updateMobileTabs(active) {
   ['video','kol','paper','cal'].forEach(t => {
