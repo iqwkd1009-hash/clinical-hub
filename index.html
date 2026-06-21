@@ -3759,7 +3759,12 @@ function normalizeVideoRow(row, headers) {
     return '';
   };
 
-  const url = get('url', 'link', '링크', 'youtube', 'youtube url', '영상링크');
+  let url = get('url', 'link', '링크', 'youtube', 'youtube url', '영상링크');
+  // "Learning: https://... / Seismic: https://..." 형태 처리 → 첫 번째 URL 추출
+  if(url && !url.startsWith('http')) {
+    const urlMatch = url.match(/https?:\/\/[^\s]+/);
+    url = urlMatch ? urlMatch[0] : '';
+  }
   const title = get('title', 'name', '영상명', '제목', '주제');
   const sys = get('sys', 'system', '시스템', 'platform') || 'Xi';
 
@@ -5882,7 +5887,16 @@ function renderCardiacVideos() {
     const card = document.createElement('div'); card.className='yt-card';
     card.innerHTML =
       '<div class="yt-thumb">' +
-        (thumb ? '<img src="'+thumb+'" alt="'+v.title+'" loading="lazy" onerror="this.style.display=\'none\'">' : '<div style="background:#1a1714;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">🫀</div>') +
+        (thumb ? '<img src="'+thumb+'" alt="'+v.title+'" loading="lazy" onerror="this.style.display=\'none\'">' :
+        (()=>{
+          const CARDIAC_BG = { 'CABG':'linear-gradient(135deg,#7B1A1A,#C0143C)', 'Valve Repair':'linear-gradient(135deg,#1a3a6e,#2255B4)', 'Valve Replacement':'linear-gradient(135deg,#1a4a2e,#2A7F4F)', 'Atrial':'linear-gradient(135deg,#3a1a6e,#6633B4)' };
+          const bg = CARDIAC_BG[v.op] || 'linear-gradient(135deg,#1a1a2e,#2a2a4e)';
+          const src = v.url||'';
+          let srcBadge = '';
+          if(src.includes('seismic')) srcBadge = '<span style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.6);color:#FFD700;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;font-family:var(--mono)">🔒 SEISMIC</span>';
+          else if(src.includes('learning.intuitive')) srcBadge = '<span style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.6);color:#7DF9FF;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;font-family:var(--mono)">📚 LEARNING</span>';
+          return '<div style="background:'+bg+';width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative"><span style="font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))">🫀</span><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.7);font-family:var(--mono);letter-spacing:0.05em">'+v.op+'</span>'+srcBadge+'</div>';
+        })()) +
         '<span class="sys-badge-thumb '+sysClass(v.sys)+'">'+v.sys+'</span>' +
         missingBadge +
         (!v.linkMissing ? '<div class="play-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>' : '') +
@@ -5900,7 +5914,11 @@ function renderCardiacVideos() {
     const popup = document.createElement('div'); popup.className='card-hover-popup';
     popup.innerHTML =
       '<div class="popup-thumb">' +
-        (thumb?'<img src="'+thumb+'" loading="lazy">':'<div style="background:#1a1a2e;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🫀</div>') +
+        (thumb?'<img src="'+thumb+'" loading="lazy">':
+          (()=>{
+            const CARDIAC_BG2 = { 'CABG':'linear-gradient(135deg,#7B1A1A,#C0143C)', 'Valve Repair':'linear-gradient(135deg,#1a3a6e,#2255B4)', 'Valve Replacement':'linear-gradient(135deg,#1a4a2e,#2A7F4F)' };
+            return '<div style="background:'+(CARDIAC_BG2[v.op]||'linear-gradient(135deg,#1a1a2e,#2a2a4e)')+';width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🫀</div>';
+          })()) +
         '<div class="popup-thumb-overlay"><span class="popup-sys-badge '+sysClass(v.sys)+'">'+v.sys+'</span></div>' +
       '</div>' +
       '<div class="popup-body">' +
@@ -5908,7 +5926,7 @@ function renderCardiacVideos() {
         '<div class="popup-title">'+v.title+'</div>' +
         '<div class="popup-actions">' +
           (!v.linkMissing?'<button class="popup-btn play" onclick="event.stopPropagation();openModal('+JSON.stringify(v).replace(/"/g,'&quot;')+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>재생</button>':'') +
-          (!v.linkMissing?'<a href="'+v.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="popup-btn ext">유튜브</a>':'') +
+          (!v.linkMissing?'<a href="'+v.url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="popup-btn ext">'+(v.url.includes('seismic')?'🔒 Seismic':v.url.includes('learning.intuitive')?'📚 Learning':v.url.includes('youtube')||v.url.includes('youtu.be')?'▶ YouTube':'🔗 링크')+'</a>':'') +
         '</div>' +
       '</div>';
 
