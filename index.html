@@ -4383,17 +4383,63 @@ function renderKOL() {
   });
 
   const container = document.getElementById('kolCards'); container.innerHTML='';
-  if(!items.length){ container.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`; return; }
+  if(!items.length){
+    container.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>`;
+    return;
+  }
 
-  // 태그별 배너 색상
-  const TAG_BANNER = {
-    vnotes:       { from:'#0F6E56', to:'#1D9E75', icon:'🔬' },
-    milestone:    { from:'#854F0B', to:'#BA7517', icon:'🏆' },
-    dv5:          { from:'#185FA5', to:'#378ADD', icon:'🤖' },
-    myoma:        { from:'#993556', to:'#D4537E', icon:'🏥' },
-    endometriosis:{ from:'#3C3489', to:'#7F77DD', icon:'🔴' },
-    gyn:          { from:'#0F6E56', to:'#1D9E75', icon:'⚕️' },
+  // 태그별 색상
+  const TAG_COLOR = {
+    vnotes:       '#0F6E56',
+    milestone:    '#BA7517',
+    dv5:          '#185FA5',
+    myoma:        '#993556',
+    endometriosis:'#3C3489',
+    gyn:          '#0F6E56',
   };
+
+  // 이미지 hover 팝업 (전역 1개)
+  let _artPopup = document.getElementById('artImgPopup');
+  if(!_artPopup) {
+    _artPopup = document.createElement('div');
+    _artPopup.id = 'artImgPopup';
+    _artPopup.style.cssText = [
+      'position:fixed','z-index:9999','pointer-events:none',
+      'border-radius:14px','overflow:hidden',
+      'box-shadow:0 8px 40px rgba(0,0,0,0.28),0 0 0 1px rgba(0,0,0,0.08)',
+      'background:#111','opacity:0',
+      'transition:opacity 0.15s ease,transform 0.15s ease',
+      'transform:scale(0.95)',
+      'width:280px','height:168px',
+    ].join(';');
+    _artPopup.innerHTML = '<img id="artImgPopupImg" style="width:100%;height:100%;object-fit:cover;display:block">';
+    document.body.appendChild(_artPopup);
+  }
+
+  function showPopup(e, imgUrl) {
+    if(!imgUrl || imgUrl==='이미지 확인 필요') return;
+    const pop = document.getElementById('artImgPopup');
+    const img = document.getElementById('artImgPopupImg');
+    img.src = imgUrl;
+    pop.style.opacity = '1';
+    pop.style.transform = 'scale(1)';
+    movePopup(e);
+  }
+  function movePopup(e) {
+    const pop = document.getElementById('artImgPopup');
+    if(!pop || pop.style.opacity==='0') return;
+    const pw=280, ph=168, margin=16;
+    let x = e.clientX + margin;
+    let y = e.clientY + margin;
+    if(x + pw > window.innerWidth  - margin) x = e.clientX - pw - margin;
+    if(y + ph > window.innerHeight - margin) y = e.clientY - ph - margin;
+    pop.style.left = x + 'px';
+    pop.style.top  = y + 'px';
+  }
+  function hidePopup() {
+    const pop = document.getElementById('artImgPopup');
+    if(pop){ pop.style.opacity='0'; pop.style.transform='scale(0.95)'; }
+  }
 
   // 연도별 그룹
   const years = [...new Set(items.map(a => a.date.slice(0,4)))].sort((a,b)=>b-a);
@@ -4404,111 +4450,120 @@ function renderKOL() {
 
     // 연도 헤더
     const yrHdr = document.createElement('div');
-    yrHdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:4px 0 10px';
+    yrHdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 8px';
     yrHdr.innerHTML = `
       <span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>
-      ${isThisYear?'<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
+      ${isThisYear?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
       <div style="flex:1;height:1px;background:var(--border)"></div>
       <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>`;
     container.appendChild(yrHdr);
 
-    // 카드 그리드
-    const grid = document.createElement('div');
-    grid.className = 'art-grid';
+    // 리스트 컨테이너
+    const listWrap = document.createElement('div');
+    listWrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:16px';
 
     grp.forEach(a => {
-      const tag = (a.tag||'').toLowerCase();
-      const banner = TAG_BANNER[tag] || { from:'#444441', to:'#888780', icon:'📰' };
-      const faviconUrl = a.link_url ? 'https://www.google.com/s2/favicons?domain='+encodeURIComponent(new URL(a.link_url).hostname)+'&sz=32' : '';
+      const tag    = (a.tag||'').toLowerCase();
+      const tagClr = TAG_COLOR[tag] || '#888780';
+      const hasImg = a.image && a.image !== '이미지 확인 필요';
+      const dateStr= a.date ? a.date.slice(5) : '';  // MM-DD
 
-      const card = document.createElement('div');
-      card.className = 'art-thumb-card';
-      card.onclick = () => { if(a.link_url) window.open(a.link_url,'_blank'); };
+      // 리스트 행
+      const row = document.createElement('div');
+      row.style.cssText = [
+        'display:flex','align-items:center','gap:12px',
+        'padding:10px 12px','background:var(--surface)',
+        'border-radius:10px','cursor:pointer',
+        'transition:background 0.15s,transform 0.15s',
+        'border:0.5px solid var(--border)',
+        'position:relative',
+      ].join(';');
+      row.onmouseenter = () => { row.style.background='var(--surface2)'; row.style.transform='translateX(2px)'; };
+      row.onmouseleave = () => { row.style.background='var(--surface)';  row.style.transform=''; };
+      row.onclick = () => { if(a.link_url) window.open(a.link_url,'_blank'); };
 
-      // 썸네일 배너
-      const thumb = document.createElement('div');
-      thumb.className = 'art-thumb';
+      // 왼쪽: 이미지 또는 컬러 블록
+      const imgBox = document.createElement('div');
+      imgBox.style.cssText = `width:72px;height:48px;border-radius:7px;overflow:hidden;flex-shrink:0;background:${tagClr}22;position:relative`;
 
-      if(a.image && a.image !== '이미지 확인 필요') {
-        thumb.style.background = '#111';
+      if(hasImg) {
         const img = document.createElement('img');
         img.src = a.image;
         img.alt = a.title;
         img.loading = 'lazy';
-        img.onerror = () => { img.style.display='none'; thumb.style.background=`linear-gradient(135deg,${banner.from},${banner.to})`; };
-        thumb.appendChild(img);
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+        img.onerror = () => { img.style.display='none'; };
+        imgBox.appendChild(img);
+
+        // hover 이벤트 → 팝업
+        imgBox.onmouseenter = (e) => { e.stopPropagation(); showPopup(e, a.image); };
+        imgBox.onmousemove  = (e) => { e.stopPropagation(); movePopup(e); };
+        imgBox.onmouseleave = (e) => { e.stopPropagation(); hidePopup(); };
       } else {
-        thumb.style.background = `linear-gradient(135deg,${banner.from},${banner.to})`;
-        const pat = document.createElement('div');
-        pat.style.cssText = 'position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:18px 18px';
-        thumb.appendChild(pat);
-        const icon = document.createElement('div');
-        icon.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:40px;opacity:0.2;line-height:1';
-        icon.textContent = banner.icon;
-        thumb.appendChild(icon);
-        // 병원 파비콘 좌하단
-        if(faviconUrl) {
-          const fav = document.createElement('img');
-          fav.src = faviconUrl;
-          fav.style.cssText = 'position:absolute;bottom:8px;left:10px;width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,0.3);z-index:2';
-          fav.onerror = () => fav.style.display='none';
-          thumb.appendChild(fav);
-        }
+        // 태그 이니셜 표시
+        imgBox.style.cssText += `;display:flex;align-items:center;justify-content:center`;
+        const lbl = document.createElement('span');
+        lbl.style.cssText = `font-size:10px;font-weight:700;color:${tagClr};font-family:var(--mono);letter-spacing:0.05em;opacity:0.8`;
+        lbl.textContent = (a.tag||'').toUpperCase().slice(0,8);
+        imgBox.appendChild(lbl);
       }
+      row.appendChild(imgBox);
 
-      // 태그 배지 (좌상단)
-      const tagBadge = document.createElement('div');
-      tagBadge.className = 'art-thumb-badge';
-      tagBadge.textContent = (a.tag||'').toUpperCase();
-      thumb.appendChild(tagBadge);
+      // 중앙: 텍스트
+      const text = document.createElement('div');
+      text.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:3px';
 
-      // 날짜 배지 (우상단)
-      const dateBadge = document.createElement('div');
-      dateBadge.className = 'art-thumb-date';
-      dateBadge.textContent = (a.date||'').slice(5); // MM-DD
-      thumb.appendChild(dateBadge);
+      // 제목
+      const titleEl = document.createElement('div');
+      titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text);line-height:1.4;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+      titleEl.textContent = a.title || '';
+      text.appendChild(titleEl);
 
-      card.appendChild(thumb);
+      // 병원 · 술자
+      const metaEl = document.createElement('div');
+      metaEl.style.cssText = 'display:flex;align-items:center;gap:5px;flex-wrap:wrap';
+      metaEl.innerHTML = `
+        <span style="font-size:11px;font-weight:600;color:var(--text2)">${a.hospital||''}</span>
+        ${a.surgeon?`<span style="font-size:10px;color:var(--text3)">·</span><span style="font-size:11px;color:var(--text3)">${a.surgeon}</span>`:''}`;
+      text.appendChild(metaEl);
 
-      // 카드 바디
-      const body = document.createElement('div');
-      body.className = 'art-card-body';
-
-      const meta = document.createElement('div');
-      meta.className = 'art-card-meta';
-      meta.innerHTML = `
-        <span class="art-card-hospital">${a.hospital||''}</span>
-        ${a.surgeon ? `<span style="color:var(--text3);font-size:11px">·</span><span class="art-card-surgeon">${a.surgeon}</span>` : ''}`;
-      body.appendChild(meta);
-
-      const title = document.createElement('div');
-      title.className = 'art-card-title';
-      title.textContent = a.title||'';
-      body.appendChild(title);
-
+      // desc (1줄)
       if(a.desc && a.desc !== a.title) {
-        const desc = document.createElement('div');
-        desc.className = 'art-card-desc';
-        desc.textContent = a.desc;
-        body.appendChild(desc);
+        const descEl = document.createElement('div');
+        descEl.style.cssText = 'font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+        descEl.textContent = a.desc;
+        text.appendChild(descEl);
       }
+      row.appendChild(text);
 
-      // 푸터 (링크)
+      // 오른쪽: 태그 + 날짜
+      const right = document.createElement('div');
+      right.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0';
+
+      const tagBadge = document.createElement('span');
+      tagBadge.style.cssText = `font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:${tagClr}18;color:${tagClr};font-family:var(--mono);letter-spacing:0.04em`;
+      tagBadge.textContent = (a.tag||'').toUpperCase();
+      right.appendChild(tagBadge);
+
+      const dateBadge = document.createElement('span');
+      dateBadge.style.cssText = 'font-size:10px;color:var(--text3);font-family:var(--mono)';
+      dateBadge.textContent = dateStr;
+      right.appendChild(dateBadge);
+
+      // 외부 링크 아이콘
       if(a.link_url) {
-        const footer = document.createElement('div');
-        footer.style.cssText = 'padding:6px 13px 10px;';
-        footer.innerHTML = `<span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${a.link_label||''}</span>`;
-        body.appendChild(footer);
+        const extIcon = document.createElement('span');
+        extIcon.style.cssText = 'color:var(--text3);opacity:0.5';
+        extIcon.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+        right.appendChild(extIcon);
       }
+      row.appendChild(right);
 
-      card.appendChild(body);
-      grid.appendChild(card);
+      listWrap.appendChild(row);
     });
-
-    container.appendChild(grid);
+    container.appendChild(listWrap);
   });
 }
-
 
 function makeArtRow(aid, a, tagColor, tagLabel, dateStr, linkHtml, faviconUrl, domain) {
   const fav = faviconUrl
