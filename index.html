@@ -3674,6 +3674,7 @@ let CARDIAC_VIDEOS   = [];
 let CARDIAC_ARTICLES = [];
 let CARDIAC_PAPERS   = [];
 let CARDIAC_CALS     = [];
+let CARDIAC_SURGEONS = [];
 
 async function loadArticlesFromSheet() {
   try {
@@ -3892,6 +3893,7 @@ function switchTab(tab, el) {
     else if(tab === 'kol') renderKOL();
     else if(tab === 'paper') renderPapers();
     else if(tab === 'cal') renderCal();
+    else if(tab === 'surgeon') renderCardiacSurgeons();
     else if(tab === 'dashboard') renderDashboard();
   }
 }
@@ -4588,6 +4590,15 @@ function getPaperImage(p) {
   }
   return '';
 }
+
+const CARDIAC_SURGEONS_FALLBACK = [
+  { surgeon:'Dr. Michael E. Halkos', institution:'Emory University School of Medicine / Emory Healthcare', specialty:'Robotic CABG, Hybrid Coronary Revascularization, Robotic Mitral Surgery', highlights:'미국 Robotic CABG Program 구축 분야 대표 KOL', country:'USA', system:'da Vinci Xi', category:'CABG', link:'' },
+  { surgeon:'Dr. Zhandong Zhou', institution:"St. Joseph's Health", specialty:'Robotic CABG, Skeletonized IMA Harvesting', highlights:'약 20년 이상 Robotic CABG 경험, 다수 Surgeon Proctor', country:'USA', system:'da Vinci Xi', category:'CABG', link:'' },
+  { surgeon:'Dr. Didier F. Loulmet', institution:'NYU Langone Health', specialty:'Robotic Mitral Valve Repair, Robotic CABG, Cardiac Tumor Surgery', highlights:'Robotic Cardiac Surgery Pioneer', country:'USA', system:'da Vinci Xi', category:'Valve', link:'' },
+  { surgeon:'Dr. Eugene A. Grossi', institution:'NYU Langone Health', specialty:'Valvular Heart Disease, Robotic Valve Surgery', highlights:'Mitral Valve Repair 분야 세계적 전문가', country:'USA', system:'da Vinci Xi', category:'Valve', link:'' },
+  { surgeon:'Dr. J. Michael Smith', institution:'The Christ Hospital', specialty:'Robotic Mitral Valve Repair', highlights:'da Vinci 5 MVR 대표 사례', country:'USA', system:'da Vinci 5', category:'Valve', link:'' },
+];
+
 const PAPERS = [
   { title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery", authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy", hospital:"Eulji University Hospital, Korea", summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증. Console time 135분, EBL 50mL, major complication 없음.", doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"Robotic NOTES Hysterectomy 최초 보고 — Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증", talkingPoint:"초기 vNOTES 도입 필요성 논의 시 세계 최초 보고 근거로 활용" },
   { title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery", authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery", hospital:"Eulji University Hospital, Korea", summary:"35명 대상 Robotic Glove Port Technique(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14) 포함. 전례 성공, 합병증 없음.", doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Myomectomy", evidence:"Case Series", keyMessage:"Robotic Glove Port Technique으로 다양한 부인과 수술에서 단일공 접근 실현", talkingPoint:"Myomectomy 및 복합 수술 케이스에서 SP 확장 가능성 강조 가능" },
@@ -5510,6 +5521,164 @@ function renderCal() {
 }
 
 
+
+/* ══════════════════════ CARDIAC SURGEON LIST ══════════════════════ */
+function renderCardiacSurgeons() {
+  const data = CARDIAC_SURGEONS.length ? CARDIAC_SURGEONS : CARDIAC_SURGEONS_FALLBACK;
+  const q = (document.getElementById('surgeonSearch')?.value||'').toLowerCase();
+
+  const items = data.filter(s =>
+    !q || [s.surgeon,s.institution,s.specialty,s.highlights,s.category].join(' ').toLowerCase().includes(q)
+  );
+
+  const countEl = document.getElementById('surgeonCount');
+  if(countEl) countEl.textContent = items.length + ' surgeons';
+
+  // 카테고리 필터 버튼
+  const cats = [...new Set(data.map(s=>s.category||'Other').filter(Boolean))];
+  const catEl = document.getElementById('surgeonCatFilter');
+  if(catEl && catEl.children.length === 0) {
+    ['전체', ...cats].forEach(cat => {
+      const btn = document.createElement('button');
+      btn.textContent = cat;
+      btn.dataset.cat = cat;
+      btn.style.cssText = `padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--font);cursor:pointer;border:1px solid var(--border);background:${cat==='전체'?'var(--primary)':'var(--surface)'};color:${cat==='전체'?'white':'var(--text2)'};transition:all 0.15s`;
+      btn.onclick = () => {
+        catEl.querySelectorAll('button').forEach(b => {
+          b.style.background = 'var(--surface)'; b.style.color = 'var(--text2)';
+        });
+        btn.style.background = 'var(--primary)'; btn.style.color = 'white';
+        btn.dataset.active = '1';
+        _surgeonCatFilter = cat === '전체' ? 'all' : cat;
+        renderCardiacSurgeons();
+      };
+      catEl.appendChild(btn);
+    });
+  }
+
+  const filtered = _surgeonCatFilter === 'all' ? items : items.filter(s => s.category === _surgeonCatFilter);
+
+  const grid = document.getElementById('surgeonGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  if(!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';
+    return;
+  }
+
+  const CAT_COLORS = {
+    'CABG':    { from:'#7B1A1A', to:'#C0143C', icon:'❤️' },
+    'Valve':   { from:'#1a3a6e', to:'#2255B4', icon:'💙' },
+    'Valve Repair': { from:'#1a3a6e', to:'#2255B4', icon:'💙' },
+    'Valve Replacement': { from:'#1a4a2e', to:'#2A7F4F', icon:'💚' },
+    'Atrial':  { from:'#3a1a6e', to:'#6633B4', icon:'💜' },
+    'Other':   { from:'#333',    to:'#555',    icon:'🫀' },
+  };
+
+  const COUNTRY_FLAG = { 'USA':'🇺🇸','Korea':'🇰🇷','UK':'🇬🇧','Germany':'🇩🇪','France':'🇫🇷','Japan':'🇯🇵','Italy':'🇮🇹','Australia':'🇦🇺' };
+
+  filtered.forEach(s => {
+    const cat = s.category || 'Other';
+    const col = CAT_COLORS[cat] || CAT_COLORS['Other'];
+    const flag = COUNTRY_FLAG[s.country] || '🌍';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 0 0 0.5px rgba(0,0,0,0.07),0 2px 8px rgba(0,0,0,0.05);transition:transform 0.18s ease,box-shadow 0.18s ease;display:flex;flex-direction:column';
+    card.onmouseenter = () => { card.style.transform='translateY(-2px)'; card.style.boxShadow='0 0 0 0.5px rgba(0,0,0,0.07),0 8px 24px rgba(0,0,0,0.12)'; };
+    card.onmouseleave = () => { card.style.transform=''; card.style.boxShadow='0 0 0 0.5px rgba(0,0,0,0.07),0 2px 8px rgba(0,0,0,0.05)'; };
+
+    // 배너
+    const banner = document.createElement('div');
+    banner.style.cssText = `height:72px;background:linear-gradient(135deg,${col.from},${col.to});position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:8px 14px`;
+
+    const pat = document.createElement('div');
+    pat.style.cssText = 'position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:16px 16px';
+    banner.appendChild(pat);
+
+    const iconEl = document.createElement('div');
+    iconEl.style.cssText = 'position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:36px;opacity:0.2';
+    iconEl.textContent = col.icon;
+    banner.appendChild(iconEl);
+
+    // 카테고리 배지
+    const catBadge = document.createElement('div');
+    catBadge.style.cssText = 'position:absolute;top:8px;left:12px;background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);border-radius:20px;padding:2px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);font-family:var(--mono);letter-spacing:0.05em';
+    catBadge.textContent = cat;
+    banner.appendChild(catBadge);
+
+    // 국가 배지
+    const flagBadge = document.createElement('div');
+    flagBadge.style.cssText = 'position:absolute;top:8px;right:12px;font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))';
+    flagBadge.textContent = flag;
+    banner.appendChild(flagBadge);
+
+    card.appendChild(banner);
+
+    // 바디
+    const body = document.createElement('div');
+    body.style.cssText = 'padding:14px 16px;display:flex;flex-direction:column;gap:6px;flex:1';
+
+    // 이름
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.02em';
+    nameEl.textContent = s.surgeon;
+    body.appendChild(nameEl);
+
+    // 기관
+    const instEl = document.createElement('div');
+    instEl.style.cssText = 'font-size:11px;color:var(--text3);line-height:1.4';
+    instEl.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><path d="M3 21h18M3 7l9-4 9 4M4 21V10m16 11V10m-9 11V10"/></svg>${s.institution}`;
+    body.appendChild(instEl);
+
+    // 전문분야 태그들
+    if(s.specialty) {
+      const specRow = document.createElement('div');
+      specRow.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-top:2px';
+      s.specialty.split(',').slice(0,3).forEach(sp => {
+        const tag = document.createElement('span');
+        tag.style.cssText = 'font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(192,20,60,0.08);color:var(--primary);font-family:var(--mono)';
+        tag.textContent = sp.trim();
+        specRow.appendChild(tag);
+      });
+      body.appendChild(specRow);
+    }
+
+    // Highlights
+    if(s.highlights) {
+      const hlDiv = document.createElement('div');
+      hlDiv.style.cssText = 'padding:8px 10px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--primary);margin-top:2px';
+      hlDiv.innerHTML = `<span style="font-size:11px;color:var(--text2);line-height:1.5">${s.highlights}</span>`;
+      body.appendChild(hlDiv);
+    }
+
+    // 시스템 배지
+    if(s.system) {
+      const sysEl = document.createElement('div');
+      sysEl.style.cssText = 'font-size:10px;font-weight:600;color:var(--primary);font-family:var(--mono);margin-top:2px';
+      sysEl.textContent = '🤖 ' + s.system;
+      body.appendChild(sysEl);
+    }
+
+    card.appendChild(body);
+
+    // 푸터 링크
+    if(s.link) {
+      const foot = document.createElement('div');
+      foot.style.cssText = 'padding:8px 16px 12px';
+      const a = document.createElement('a');
+      a.href = s.link; a.target='_blank'; a.rel='noopener';
+      a.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--primary);text-decoration:none;font-family:var(--font)';
+      a.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>프로필 보기';
+      foot.appendChild(a);
+      card.appendChild(foot);
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+let _surgeonCatFilter = 'all';
 function toggleYear(yr) {
   const sec=document.getElementById('yr_'+yr);
   const arr=document.getElementById('yarr_'+yr);
@@ -5815,6 +5984,7 @@ async function loadCardiacData() {
     { url: pub+'?gid=924999404&single=true&output=csv', arr: CARDIAC_ARTICLES, type:'article' },
     { url: pub+'?gid=1700395267&single=true&output=csv',arr: CARDIAC_PAPERS,   type:'paper' },
     { url: pub+'?gid=1345374325&single=true&output=csv',arr: CARDIAC_CALS,     type:'cal' },
+    { url: pub+'?gid=SURGEON_GID&single=true&output=csv', arr: CARDIAC_SURGEONS, type:'surgeon' },
   ];
   await Promise.allSettled(sheets.map(async s => {
     try {
@@ -5848,6 +6018,17 @@ async function loadCardiacData() {
             year: get(r,'year','연도'), journal: get(r,'journal','저널'),
             hospital: get(r,'hospital','기관'), summary: get(r,'summary','요약','desc'),
             doi: get(r,'doi / link','doi','url'), tech: get(r,'tech','기법'), attach: get(r,'attachment','첨부','attach','media'), chartData: null
+          });
+        } else if(s.type==='surgeon') {
+          s.arr.push({
+            surgeon:    get(r,'surgeon','name','술자','성명'),
+            institution:get(r,'institution','hospital','기관','병원'),
+            specialty:  get(r,'specialty','specialties','전문분야'),
+            highlights: get(r,'highlights','highlight','내용','특기사항'),
+            country:    get(r,'country','국가'),
+            system:     get(r,'system','platform','시스템'),
+            category:   get(r,'category','분류'),
+            link:       get(r,'link','url','링크'),
           });
         } else if(s.type==='cal') {
           s.arr.push({
@@ -6499,6 +6680,8 @@ window.addEventListener('DOMContentLoaded', () => {
   applyLang();
   checkPhoneMode();
   updatePhoneSpecPill('gyn');
+  // Cardiac surgeon fallback 초기 세팅
+  if(!CARDIAC_SURGEONS.length) CARDIAC_SURGEONS.push(...CARDIAC_SURGEONS_FALLBACK);
   loadVideosFromSheet();
   loadArticlesFromSheet();
   loadConferencesFromSheet();
@@ -6552,5 +6735,37 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
 </div>
+
+<div class="page" id="page-cardiac-surgeon" style="min-height:calc(100vh - 94px)">
+  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em">Global Surgeon List</h2>
+        <p style="font-size:12px;color:var(--text3);margin-top:2px">Cardiac Robotic Surgery 글로벌 KOL 현황</p>
+      </div>
+      <span id="surgeonCount" style="font-size:12px;color:var(--text3);font-family:var(--mono)">0 surgeons</span>
+    </div>
+
+    <!-- 검색 + 필터 -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:rgba(0,0,0,0.04);border-radius:10px;flex:1;min-width:200px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="surgeonSearch" type="text" placeholder="술자명, 기관, 전문분야 검색..." oninput="renderCardiacSurgeons()"
+          style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);outline:none;width:100%">
+      </div>
+      <div id="surgeonCatFilter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+
+    <!-- disclaimer -->
+    <div class="tab-disclaimer" id="disc-surgeon">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>본 정보는 <b>공개된 학술 발표, 학회 자료, 공식 기관 홈페이지</b> 기반의 내부 참고 자료입니다. 비공개 정보를 포함하지 않아야 하며, 외부 공유 전 사전 확인하십시오. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>
+    </div>
+
+    <!-- 카드 그리드 -->
+    <div id="surgeonGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:start"></div>
+  </div>
+</div>
+
 </body>
 </html>
