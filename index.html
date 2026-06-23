@@ -4136,7 +4136,7 @@ function copyLink(){
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModalBtn(); });
 
 /* ══════════════════════ KOL ══════════════════════ */
-const ARTICLES = [
+let ARTICLES = [
   // ── vNOTES ──
   { hospital:"의정부성모병원", surgeon:"김진휘", date:"2026-03-10",
     tag:"vnotes", tech:"vnotes", indication:"hysterectomy",
@@ -4366,6 +4366,7 @@ function buildKolFilters() {
   }
 }
 
+let _artCollapsed = new Set();
 function renderKOL() {
   const q = document.getElementById('kolSearch').value.toLowerCase();
   let items = ARTICLES
