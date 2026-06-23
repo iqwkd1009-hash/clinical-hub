@@ -3744,6 +3744,7 @@ async function loadArticlesFromSheet() {
         title:      get(r,'title'),
         desc:       get(r,'desc'),
         image:      get(r,'image'),
+        link_url:   get(r,'link_url'),
         links: (() => {
           const label = get(r,'link_label');
           const url   = get(r,'link_url');
@@ -3778,7 +3779,7 @@ function normalizeVideoRow(row, headers) {
     const urlMatch = url.match(/https?:\/\/[^\s]+/);
     url = urlMatch ? urlMatch[0] : '';
   }
-  const title = get('title', 'name', '영상명', '제목', '주제');
+  const title = get('title', 'name', '영상명', '제목', '주제', '영상 제목', 'video title');
   const sys = get('sys', 'system', '시스템', 'platform') || 'Xi';
 
   return {
@@ -4371,8 +4372,8 @@ function renderKOL() {
     .filter(a =>
       (kolFilters.tech==='all'       || a.tech===kolFilters.tech) &&
       (kolFilters.indication==='all' || a.indication===kolFilters.indication) &&
-      (kolFilters.category==='all'   || a.tag===kolFilters.category) &&
-      (!q || a.hospital.toLowerCase().includes(q) || a.surgeon.toLowerCase().includes(q) || a.title.toLowerCase().includes(q))
+      (kolFilters.category==='all'   || (a.tag||'')===kolFilters.category) &&
+      (!q || (a.hospital||'').toLowerCase().includes(q) || (a.surgeon||'').toLowerCase().includes(q) || (a.title||'').toLowerCase().includes(q))
     )
     .sort((a,b) => (b.date||'0000-00-00').localeCompare(a.date||'0000-00-00'));
 
@@ -4454,10 +4455,10 @@ function renderKOL() {
   }
 
   // 연도별 그룹
-  const years = [...new Set(items.map(a => a.date.slice(0,4)))].sort((a,b)=>b-a);
+  const years = [...new Set(items.map(a => (a.date||'').slice(0,4)).filter(y=>y))].sort((a,b)=>b-a);
 
   years.forEach(yr => {
-    const grp = items.filter(a => a.date.startsWith(yr));
+    const grp = items.filter(a => (a.date||'').startsWith(yr));
     const isThisYear = yr === String(new Date().getFullYear());
 
     // 연도 헤더 (클릭으로 접기/펼치기)
@@ -6279,7 +6280,7 @@ function buildCardiacVideoFilters() {
   make('sysFilters','sys', uniq(CARDIAC_VIDEOS.map(v=>v.sys)));
   // ADV. Tech 필터 — VSE & TilePro는 분리해서 각각 매칭
   const advVals = ['VSE','TilePro','Force Bipolar','Long Bipolar','Suction & Irrigator','ITM'];
-  make('adcVFilters','adv', advVals);
+  make('advFilters','adv', advVals);
 }
 
 function renderCardiacArticles() {
