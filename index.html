@@ -1761,7 +1761,37 @@ body.dark #paperGrid > div {
         <div id="pf-country"></div>
       </div>
     </div>
-  </aside>
+  
+        <!-- Evidence Level Guide -->
+        <div class="sidebar-section" style="margin-top:4px">
+          <div class="sidebar-label">EVIDENCE LEVEL</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
+            <div style="font-size:10px;color:var(--text3);line-height:1.5;padding:6px 8px;background:var(--surface2);border-radius:7px;margin-bottom:4px">
+              근거 수준 분류 기준
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="RCT / Systematic Review / Meta-analysis">
+              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#05966918;color:#059669;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.1</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">RCT / Systematic Review / Meta-analysis</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Prospective Comparative Study">
+              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#0891B218;color:#0891B2;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.2</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">Prospective Comparative Study</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Retrospective / Comparative Cohort">
+              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#7C3AED18;color:#7C3AED;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.3</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">Retrospective / Comparative Cohort</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Case Series / Case Report / Technical Note">
+              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#D9770618;color:#D97706;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.4</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">Case Series / Case Report / Technical Note</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Expert Opinion / Narrative Review">
+              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#DC262618;color:#DC2626;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.5</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">Expert Opinion / Narrative Review</span>
+            </div>
+          </div>
+        </div>
+</aside>
   <div style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -4748,14 +4778,41 @@ const PF = {
 let PF_active = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
 
 /* ── 헬퍼 함수 ── */
+/* ── Evidence Level Classification ────────────────────
+   Lv.1  RCT / Systematic Review / Meta-analysis
+   Lv.2  Prospective Comparative Study
+   Lv.3  Retrospective Comparative Study / Comparative Cohort
+   Lv.4  Case Series / Case Report / Technical Note / Feasibility
+   Lv.5  Expert Opinion / Narrative Review / Commentary
+──────────────────────────────────────────────────── */
+const EVIDENCE_DEFS = [
+  { lv:1, label:'Lv.1', desc:'RCT / Systematic Review / Meta-analysis',        color:'#059669', keywords:['meta','systematic','randomized','rct'] },
+  { lv:2, label:'Lv.2', desc:'Prospective Comparative Study',                   color:'#0891B2', keywords:['prospective','registry'] },
+  { lv:3, label:'Lv.3', desc:'Retrospective Comparative Study / Cohort',        color:'#7C3AED', keywords:['retrospective','comparative cohort','cohort'] },
+  { lv:4, label:'Lv.4', desc:'Case Series / Case Report / Technical Note',      color:'#D97706', keywords:['case series','case report','technical note','feasibility','comparative study'] },
+  { lv:5, label:'Lv.5', desc:'Expert Opinion / Narrative Review / Commentary',  color:'#DC2626', keywords:['expert opinion','narrative','commentary','review','case','technical','series','note','video'] },
+];
+
 function pEvidence(v) {
   const s = (v||'').toLowerCase();
-  if(s.includes('meta') || s.includes('systematic')) return {lv:1, txt:'Meta-analysis', stars:5};
-  if(s.includes('rct') || s.includes('randomized'))  return {lv:2, txt:'RCT', stars:4};
-  if(s.includes('prospective') || s.includes('registry')) return {lv:3, txt:'Prospective', stars:3};
-  if(s.includes('retrospective') || s.includes('comparative')) return {lv:4, txt:'Retrospective', stars:2};
-  if(s.includes('case') || s.includes('technical') || s.includes('series') || s.includes('note') || s.includes('video')) return {lv:5, txt:v, stars:1};
-  return null;
+  // Lv 숫자 직접 명시된 경우 (e.g. "Level III", "Lv.3", "Level IV (Case Series)")
+  const lvMatch = s.match(/(?:level|lv)[\s.]*(i{1,3}v?|[1-5])/i);
+  if(lvMatch) {
+    const raw = lvMatch[1].toUpperCase();
+    const numMap = {'I':1,'II':2,'III':3,'IV':4,'V':5,'1':1,'2':2,'3':3,'4':4,'5':5};
+    const lv = numMap[raw];
+    if(lv) {
+      const def = EVIDENCE_DEFS[lv-1];
+      return { lv, txt: v.replace(/level\s*(i{1,3}v?|[1-5])\s*\(?/i,'').replace(/\)?$/,'').trim() || def.desc, stars: 6-lv, color: def.color };
+    }
+  }
+  // 키워드 매칭
+  for(const def of EVIDENCE_DEFS) {
+    if(def.keywords.some(k => s.includes(k))) {
+      return { lv: def.lv, txt: v || def.desc, stars: 6-def.lv, color: def.color };
+    }
+  }
+  return { lv:4, txt: v||'Case Study', stars:2, color: EVIDENCE_DEFS[3].color };
 }
 
 function pStars(n) {
@@ -4827,7 +4884,7 @@ function buildPaperCard(p) {
     return { from:'#444441', to:'#888780', text:'#D3D1C7' };
   }
   const jc = getJColor(p.journal);
-  const EV_COLORS = {1:'#534AB7',2:'#0F6E56',3:'#185FA5',4:'#BA7517',5:'#888780'};
+  const EV_COLORS = {1:'#059669',2:'#0891B2',3:'#7C3AED',4:'#D97706',5:'#DC2626'};
   const evColor = ev ? (EV_COLORS[ev.lv]||'#888780') : '#888780';
 
   /* ── 카드 래퍼 ── */
