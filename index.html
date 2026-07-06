@@ -1764,30 +1764,28 @@ body.dark #paperGrid > div {
   
         <!-- Evidence Level Guide -->
         <div class="sidebar-section" style="margin-top:4px">
-          <div class="sidebar-label">EVIDENCE LEVEL</div>
-          <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
-            <div style="font-size:10px;color:var(--text3);line-height:1.5;padding:6px 8px;background:var(--surface2);border-radius:7px;margin-bottom:4px">
-              근거 수준 분류 기준
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="RCT / Systematic Review / Meta-analysis">
-              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#05966918;color:#059669;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.1</span>
+          <div class="sidebar-label">EVIDENCE LEVEL GUIDE</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px">
+            <div style="font-size:10px;color:var(--text3);line-height:1.5;padding:5px 8px;background:var(--surface2);border-radius:7px;margin-bottom:2px;font-style:italic">근거 수준 분류 기준 (내부 기준)</div>
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Randomized controlled trials, systematic reviews, or meta-analyses">
+              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#05996918;color:#059669;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.1</span>
               <span style="font-size:10px;color:var(--text2);line-height:1.4">RCT / Systematic Review / Meta-analysis</span>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Prospective Comparative Study">
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Prospective comparative studies">
               <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#0891B218;color:#0891B2;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.2</span>
               <span style="font-size:10px;color:var(--text2);line-height:1.4">Prospective Comparative Study</span>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Retrospective / Comparative Cohort">
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Retrospective comparative studies or comparative cohort studies">
               <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#7C3AED18;color:#7C3AED;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.3</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">Retrospective / Comparative Cohort</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">Retrospective Comparative / Cohort Study</span>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Case Series / Case Report / Technical Note">
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Case reports, case series, technical notes, or feasibility studies">
               <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#D9770618;color:#D97706;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.4</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">Case Series / Case Report / Technical Note</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">Case Report / Case Series / Technical Note / Feasibility</span>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2);cursor:default" title="Expert Opinion / Narrative Review">
+            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Expert opinion, narrative review, or commentary">
               <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#DC262618;color:#DC2626;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.5</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">Expert Opinion / Narrative Review</span>
+              <span style="font-size:10px;color:var(--text2);line-height:1.4">Expert Opinion / Narrative Review / Commentary</span>
             </div>
           </div>
         </div>
@@ -4726,51 +4724,64 @@ const CARDIAC_SURGEONS_FALLBACK = [
 ];
 
 let PAPERS = [
-  { title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery", authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy", hospital:"Eulji University Hospital, Korea", summary:"13명 양성 자궁질환 환자 대상 Robotic NOTES Hysterectomy 최초 보고. Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증. Console time 135분, EBL 50mL, major complication 없음.", doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"Robotic NOTES Hysterectomy 최초 보고 — Gasless transvaginal 접근으로 흉터 없는 수술 가능성 입증", talkingPoint:"초기 vNOTES 도입 필요성 논의 시 세계 최초 보고 근거로 활용" },
-  { title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery", authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery", hospital:"Eulji University Hospital, Korea", summary:"35명 대상 Robotic Glove Port Technique(RGPT) 최초 보고. Myomectomy(12), Adenomyomectomy(3), 난소낭종절제(6), NOTES Hysterectomy(14) 포함. 전례 성공, 합병증 없음.", doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Myomectomy", evidence:"Case Series", keyMessage:"Robotic Glove Port Technique으로 다양한 부인과 수술에서 단일공 접근 실현", talkingPoint:"Myomectomy 및 복합 수술 케이스에서 SP 확장 가능성 강조 가능" },
-  { title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience and technical considerations", authors:"Zhang X, Guan X et al.", year:"2021", journal:"JMIG", hospital:"China", summary:"33례 자궁내막증 환자 대상 Robotic vNOTES 적용. 수술 후 VAS pain score 유의미하게 감소. 재발 없음. DIE 적용 가능성 제시.", doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"Robotic vNOTES로 자궁내막증 33례에서 통증 감소 및 재발 없음 확인", talkingPoint:"Endometriosis 환자 대상 vNOTES 도입 타당성 논의 시 핵심 근거" },
-  { title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study", authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine", hospital:"China", summary:"Gasless vs 기존 Robotic vNOTES Hysterectomy 비교. 수술시간, 출혈량, 입원기간 분석. Gasless군에서 복부팽만 부작용 유의하게 감소.", doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Retrospective", keyMessage:"Gasless Robotic vNOTES는 기존 방식 대비 복부 팽만 부작용 유의하게 낮음", talkingPoint:"Gasless 접근의 환자 경험 개선 효과로 차별화 포인트 제시 가능", image:"https://www.frontiersin.org/files/Articles/1117158/fmed-10-1117158-HTML/image_m/fmed-10-1117158-g001.jpg" },
-  { title:"ICG-assisted retrograde ureterolysis in robotic vNOTES for deep infiltrating endometriosis", authors:"Guan X et al.", year:"2023", journal:"JMIG", hospital:"China", summary:"심부자궁내막증 Robotic vNOTES 시 ICG 형광 역행 요관박리술 적용. 요관 손상 없이 전례 성공. 수술시간 단축.", doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Prospective", keyMessage:"ICG 형광 요관박리술 적용으로 심부자궁내막증 vNOTES에서 요관 손상 없이 전례 성공", talkingPoint:"DIE 복잡 케이스에서 SP + ICG 조합의 안전성 강조 가능" },
-  { title:"Vaginal-Assisted Natural Orifice Translumenal Endoscopic Surgery Hysterectomy for Large Uterus Using the da Vinci SP", authors:"Kanno et al.", year:"2025", journal:"JMIG", hospital:"Japan", summary:"da Vinci SP 기반 VANH(Vaginal-Assisted NOTES Hysterectomy). 대형 자궁에서도 단일공 robotic transvaginal 접근 feasibility 및 ergonomics advantage 제시.", doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"da Vinci SP로 대형 자궁 VANH 수술 성공 — 크기 제한 없는 단일공 접근 가능성 입증", talkingPoint:"Large uterus 케이스에서 SP 도입 망설이는 술자 설득에 활용" },
-  { title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor: a case report", authors:"Kanno et al.", year:"2025", journal:"Gynecologic Oncology Reports", hospital:"Japan", summary:"da Vinci SP 이용 transvaginal staging surgery case report. Borderline ovarian tumor 의심 환자에서 scarless 접근 feasibility와 oncologic applicability 제시.", doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Ovarian Cystectomy", evidence:"Case Report", keyMessage:"da Vinci SP 경질 로봇수술로 난소 경계성 종양 병기 수술 성공 — 종양학적 안전성 확인", talkingPoint:"GYN Oncology 영역에서 SP 확장 가능성 논의 시 근거 자료" },
-  { title:"Robot-assisted transvaginal natural orifice transluminal endoscopic surgery for a 32-year-old patient with early-stage endometrial carcinoma (with video)", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"32세 조기 자궁내막암 환자에서 Robotic transvaginal NOTES 시행. 종양학적 안전성과 cosmetic benefit 동시 강조.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000795", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Case Report", keyMessage:"32세 조기 자궁내막암 환자에서 vNOTES로 종양학적 안전성과 미용 효과 동시 달성", talkingPoint:"젊은 부인암 환자 대상 최소침습 접근 논의 시 감성적 설득 포인트" },
-  { title:"Robotic assisted vaginal natural orifice transluminal endoscopic surgery high uterosacral ligament suspension (NOTES-HUS) for uterine prolapse", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"자궁탈출증 환자 대상 Robotic NOTES-HUS 적용. 단일공 transvaginal 접근 기반 pelvic floor reconstruction feasibility 보고.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000473", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Case Series", keyMessage:"Robotic NOTES-HUS로 자궁탈출증 환자에서 자궁 보존 여부와 무관하게 골반저 재건 성공", talkingPoint:"Pelvic floor 전문 술자 대상 vNOTES 확장 적용 논의 시 활용" },
-  { title:"Robotic transvaginal NOTES: A step-by-step approach to surgical technique", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"Robotic transvaginal NOTES 수술 technique standardization 논문. Port insertion, docking, suturing workflow 단계별 소개.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000588", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Technical Note", keyMessage:"Robotic transvaginal NOTES 표준화 술기 단계별 정리 — 내부 교육 및 온보딩 자료로 활용 가능", talkingPoint:"신규 vNOTES 술자 교육 및 병원 내 확산 프로그램 지원 자료" },
+  { title:"Vaginal-Assisted Natural Orifice Translumenal Endoscopic Surgery Hysterectomy for Large Uterus Using the da Vinci SP", authors:"Kanno et al.", year:"2025", journal:"Journal of Minimally Invasive Gynecology", hospital:"Japan", summary:"da Vinci SP 기반 VANH for large uterus. Large uterus에서도 single-port robotic transvaginal approach의 feasibility와 ergonomic advantage 제시.", doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Hysterectomy", evidence:"Level IV (Case Report / Video Article)", keyMessage:"da Vinci SP를 이용한 large uterus VANH 가능성을 제시.", talkingPoint:"Large uterus에서 transvaginal robotic approach를 망설이는 surgeon과 논의 시 활용 가능." },
+  { title:"Robot-assisted transvaginal staging surgery using da Vinci SP for suspected ovarian borderline tumor: a case report", authors:"Kanno et al.", year:"2025", journal:"Gynecologic Oncology Reports", hospital:"Japan", summary:"da Vinci SP를 이용한 transvaginal staging surgery case report. Suspected ovarian borderline tumor 환자에서 scarless transvaginal robotic approach의 feasibility와 oncologic applicability를 제시.", doi:"https://www.sciencedirect.com/science/article/pii/S2352578925003121", tech:"vNOTES", system:"da Vinci SP", attach:"Video", indication:"Ovarian borderline tumor / Staging surgery", evidence:"Level IV (Case Report)", keyMessage:"da Vinci SP 기반 transvaginal staging surgery 가능성을 제시한 oncology case report.", talkingPoint:"GYN Oncology 영역에서 SP transvaginal approach 확장 가능성을 설명할 때 활용 가능." },
+  { title:"Robot-assisted transvaginal surgery using da Vinci SP platform: technical feasibility and clinical application", authors:"Kanno et al.", year:"2025", journal:"Journal of Minimally Invasive Gynecology", hospital:"Japan", summary:"da Vinci SP 기반 robotic transvaginal surgery의 technical feasibility 및 clinical application을 정리. SP articulation과 narrow pelvic workspace에서의 ergonomic advantage 강조.", doi:"https://www.jmig.org/article/S1553-4650(25)00027-5/abstract", tech:"vNOTES", system:"da Vinci SP", attach:"—", indication:"Hysterectomy", evidence:"Level IV (Technical Feasibility / Case Series)", keyMessage:"da Vinci SP platform이 transvaginal robotic surgery에 적합한 platform일 수 있음을 제시.", talkingPoint:"SP의 single-arm architecture, articulation, pelvic workspace advantage를 설명할 때 활용 가능." },
+  { title:"Comparative outcomes of robotic single-port vNOTES versus robotic-Xi assisted single-incision transumbilical surgery for hysterectomy", authors:"Yang Q, Pasternak D, Zhang C, Guan X", year:"2026", journal:"Frontiers in Surgery", hospital:"USA", summary:"Robotic SP-vNOTES hysterectomy와 robotic Xi single-incision transumbilical hysterectomy를 비교. da Vinci SP Access Port와 4-P anchoring method를 사용한 standardized transvaginal access strategy 보고.", doi:"https://doi.org/10.3389/fsurg.2026.1820180", tech:"vNOTES", system:"da Vinci SP", attach:"Photo", indication:"Hysterectomy", evidence:"Level III (Comparative Cohort Study)", keyMessage:"Robotic SP-vNOTES hysterectomy is feasible using da Vinci SP Access Port and standardized 4-P anchoring technique.", talkingPoint:"현재 SP vNOTES clinical outcome과 port anchoring strategy를 연결해 설명할 수 있는 핵심 reference." },
+  { title:"Single-port robotic versus conventional laparoscopic vaginal-assisted NOTES hysterectomy", authors:"Kanno et al.", year:"2025", journal:"Asian Journal of Endoscopic Surgery", hospital:"Japan", summary:"Single-port robotic VANH와 conventional laparoscopic VANH 비교. Deep pelvis ergonomics 및 instrument collision reduction advantage 강조.", doi:"Pending publication / DOI not publicly confirmed", tech:"vNOTES", system:"da Vinci SP", attach:"Photo", indication:"Hysterectomy", evidence:"Level III (Comparative Study)", keyMessage:"Single-port robotic VANH는 conventional laparoscopic VANH 대비 deep pelvic workspace에서 ergonomic advantage 가능성을 제시.", talkingPoint:"SP와 conventional laparoscopic vNOTES/VANH 비교 논의 시 활용 가능." },
+  { title:"Enhanced surgical efficiency with the next-generation da Vinci 5 system compared with da Vinci Xi: a retrospective cohort study in total laparoscopic hysterectomy", authors:"Hyunkyoung Seo et al.", year:"2026", journal:"Journal of Robotic Surgery", hospital:"Korea", summary:"양성 부인과 질환으로 robotic TLH를 받은 124명 환자 대상 DV5(n=48)와 Xi(n=76) 비교. DV5군에서 console time(63.6 vs 86.6분), total surgical time(109.8 vs 153.2분) 유의하게 짧음. 다변량 보정 후에도 총 수술시간 43.8분 단축 효과 유지.", doi:"https://doi.org/10.1007/s11701-026-03481-8", tech:"Hysterectomy", system:"da Vinci 5", attach:"None", indication:"Hysterectomy", evidence:"Level III (Retrospective Cohort Study)", keyMessage:"DV5는 양성 부인과 robotic TLH에서 Xi 대비 유의한 수술 효율 향상(console time 및 total surgical time 단축)을 보여주었으며, 단기 perioperative outcome은 유사했다.", talkingPoint:"DV5의 GYN value proposition을 workflow efficiency 향상 관점에서 설명하기에 적합. E-200, integrated smoke evacuation, surgeon autonomy 등 플랫폼 통합 기능과 연결." },
+  { title:"Robotic transvaginal natural orifice transluminal endoscopic surgery (RvNOTES) hysterectomy using the da Vinci SP Surgical System", authors:"Kim et al.", year:"2025", journal:"Frontiers in Surgery", hospital:"Korea", summary:"RvNOTES hysterectomy using the da Vinci SP system was feasible and safe with favorable perioperative outcomes and no major complications in a small case series.", doi:"https://pmc.ncbi.nlm.nih.gov/articles/PMC13216655/", tech:"vNOTES", system:"da Vinci SP", attach:"Clinical Images / Video", indication:"Hysterectomy", evidence:"Level IV (Case Series)", keyMessage:"SP 기반 RvNOTES 자궁절제술의 기술적 수행 가능성(feasibility)과 안전성(safety)을 입증", talkingPoint:"SP 플랫폼의 Transvaginal 접근 수술 적용 가능성을 뒷받침하며, 무흉터(Scarless) 최소침습 부인과 수술의 잠재적 이점을 보여준다." },
+  { title:'Application of "4-P" Port Anchoring in Transvaginal Natural Orifice Transluminal Endoscopic Surgery (vNOTES): Technique and Initial Feasibility', authors:"Koythong T, Thigpen B, Sunkara S, Guan X", year:"2025", journal:"Journal of Robotic Surgery", hospital:"USA", summary:"4개의 fixation suture를 vaginal cuff에 배치해 wound retractor를 고정하는 4-P port anchoring technique 소개. Port stability, gas leakage prevention, workspace maintenance를 목표로 함.", doi:"https://doi.org/10.1007/s11701-025-02653-2", tech:"vNOTES", system:"da Vinci SP", attach:"Photo / Technique", indication:"Hysterectomy", evidence:"Level IV (Technical Note / Initial Feasibility)", keyMessage:"Stable wound retractor fixation is critical to prevent gas leakage and port displacement during vNOTES.", talkingPoint:"SP vNOTES port fixation, gas leakage prevention, workspace maintenance를 설명할 때 핵심 술기 reference." },
+  { title:"ICG-assisted retrograde ureterolysis in robotic vNOTES for deep infiltrating endometriosis", authors:"Guan X et al.", year:"2023", journal:"Journal of Minimally Invasive Gynecology", hospital:"China", summary:"DIE robotic vNOTES에서 ICG fluorescence 기반 retrograde ureterolysis 적용. 요관 손상 없이 수술 성공 및 operative efficiency 향상 가능성 보고.", doi:"https://www.jmig.org/article/S1553-4650(23)00051-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Deep infiltrating endometriosis", evidence:"Level IV (Technical Note)", keyMessage:"ICG fluorescence를 활용해 robotic vNOTES에서 ureter identification과 retrograde ureterolysis를 보조할 수 있음.", talkingPoint:"DIE 복잡 케이스에서 Firefly/ICG value proposition과 연결 가능." },
+  { title:"Gasless versus traditional robotic vNOTES hysterectomy: a comparative study", authors:"Mei J, Lin J et al.", year:"2023", journal:"Frontiers in Medicine", hospital:"China", summary:"Gasless versus conventional robotic vNOTES hysterectomy 비교. 수술시간, 출혈량, 입원기간 및 gas-related side effects 분석. Gasless군에서 복부팽만 관련 불편감 감소.", doi:"https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2023.1117158/full", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Level III (Comparative Study)", keyMessage:"Gasless robotic vNOTES는 traditional robotic vNOTES 대비 gas-related discomfort를 줄일 수 있음.", talkingPoint:"환자 경험, postoperative discomfort, gasless 접근의 차별성을 설명할 때 활용 가능." },
+  { title:"Hysterectomy and Adnexal Procedures by Vaginal Natural Orifice Transluminal Endoscopic Surgery (VNH): Initial Findings From a Korean Surgeon", authors:"Kim MS, Noh JJ, Kim TJ", year:"2021", journal:"Frontiers in Medicine", hospital:"Korea", summary:"국내 surgeon의 conventional vNOTES hysterectomy 및 adnexal surgery 초기 경험. Vaginal access creation, wound retractor insertion, multi-channel platform placement 방법을 기술.", doi:"https://doi.org/10.3389/fmed.2020.583147", tech:"vNOTES", system:"Laparoscopic", attach:"Photo", indication:"Hysterectomy", evidence:"Level IV (Single-center case series)", keyMessage:"표준화된 wound retractor placement와 port insertion은 vNOTES에서 exposure와 pneumoperitoneum 유지에 중요함.", talkingPoint:"SP vNOTES 임상근거는 아니지만, 국내 vNOTES access-port insertion technique 참고문헌으로 유용." },
+  { title:"Robot-assisted vNOTES for the treatment of endometriosis: initial experience and technical considerations", authors:"Zhang X, Guan X et al.", year:"2021", journal:"Journal of Minimally Invasive Gynecology", hospital:"China", summary:"33례 자궁내막증 환자 대상 robotic vNOTES 적용. 수술 후 VAS pain score 감소 및 재발 없음 보고. DIE 적용 가능성 제시.", doi:"https://www.jmig.org/article/S1553-4650(21)00283-1/abstract", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Endometriosis", evidence:"Level IV (Case Series)", keyMessage:"Robotic vNOTES가 endometriosis 및 deep pelvic dissection 영역까지 확장 가능함을 제시.", talkingPoint:"Endometriosis surgeon 대상 vNOTES 적용 가능성을 논의할 때 핵심 reference." },
+  { title:"Robotic glove port technique for the endowristed rigid instruments in robotic single-site transabdominal and transvaginal surgery", authors:"Yang YS", year:"2021", journal:"Journal of Robotic Surgery", hospital:"Korea", summary:"35명 대상 robotic glove port technique(RGPT) 보고. Myomectomy, adenomyomectomy, ovarian cystectomy, NOTES hysterectomy 포함. 전례 성공, major complication 없음.", doi:"https://link.springer.com/article/10.1007/s11701-020-01093-4", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Myomectomy", evidence:"Level IV (Case Series)", keyMessage:"Robotic glove port technique을 통해 다양한 gynecologic procedures에서 single-site robotic access 가능성을 제시.", talkingPoint:"SP 도입 전 Xi 기반 single-site/transvaginal robotic surgery의 historical reference로 활용 가능." },
+  { title:"Robot-assisted transvaginal NOTES for early-stage endometrial carcinoma (with video)", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"32세 early-stage endometrial carcinoma 환자에서 robotic transvaginal NOTES를 시행한 case report. 종양학적 안전성과 cosmetic benefit를 함께 강조.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000795", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Endometriosis", evidence:"Level IV (Case Report)", keyMessage:"Robotic transvaginal NOTES가 selected early-stage endometrial cancer 환자에서 적용 가능함을 제시.", talkingPoint:"젊은 부인암 환자에서 scarless approach와 oncologic feasibility를 논의할 때 활용 가능." },
+  { title:"Robotic assisted vaginal NOTES high uterosacral ligament suspension (NOTES-HUS) for uterine prolapse", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"자궁탈출증 환자에서 robotic assisted vaginal NOTES-HUS를 시행한 case report. Transvaginal single-site 접근 기반 pelvic floor reconstruction 가능성 제시.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000473", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Other", evidence:"Level IV (Case Report)", keyMessage:"Robotic vNOTES를 이용해 pelvic floor reconstruction까지 확장 가능함을 제시.", talkingPoint:"Urogynecology 또는 pelvic floor surgeon 대상 vNOTES 확장 적용을 설명할 때 활용 가능." },
+  { title:"Robotic transvaginal NOTES: A step-by-step approach to surgical technique", authors:"Wang et al.", year:"2022", journal:"Gynecologic Oncology Reports", hospital:"China", summary:"Robotic transvaginal NOTES의 수술 technique standardization 논문. Port insertion, docking, suturing workflow를 단계별로 소개.", doi:"https://www.sciencedirect.com/science/article/pii/S2666676622000588", tech:"vNOTES", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Level V (Technical Note)", keyMessage:"Robotic transvaginal NOTES 술기를 단계별로 정리한 교육용 reference.", talkingPoint:"신규 vNOTES 술자 교육, internal onboarding, case observation guide 작성 시 활용 가능." },
+  { title:"Robotic natural orifice transluminal endoscopic surgery (NOTES) hysterectomy as a scarless and gasless surgery", authors:"Yang YS", year:"2020", journal:"Surgical Endoscopy", hospital:"Korea", summary:"13명 양성 자궁질환 환자 대상 robotic NOTES hysterectomy 초기 보고. Gasless transvaginal approach 기반 scarless surgery 가능성 제시. Console time 135분, EBL 50mL, major complication 없음.", doi:"https://link.springer.com/article/10.1007/s00464-019-07115-z", tech:"vNOTES", system:"da Vinci Xi", attach:"Photo", indication:"Hysterectomy", evidence:"Level IV (Case Series)", keyMessage:"Robotic NOTES hysterectomy가 gasless and scarless approach로 feasible함을 제시한 초기 한국 경험.", talkingPoint:"국내 robotic vNOTES 초기 도입 근거로 활용 가능." },
+  { title:"Robotic Surgery in Gynecology: An Updated Systematic Review", authors:"L. Weinberg et al.", year:"2011", journal:"Rambam Maimonides Medical Journal", hospital:"Other", summary:"부인과 로봇수술 관련 기존 문헌을 종합한 systematic review. Benign gynecology와 gynecologic oncology 전반에서 로봇수술의 feasibility, safety, perioperative benefit 정리. 출혈 감소, 재원기간 단축, 통증 감소, 빠른 회복 등의 장점 보고.", doi:"https://pmc.ncbi.nlm.nih.gov/articles/PMC10734560/", tech:"GYN Robotic", system:"da Vinci Xi", attach:"Video", indication:"Hysterectomy", evidence:"Level I (Systematic Review)", keyMessage:"부인과 영역에서 로봇수술은 전반적으로 시행 가능하고 안전한 최소침습수술 플랫폼.", talkingPoint:"GYN robotic surgery 전반의 근거 흐름을 요약할 때 활용 가능한 background reference." },
 ];
 
 /* ── 필터 정의 ── */
 const PF = {
   category: [
-    {k:'all', l:'전체'},
-    {k:'vnotes', l:'vNOTES'},
-    {k:'sp',     l:'SP'},
+    {k:'all',          l:'전체'},
+    {k:'vnotes',       l:'vNOTES'},
+    {k:'Hysterectomy', l:'Hysterectomy'},
+    {k:'GYN Robotic',  l:'GYN Robotic'},
   ],
   indication: [
-    {k:'all',           l:'전체'},
-    {k:'Hysterectomy',  l:'Hysterectomy'},
-    {k:'Endometriosis', l:'Endometriosis'},
-    {k:'Myomectomy',    l:'Myomectomy'},
-    {k:'Ovarian Cystectomy', l:'Ovarian Cystectomy'},
+    {k:'all',                          l:'전체'},
+    {k:'Hysterectomy',                 l:'Hysterectomy'},
+    {k:'Endometriosis',                l:'Endometriosis'},
+    {k:'Deep infiltrating endometriosis', l:'DIE'},
+    {k:'Myomectomy',                   l:'Myomectomy'},
+    {k:'Ovarian borderline tumor / Staging surgery', l:'Ovarian / Oncology'},
+    {k:'Other',                        l:'Other'},
   ],
   platform: [
-    {k:'all',        l:'전체'},
-    {k:'da Vinci SP',l:'da Vinci SP'},
-    {k:'da Vinci Xi',l:'da Vinci Xi'},
-    {k:'da Vinci 5', l:'da Vinci 5'},
+    {k:'all',          l:'전체'},
+    {k:'da Vinci SP',  l:'da Vinci SP'},
+    {k:'da Vinci Xi',  l:'da Vinci Xi'},
+    {k:'da Vinci 5',   l:'da Vinci 5'},
+    {k:'Laparoscopic', l:'Laparoscopic'},
   ],
   evidence: [
-    {k:'all', l:'전체', s:0},
-    {k:'1',   l:'Level 1', s:5},
-    {k:'2',   l:'Level 2', s:4},
-    {k:'3',   l:'Level 3', s:3},
-    {k:'4',   l:'Level 4', s:2},
-    {k:'5',   l:'Level 5', s:1},
+    {k:'all', l:'전체',  s:0},
+    {k:'1',   l:'Lv.1 — RCT / Systematic Review', s:5},
+    {k:'2',   l:'Lv.2 — Prospective Comparative', s:4},
+    {k:'3',   l:'Lv.3 — Retrospective / Cohort',  s:3},
+    {k:'4',   l:'Lv.4 — Case Report / Tech Note', s:2},
+    {k:'5',   l:'Lv.5 — Expert Opinion / Review', s:1},
   ],
   country: [
     {k:'all',   l:'전체'},
     {k:'Korea', l:'🇰🇷 Korea'},
     {k:'Japan', l:'🇯🇵 Japan'},
     {k:'China', l:'🇨🇳 China'},
+    {k:'USA',   l:'🇺🇸 USA'},
     {k:'Other', l:'🌏 Other'},
   ],
 };
@@ -4821,20 +4832,24 @@ function pStars(n) {
 }
 
 function pCategory(tech) {
-  const s = (tech||'').toLowerCase();
-  return s.includes('sp') && !s.includes('notes') ? 'sp' : 'vnotes';
+  const t = (tech||'').toLowerCase();
+  if(t.includes('vnotes') || t.includes('notes')) return 'vnotes';
+  if(t.includes('hysterectomy')) return 'Hysterectomy';
+  if(t.includes('gyn')) return 'GYN Robotic';
+  return 'vnotes';
 }
+
 
 function pCountry(hospital) {
-  const s = (hospital||'').toLowerCase();
-  if(s.includes('korea') || s.includes('eulji') || /[가-힣]/.test(hospital)) return 'Korea';
-  if(s.includes('japan')) return 'Japan';
-  if(s.includes('china')) return 'China';
-  if(hospital) return 'Other';
-  return '';
+  const h = (hospital||'').toLowerCase();
+  if(h.includes('korea') || h.includes('한국') || h.includes('서울') || h.includes('부산')) return 'Korea';
+  if(h.includes('japan')) return 'Japan';
+  if(h.includes('china')) return 'China';
+  if(h.includes('usa') || h.includes('united states') || h.includes('emory') || h.includes('nyu') || h.includes('christ')) return 'USA';
+  return 'Other';
 }
 
-/* ── 필터 초기화 ── */
+
 function resetPaperFilters() {
   PF_active = { category:'all', indication:'all', platform:'all', evidence:'all', year:'all', country:'all' };
   const s = document.getElementById('paperSearch');
