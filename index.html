@@ -1503,6 +1503,55 @@ body.dark #paperGrid > div {
 #paperGrid > div {
   break-inside: avoid;
 }
+
+/* ── Article Lightbox ── */
+#artLightbox {
+  position:fixed; inset:0; z-index:10000;
+  background:rgba(0,0,0,0);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:background 0.25s ease, opacity 0.25s ease;
+  backdrop-filter:blur(0px);
+}
+#artLightbox.open {
+  background:rgba(0,0,0,0.82);
+  opacity:1; pointer-events:all;
+  backdrop-filter:blur(12px);
+}
+#artLightboxCard {
+  position:relative;
+  width:min(780px, 94vw);
+  background:var(--surface);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,0.4);
+  transform:scale(0.9) translateY(20px);
+  transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;
+  opacity:0;
+  max-height:92vh;
+  display:flex; flex-direction:column;
+}
+#artLightbox.open #artLightboxCard {
+  transform:scale(1) translateY(0);
+  opacity:1;
+}
+#artLightboxImg {
+  width:100%; aspect-ratio:16/9; object-fit:cover; display:block; flex-shrink:0;
+}
+#artLightboxBody {
+  padding:20px 24px 22px; display:flex; flex-direction:column; gap:10px;
+  overflow-y:auto;
+}
+#artLightboxClose {
+  position:absolute; top:12px; right:12px;
+  width:32px; height:32px; border-radius:50%;
+  background:rgba(0,0,0,0.5); border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:white; font-size:16px; line-height:1;
+  transition:background 0.15s; z-index:2;
+  backdrop-filter:blur(8px);
+}
+#artLightboxClose:hover { background:rgba(0,0,0,0.75); }
 </style>
 </head>
 <body>
@@ -4010,7 +4059,7 @@ function buildVideoFilters() {
   // 데이터에서 실제 값 추출
   const ops  = [...new Set(VIDEOS.map(v=>v.op ).filter(Boolean))].sort();
   const syss = [...new Set(VIDEOS.map(v=>v.sys).filter(Boolean))].sort();
-  const advs = [...new Set(VIDEOS.map(v=>v.adv).filter(Boolean)).filter(a=>a&&a!=='-')].sort();
+  const advs = [...new Set(VIDEOS.map(v=>v.adv).filter(Boolean))].filter(a=>a&&a!=='-').sort();
 
   const make = (id, key, vals, filters) => {
     const el = document.getElementById(id); if(!el) return; el.innerHTML='';
@@ -4425,6 +4474,7 @@ function buildKolFilters() {
 }
 
 
+let _artCollapsed = new Set();
 function renderKOL() {
   const q = document.getElementById('kolSearch').value.toLowerCase();
   let items = ARTICLES
@@ -4471,7 +4521,7 @@ function renderKOL() {
     popup = document.createElement('div');
     popup.id = 'artImgPopup';
     popup.style.cssText = [
-      'position:fixed','z-index:9999','pointer-events:none',
+      'position:fixed','z-index:9999','pointer-events:auto','cursor:pointer',
       'width:340px',
       'background:var(--surface)',
       'border-radius:16px','overflow:hidden',
@@ -4490,10 +4540,12 @@ function renderKOL() {
     pInfo.style.cssText = 'padding:10px 14px 12px;display:flex;flex-direction:column;gap:3px';
     popup.appendChild(pInfo);
 
+    popup.onmouseleave = () => hidePopup();
     document.body.appendChild(popup);
   }
 
   function showPopup(e, a) {
+    popup.onclick = () => { hidePopup(); openArtLightbox(a); };
     if(!a.image || a.image === '이미지 확인 필요') return;
     document.getElementById('artImgPopupImg').src = a.image;
     const info = document.getElementById('artImgPopupInfo');
@@ -4594,11 +4646,12 @@ function renderKOL() {
         row.style.borderColor = 'var(--border)';
         row.style.transform = 'translateX(2px)';
       };
-      row.onmouseleave = () => {
+      row.onmouseleave = (e) => {
         row.style.background = 'var(--surface)';
         row.style.borderColor = 'transparent';
         row.style.transform = '';
-        hidePopup();
+        // 팝업으로 이동한 경우 숨기지 않음
+        if(!document.getElementById('artImgPopup').matches(':hover')) hidePopup();
       };
       row.onmousemove = (e) => movePopup(e);
       row.onmouseenter = (e) => {
@@ -6102,6 +6155,77 @@ function renderCardiacSurgeons() {
 }
 
 let _surgeonCatFilter = 'all';
+
+/* ── Article Lightbox Functions ── */
+function openArtLightbox(a) {
+  const lb   = document.getElementById('artLightbox');
+  const img  = document.getElementById('artLightboxImg');
+  const tag  = document.getElementById('artLightboxTag');
+  const ttl  = document.getElementById('artLightboxTitle');
+  const meta = document.getElementById('artLightboxMeta');
+  const desc = document.getElementById('artLightboxDesc');
+  const link = document.getElementById('artLightboxLink');
+  if(!lb) return;
+
+  // 이미지
+  if(a.image && a.image !== '이미지 확인 필요') {
+    img.src = a.image; img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+  }
+
+  // 태그 배지
+  const TAG_COLOR = {
+    vnotes:'#0F6E56',milestone:'#BA7517',dv5:'#185FA5',
+    myoma:'#993556',endometriosis:'#3C3489',gyn:'#0F6E56',
+  };
+  const tag_k = (a.tag||'').toLowerCase();
+  const tagClr = TAG_COLOR[tag_k] || '#888';
+  tag.innerHTML = `
+    <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:${tagClr}18;color:${tagClr};font-family:var(--mono);letter-spacing:0.05em">${(a.tag||'').toUpperCase()}</span>
+    <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${(a.date||'').slice(0,10)}</span>
+  `;
+
+  // 제목
+  ttl.textContent = a.title || '';
+
+  // 병원 · 술자
+  meta.innerHTML = `
+    <span style="font-weight:700;color:var(--text)">${a.hospital||''}</span>
+    ${a.surgeon ? `<span style="margin:0 4px;color:var(--text3)">·</span><span>${a.surgeon}</span>` : ''}
+  `;
+
+  // 설명
+  if(a.desc && a.desc !== a.title) {
+    desc.textContent = a.desc;
+    desc.style.display = 'block';
+  } else {
+    desc.style.display = 'none';
+  }
+
+  // 링크
+  if(a.link_url) {
+    link.href = a.link_url;
+    link.style.display = 'inline-flex';
+  } else {
+    link.style.display = 'none';
+  }
+
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeArtLightbox(e) {
+  if(e && e.target !== document.getElementById('artLightbox') && !e.target.closest('#artLightboxClose')) return;
+  const lb = document.getElementById('artLightbox');
+  if(lb) lb.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeArtLightbox({target: document.getElementById('artLightbox')});
+});
+
 function toggleYear(yr) {
   const sec=document.getElementById('yr_'+yr);
   const arr=document.getElementById('yarr_'+yr);
@@ -6588,7 +6712,7 @@ function renderCardiacVideos() {
 function buildCardiacVideoFilters() {
   const ops  = [...new Set(CARDIAC_VIDEOS.map(v=>v.op ).filter(Boolean))].sort();
   const syss = [...new Set(CARDIAC_VIDEOS.map(v=>v.sys).filter(Boolean))].sort();
-  const advs = [...new Set(CARDIAC_VIDEOS.map(v=>v.adv).filter(Boolean)).filter(a=>a&&a!=='-')].sort();
+  const advs = [...new Set(CARDIAC_VIDEOS.map(v=>v.adv).filter(Boolean))].filter(a=>a&&a!=='-').sort();
 
   const make = (id, key, vals, filters) => {
     const el = document.getElementById(id); if(!el) return; el.innerHTML='';
@@ -7286,5 +7410,31 @@ window.addEventListener('DOMContentLoaded', () => {
     <span class="mobile-tab-label">캘린더</span>
   </button>
 </nav>
+
+<!-- ── Article Image Lightbox ── -->
+<div id="artLightbox" onclick="closeArtLightbox(event)">
+  <div id="artLightboxCard">
+    <button id="artLightboxClose" onclick="closeArtLightbox()" aria-label="닫기">✕</button>
+    <img id="artLightboxImg" src="" alt="">
+    <div id="artLightboxBody">
+      <div id="artLightboxTag" style="display:flex;align-items:center;gap:8px"></div>
+      <div id="artLightboxTitle" style="font-size:17px;font-weight:700;color:var(--text);line-height:1.45;letter-spacing:-0.02em"></div>
+      <div id="artLightboxMeta" style="font-size:13px;color:var(--text2)"></div>
+      <div id="artLightboxDesc" style="font-size:13px;color:var(--text3);line-height:1.6;padding:12px 14px;background:var(--surface2);border-radius:10px"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <a id="artLightboxLink" href="#" target="_blank" rel="noopener"
+           style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:10px;background:var(--primary);color:white;text-decoration:none;font-size:13px;font-weight:600;font-family:var(--font)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          기사 원문 보기
+        </a>
+        <button onclick="closeArtLightbox()"
+           style="padding:10px 16px;border-radius:10px;background:var(--surface2);color:var(--text2);border:0.5px solid var(--border);cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font)">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
