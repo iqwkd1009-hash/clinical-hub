@@ -361,7 +361,7 @@ body {
   .sys-badge-thumb {
     position:absolute; top:8px; left:8px;
     font-size:10px; font-weight:600; padding:2px 7px; border-radius:5px;
-    font-family:var(--mono); backdrop-filter:blur(4px);
+    font-family:var(--mono); -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
   }
   .sys-Xi { background:rgba(39,80,10,0.85); color:#C6E89A; }
   .sys-DV5 { background:rgba(60,52,137,0.85); color:#C4BFFF; }
@@ -436,7 +436,7 @@ body {
     display:none; position:fixed; inset:0;
     background:rgba(0,0,0,0.6); z-index:200;
     align-items:center; justify-content:center;
-    padding:20px; backdrop-filter:blur(4px);
+    padding:20px; -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
   }
   .modal-overlay.open { display:flex; }
   .modal {
@@ -522,7 +522,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
   /* ── 2-TIER NAV ── */
   .nav-top {
   background: rgba(255,255,255,0.85);
-  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid rgba(0,0,0,0.06);
   padding: 0 28px;
@@ -592,7 +592,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
 
   .nav-sub {
   background: rgba(255,255,255,0.85);
-  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid rgba(0,0,0,0.06);
   padding: 0 28px;
@@ -668,7 +668,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
   .case-row:last-child { border-bottom:0; }
   .force-bar { height:8px; border-radius:99px; background:var(--surface2); overflow:hidden; }
   .force-bar > span { display:block; height:100%; background:linear-gradient(90deg,#E8B4C0,#C0143C); border-radius:99px; }
-  .detail-panel { display:none; position:fixed; inset:0; z-index:260; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:18px; }
+  .detail-panel { display:none; position:fixed; inset:0; z-index:260; background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:18px; }
   .detail-panel.open { display:flex; }
   .detail-card { width:100%; max-width:760px; background:var(--surface); border-radius:18px; box-shadow:0 24px 70px rgba(0,0,0,.35); overflow:hidden; border:1px solid var(--border); }
   .detail-head { padding:20px 24px; background:linear-gradient(135deg,var(--primary),#8B0020); color:white; display:flex; justify-content:space-between; gap:18px; }
@@ -729,7 +729,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
   }
   .popup-sys-badge {
     font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px;
-    font-family:var(--mono); backdrop-filter:blur(4px);
+    font-family:var(--mono); -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
   }
   .popup-body { padding: 14px; }
   .popup-op { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--primary); font-family:var(--mono); margin-bottom:5px; }
@@ -749,7 +749,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
   .popup-btn.ext:hover { background:var(--border); }
   /* drawer */
   .mobile-filter-btn { display: none; }
-  .drawer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; backdrop-filter:blur(2px); }
+  .drawer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px); }
   .drawer-overlay.open { display:block; }
   .sidebar-inner {
   padding: 0 14px;
@@ -926,7 +926,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
     position: absolute;
     inset: 0;
     background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);backdrop-filter: blur(4px);
   }
   #phoneSpecSheetPanel {
     position: absolute;
@@ -1020,7 +1020,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
 /* ── Paper Modal ── */
 #paperModalOverlay {
   display:none;position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);
+  background:rgba(0,0,0,0.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
   align-items:center;justify-content:center;padding:20px;
 }
 #paperModalOverlay.open { display:flex; }
@@ -1193,7 +1193,7 @@ button, .btn {
 /* mobile tab bar */
 .mobile-tab-bar {
   background: rgba(255,255,255,0.9) !important;
-  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
   border-top: 1px solid rgba(0,0,0,0.08) !important;
 }
@@ -1299,7 +1299,7 @@ button, .btn {
   bottom: 7px;
   right: 7px;
   background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);backdrop-filter: blur(8px);
   color: white;
   font-size: 10px;
   font-weight: 600;
@@ -1430,20 +1430,20 @@ body.dark #paperGrid > div {
   transform: translateY(-3px);
   box-shadow: 0 0 0 0.5px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.12);
 }
-.art-thumb { position: relative; aspect-ratio: 16/9; background: #111; overflow: hidden; }
+.art-thumb { position: relative; height: 160px; background: #111; overflow: hidden; }
 .art-thumb img { width:100%; height:100%; object-fit:cover; transition: transform 0.3s; display:block; }
 .art-thumb-card:hover .art-thumb img { transform: scale(1.03); }
 .art-thumb-fallback { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:32px; }
 .art-thumb-badge {
   position:absolute; top:8px; left:8px;
-  background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.55); -webkit-backdrop-filter: blur(8px);backdrop-filter: blur(8px);
   border-radius: 20px; padding: 2px 8px;
   font-size: 9px; font-weight: 700; color: white;
   font-family: var(--mono); letter-spacing: 0.05em;
 }
 .art-thumb-date {
   position:absolute; top:8px; right:8px;
-  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(8px);backdrop-filter: blur(8px);
   border-radius: 20px; padding: 2px 8px;
   font-size: 9px; color: rgba(255,255,255,0.85);
   font-family: var(--mono);
@@ -1511,12 +1511,12 @@ body.dark #paperGrid > div {
   display:flex; align-items:center; justify-content:center;
   opacity:0; pointer-events:none;
   transition:background 0.25s ease, opacity 0.25s ease;
-  backdrop-filter:blur(0px);
+  -webkit-backdrop-filter:blur(0px);backdrop-filter:blur(0px);
 }
 #artLightbox.open {
   background:rgba(0,0,0,0.82);
   opacity:1; pointer-events:all;
-  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
 }
 #artLightboxCard {
   position:relative;
@@ -1536,7 +1536,7 @@ body.dark #paperGrid > div {
   opacity:1;
 }
 #artLightboxImg {
-  width:100%; aspect-ratio:16/9; object-fit:cover; display:block; flex-shrink:0;
+  width:100%; height:220px; object-fit:cover; display:block; flex-shrink:0;
 }
 #artLightboxBody {
   padding:20px 24px 22px; display:flex; flex-direction:column; gap:10px;
@@ -1549,9 +1549,14 @@ body.dark #paperGrid > div {
   display:flex; align-items:center; justify-content:center;
   color:white; font-size:16px; line-height:1;
   transition:background 0.15s; z-index:2;
-  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
 }
 #artLightboxClose:hover { background:rgba(0,0,0,0.75); }
+
+/* ── Flexbox gap fallback for Safari 14 / Whale ── */
+@supports not (gap: 1px) {
+  .nav-top-left { --gap-fallback: 8px; }
+}
 </style>
 </head>
 <body>
@@ -3503,7 +3508,7 @@ body.dark #paperGrid > div {
 <!-- ══════════════════════════════════════════ -->
 <!--  ARTICLE ADD MODAL                        -->
 <!-- ══════════════════════════════════════════ -->
-<div id="articleModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closeArticleModal(event)">
+<div id="articleModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)" onclick="closeArticleModal(event)">
   <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:16px;font-weight:700;color:var(--text)">기사 추가하기</div>
@@ -3588,7 +3593,7 @@ body.dark #paperGrid > div {
   </div>
 </div>
 
-<div id="paperModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
+<div id="paperModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
   <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:16px;font-weight:700;color:var(--text)">논문 추가하기</div>
@@ -3643,7 +3648,7 @@ body.dark #paperGrid > div {
   </div>
 </div>
 
-<div id="uploadOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="closeUploadModal(event)">
+<div id="uploadOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)" onclick="closeUploadModal(event)">
   <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:16px;font-weight:700;color:var(--text)">영상 추가하기</div>
@@ -3725,6 +3730,8 @@ body.dark #paperGrid > div {
 </div>
 
 <script>
+if(!Promise.allSettled){Promise.allSettled=promises=>Promise.all(promises.map(p=>Promise.resolve(p).then(v=>({status:'fulfilled',value:v}),e=>({status:'rejected',reason:e}))));}
+
 /* ══════════════════════ DATA ══════════════════════ */
 
 let VIDEOS = [
@@ -7248,10 +7255,11 @@ async function fetchOgImage(url) {
 
   for(const makeProxy of proxies) {
     try {
-      const res = await fetch(makeProxy(url), {
-        signal: AbortSignal.timeout(5000),
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-      });
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 5000);
+      let res;
+      try { res = await fetch(makeProxy(url), { signal: ctrl.signal }); }
+      finally { clearTimeout(tid); }
       if(!res.ok) continue;
       const html = await res.text();
 
@@ -7340,7 +7348,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <div id="phoneSpecSheet" style="display:none;position:fixed;inset:0;z-index:500">
-  <div onclick="closePhoneSpecSheet()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px)"></div>
+  <div onclick="closePhoneSpecSheet()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)"></div>
   <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;padding:12px 0 calc(env(safe-area-inset-bottom,0px) + 16px);box-shadow:0 -4px 40px rgba(0,0,0,0.15)">
     <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>
     <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;font-family:var(--mono);padding:0 20px 12px">진료과 선택</div>
