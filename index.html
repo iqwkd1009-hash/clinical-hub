@@ -4007,28 +4007,34 @@ function countVideo(key, val) {
 }
 
 function buildVideoFilters() {
-  const make = (id, key, vals) => {
+  // 데이터에서 실제 값 추출
+  const ops  = [...new Set(VIDEOS.map(v=>v.op ).filter(Boolean))].sort();
+  const syss = [...new Set(VIDEOS.map(v=>v.sys).filter(Boolean))].sort();
+  const advs = [...new Set(VIDEOS.map(v=>v.adv).filter(Boolean)).filter(a=>a&&a!=='-')].sort();
+
+  const make = (id, key, vals, filters) => {
     const el = document.getElementById(id); if(!el) return; el.innerHTML='';
-    // 전체 칩
     const all = document.createElement('button');
-    all.className = 'chip-filter-btn' + (vFilters[key]==='all' ? ' active' : '');
+    all.className = 'chip-filter-btn' + (filters[key]==='all'?' active':'');
     all.textContent = '전체';
-    all.onclick = () => { vFilters[key]='all'; renderVideos(); };
+    all.onclick = () => { filters[key]='all'; renderVideos(); };
     el.appendChild(all);
     vals.forEach(v => {
+      if(!v || v==='-') return;
+      const cnt = VIDEOS.filter(vi => vi[key]===v).length;
+      if(!cnt) return;
       const btn = document.createElement('button');
-      btn.className = 'chip-filter-btn' + (vFilters[key]===v ? ' active' : '');
+      btn.className = 'chip-filter-btn' + (filters[key]===v?' active':'');
       btn.textContent = v;
-      btn.onclick = () => { vFilters[key]=v; renderVideos(); };
+      btn.onclick = () => { filters[key]=v; renderVideos(); };
       el.appendChild(btn);
     });
   };
-  make('opFilters','op', uniq(VIDEOS.map(v=>v.op)));
-  make('sysFilters','sys', uniq(VIDEOS.map(v=>v.sys)));
-  // ADV. Tech 필터 — VSE & TilePro는 분리해서 각각 매칭
-  const advVals = ['VSE','TilePro','Force Bipolar','Long Bipolar','Suction & Irrigator','ITM'];
-  make('advFilters','adv', advVals);
+  make('opFilters',  'op',  ops,  vFilters);
+  make('sysFilters', 'sys', syss, vFilters);
+  make('advFilters', 'adv', advs, vFilters);
 }
+
 
 function sysClass(s){ return s==='Xi'?'sys-Xi':s==='DV5'?'sys-DV5':'sys-SP'; }
 
@@ -4365,36 +4371,60 @@ function resetKolFilters() {
 }
 
 function buildKolFilters() {
-  function makeGroup(containerId, defs, filterKey) {
-    const el = document.getElementById(containerId); if(!el) return; el.innerHTML = '';
-    defs.forEach(d => {
-      const count = ARTICLES.filter(a => a[filterKey] === d.key).length;
-      if(!count) return;
+  // 태그별 색상
+  const TAG_COLOR_MAP = {
+    vnotes:'#0F6E56', milestone:'#BA7517', dv5:'#185FA5',
+    myoma:'#993556', endometriosis:'#3C3489', gyn:'#0F6E56',
+    hysterectomy:'#0071E3',
+  };
+
+  function makeChips(elId, key, extractFn, labelFn) {
+    const el = document.getElementById(elId); if(!el) return; el.innerHTML='';
+    const counts = {};
+    ARTICLES.forEach(a => {
+      const v = extractFn(a);
+      if(v) counts[v] = (counts[v]||0) + 1;
+    });
+    // 전체
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (kolFilters[key]==='all'?' active':'');
+    allBtn.innerHTML = (currentLang==='en'?'All':'전체') + ' <span class="btn-count">' + ARTICLES.length + '</span>';
+    allBtn.onclick = () => { kolFilters[key]='all'; renderKOL(); };
+    el.appendChild(allBtn);
+    // 건수 많은 순 정렬
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([v,cnt]) => {
       const btn = document.createElement('button');
-      btn.className = 'filter-btn' + (kolFilters[filterKey]===d.key?' active':'');
-      btn.innerHTML = `${defLabel(d)} <span class="btn-count">${count}</span>`;
-      btn.onclick = () => {
-        kolFilters[filterKey] = kolFilters[filterKey]===d.key ? 'all' : d.key;
-        renderKOL();
-      };
+      btn.className = 'filter-btn' + (kolFilters[key]===v?' active':'');
+      btn.innerHTML = labelFn(v) + ' <span class="btn-count">' + cnt + '</span>';
+      btn.onclick = () => { kolFilters[key]=v; renderKOL(); };
       el.appendChild(btn);
     });
   }
-  makeGroup('kolTechFilters',       TECH_DEFS,       'tech');
-  makeGroup('kolIndicationFilters', INDICATION_DEFS, 'indication');
-  makeGroup('kolCategoryFilters',   CATEGORY_DEFS,   'category');
 
-  // 전체초기화 버튼 강조
-  const resetBtn = document.getElementById('kolResetBtn');
-  if(resetBtn) {
-    const anyActive = Object.values(kolFilters).some(v=>v!=='all');
-    resetBtn.style.borderColor = anyActive ? 'var(--primary)' : 'var(--border)';
-    resetBtn.style.color = anyActive ? 'var(--primary)' : 'var(--text3)';
-    resetBtn.style.background = anyActive ? 'var(--primary-soft)' : 'var(--surface2)';
-  }
+  // SYSTEM (tech) 필터
+  makeChips('kolTechFilters', 'tech',
+    a => a.tech||'',
+    v => { const m={sp:'단일공 (SP)',multiport:'멀티포트 (MP)',vnotes:'vNOTES',mp:'멀티포트 (MP)'}; return m[v.toLowerCase()]||v; }
+  );
+
+  // INDICATION 필터
+  makeChips('kolIndicationFilters', 'indication',
+    a => (a.indication||'').toLowerCase(),
+    v => { const m={hysterectomy:'자궁절제술',myoma:'자궁근종',endometriosis:'자궁내막증',ovary:'난소',gynca:'부인암'}; return m[v]||v; }
+  );
+
+  // CATEGORY (tag) 필터
+  makeChips('kolCategoryFilters', 'category',
+    a => (a.tag||'').toLowerCase(),
+    v => {
+      const clr = TAG_COLOR_MAP[v]||'#888';
+      const lbl = {milestone:'🏆 Milestone',vnotes:'vNOTES',dv5:'dV5',myoma:'자궁근종',endometriosis:'자궁내막증',gyn:'산부인과',hysterectomy:'자궁절제술'}[v]||v.toUpperCase();
+      return `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${clr};margin-right:3px;vertical-align:middle"></span>${lbl}`;
+    }
+  );
 }
 
-let _artCollapsed = new Set();
+
 function renderKOL() {
   const q = document.getElementById('kolSearch').value.toLowerCase();
   let items = ARTICLES
@@ -4872,6 +4902,147 @@ function buildPFSection(elId, defs, key, matchFn) {
     el.appendChild(btn);
   });
 }
+
+// ── 동적 필터 빌드: PAPERS 데이터에서 실제 값 추출 ──
+function buildPaperFilters() {
+  // 1. INDICATION — 실제 데이터 기반 동적 생성
+  const indEl = document.getElementById('pf-indication');
+  if(indEl) {
+    indEl.innerHTML = '';
+    const indCounts = {};
+    PAPERS.forEach(p => {
+      // indication이 "/" 로 나눠진 경우 첫 번째 항목으로 정규화
+      const raw = (p.indication||'Other').split('/')[0].trim();
+      // 대표 카테고리로 매핑
+      const mapped = normIndication(raw);
+      indCounts[mapped] = (indCounts[mapped]||0) + 1;
+    });
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (PF_active.indication==='all'?' active':'');
+    allBtn.innerHTML = '전체 <span class="btn-count">' + PAPERS.length + '</span>';
+    allBtn.onclick = () => { PF_active.indication='all'; renderPapers(); };
+    indEl.appendChild(allBtn);
+    Object.entries(indCounts).sort((a,b)=>b[1]-a[1]).forEach(([k,cnt]) => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (PF_active.indication===k?' active':'');
+      btn.innerHTML = IND_LABELS[k]||k + ' <span class="btn-count">' + cnt + '</span>';
+      btn.onclick = () => { PF_active.indication=k; renderPapers(); };
+      indEl.appendChild(btn);
+    });
+  }
+
+  // 2. PLATFORM — system 필드 기반 동적
+  const platEl = document.getElementById('pf-platform');
+  if(platEl) {
+    platEl.innerHTML = '';
+    const platOrder = ['da Vinci SP','da Vinci Xi','da Vinci 5','Laparoscopic'];
+    const platCounts = {};
+    PAPERS.forEach(p => { const s=p.system||'Other'; platCounts[s]=(platCounts[s]||0)+1; });
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (PF_active.platform==='all'?' active':'');
+    allBtn.innerHTML = '전체 <span class="btn-count">' + PAPERS.length + '</span>';
+    allBtn.onclick = () => { PF_active.platform='all'; renderPapers(); };
+    platEl.appendChild(allBtn);
+    [...platOrder, ...Object.keys(platCounts).filter(k=>!platOrder.includes(k))].forEach(plat => {
+      if(!platCounts[plat]) return;
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (PF_active.platform===plat?' active':'');
+      const icon = plat==='da Vinci SP'?'🔵':plat==='da Vinci 5'?'⚡':plat==='da Vinci Xi'?'🟣':'🔬';
+      btn.innerHTML = icon+' '+plat + ' <span class="btn-count">' + platCounts[plat] + '</span>';
+      btn.onclick = () => { PF_active.platform=plat; renderPapers(); };
+      platEl.appendChild(btn);
+    });
+  }
+
+  // 3. EVIDENCE — pEvidence 기반 동적 Lv. 분류
+  const evEl = document.getElementById('pf-evidence');
+  if(evEl) {
+    evEl.innerHTML = '';
+    const evCounts = {1:0,2:0,3:0,4:0,5:0};
+    PAPERS.forEach(p => { const ev=pEvidence(p.evidence||''); if(ev) evCounts[ev.lv]=(evCounts[ev.lv]||0)+1; });
+    const evDefs = [
+      {k:'all', l:'전체', color:'', s:0},
+      {k:'1', l:'Lv.1', desc:'RCT / Systematic Review', color:'#059669', s:5},
+      {k:'2', l:'Lv.2', desc:'Prospective Comparative', color:'#0891B2', s:4},
+      {k:'3', l:'Lv.3', desc:'Retrospective / Cohort',  color:'#7C3AED', s:3},
+      {k:'4', l:'Lv.4', desc:'Case Report / Tech Note', color:'#D97706', s:2},
+      {k:'5', l:'Lv.5', desc:'Expert Opinion / Review', color:'#DC2626', s:1},
+    ];
+    evDefs.forEach(d => {
+      const cnt = d.k==='all' ? PAPERS.length : (evCounts[parseInt(d.k)]||0);
+      if(d.k!=='all' && cnt===0) return;
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (PF_active.evidence===d.k?' active':'');
+      const badge = d.color ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${d.color};margin-right:4px;vertical-align:middle"></span>` : '';
+      btn.innerHTML = badge + d.l + (d.desc?` <span style="font-size:9px;color:var(--text3);font-weight:400">${d.desc}</span>`:'')+' <span class="btn-count">'+cnt+'</span>';
+      btn.style.cssText = 'text-align:left;width:100%';
+      btn.onclick = () => { PF_active.evidence=d.k; renderPapers(); };
+      evEl.appendChild(btn);
+    });
+  }
+
+  // 4. YEAR — 동적 연도 목록
+  const yrEl = document.getElementById('pf-year');
+  if(yrEl) {
+    yrEl.innerHTML = '';
+    const years = [...new Set(PAPERS.map(p=>p.year).filter(Boolean))].sort((a,b)=>b-a);
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (PF_active.year==='all'?' active':'');
+    allBtn.innerHTML = '최신순 <span class="btn-count">'+PAPERS.length+'</span>';
+    allBtn.onclick=()=>{PF_active.year='all';renderPapers();};
+    yrEl.appendChild(allBtn);
+    years.forEach(yr => {
+      const cnt = PAPERS.filter(p=>p.year===yr).length;
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (PF_active.year===yr?' active':'');
+      btn.innerHTML = yr+' <span class="btn-count">'+cnt+'</span>';
+      btn.onclick=()=>{PF_active.year=yr;renderPapers();};
+      yrEl.appendChild(btn);
+    });
+  }
+
+  // 5. COUNTRY — 동적 국가 목록
+  const ctEl = document.getElementById('pf-country');
+  if(ctEl) {
+    ctEl.innerHTML = '';
+    const FLAG = {Korea:'🇰🇷',Japan:'🇯🇵',China:'🇨🇳',USA:'🇺🇸',Other:'🌏'};
+    const ctCounts = {};
+    PAPERS.forEach(p => { const ct=pCountry(p.hospital); ctCounts[ct]=(ctCounts[ct]||0)+1; });
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (PF_active.country==='all'?' active':'');
+    allBtn.innerHTML = '전체 <span class="btn-count">'+PAPERS.length+'</span>';
+    allBtn.onclick=()=>{PF_active.country='all';renderPapers();};
+    ctEl.appendChild(allBtn);
+    Object.entries(ctCounts).sort((a,b)=>b[1]-a[1]).forEach(([ct,cnt]) => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (PF_active.country===ct?' active':'');
+      btn.innerHTML = (FLAG[ct]||'🌍')+' '+ct+' <span class="btn-count">'+cnt+'</span>';
+      btn.onclick=()=>{PF_active.country=ct;renderPapers();};
+      ctEl.appendChild(btn);
+    });
+  }
+}
+
+// indication 정규화
+const IND_LABELS = {
+  'Hysterectomy':         'Hysterectomy',
+  'Endometriosis':        'Endometriosis',
+  'DIE':                  'DIE',
+  'Myomectomy':           'Myomectomy',
+  'Ovarian':              'Ovarian / Oncology',
+  'Other':                'Other',
+};
+function normIndication(raw) {
+  const r = raw.toLowerCase();
+  if(r.includes('deep infiltrat') || r.includes('die')) return 'DIE';
+  if(r.includes('endometriosis')) return 'Endometriosis';
+  if(r.includes('hysterectomy') || r.includes('uterus') || r.includes('vnotes') || r.includes('technique')) return 'Hysterectomy';
+  if(r.includes('myomectomy') || r.includes('myoma') || r.includes('fibroid')) return 'Myomectomy';
+  if(r.includes('ovarian') || r.includes('oncology') || r.includes('borderline') || r.includes('carcinoma') || r.includes('cancer')) return 'Ovarian';
+  return 'Other';
+}
+
+// renderPapers에서 indication 필터링 시 normIndication 사용
 
 /* ── 메인 렌더 ── */
 function buildPaperCard(p) {
@@ -5520,16 +5691,45 @@ const CAL_TAG_COLOR = {conference:'#E6F1FB;color:#0C447C', symposium:'#EEEDFE;co
 const CAL_TAG_LABEL = {conference:'학회',symposium:'심포지엄',workshop:'워크샵',roadshow:'로드쇼',other:'기타'};
 
 function buildCalFilters() {
-  const el=document.getElementById('calFilters'); el.innerHTML='';
-  CAL_TAGS.forEach(t=>{
-    const count = t.key==='all' ? CONFERENCES.length : CONFERENCES.filter(c=>c.tag===t.key).length;
-    const btn=document.createElement('button');
-    btn.className='filter-btn'+(calTagFilter===t.key?' active':'');
-    btn.innerHTML=`${t.label} <span class="btn-count">${count}</span>`;
-    btn.onclick=()=>{ calTagFilter=t.key; renderCal(); };
+  const TAG_LABEL = {
+    conference:'🏛️ Conference', symposium:'🎤 Symposium',
+    workshop:'🔬 Workshop', webinar:'💻 Webinar', roadshow:'🚗 Roadshow',
+  };
+  const el = document.getElementById('calFilters'); if(!el) return; el.innerHTML='';
+  // 실제 데이터에서 tag 추출
+  const tagCounts = {};
+  CONFERENCES.forEach(c => { const t=c.tag||''; if(t) tagCounts[t]=(tagCounts[t]||0)+1; });
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-btn' + (calTagFilter==='all'?' active':'');
+  allBtn.innerHTML = '전체 <span class="btn-count">' + CONFERENCES.length + '</span>';
+  allBtn.onclick = () => { calTagFilter='all'; renderCal(); };
+  el.appendChild(allBtn);
+
+  // System 필터도 동적으로 (CONFERENCES에 system 필드 있으면)
+  const sysCounts = {};
+  CONFERENCES.forEach(c => { if(c.system&&c.system!=='None'&&c.system!=='-') sysCounts[c.system]=(sysCounts[c.system]||0)+1; });
+
+  Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).forEach(([tag,cnt]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (calTagFilter===tag?' active':'');
+    btn.innerHTML = (TAG_LABEL[tag]||tag) + ' <span class="btn-count">' + cnt + '</span>';
+    btn.onclick = () => { calTagFilter=tag; renderCal(); };
     el.appendChild(btn);
   });
+
+  // D-day 필터 버튼 추가 (upcoming only)
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcomingCnt = CONFERENCES.filter(c => new Date(c.start) >= today).length;
+  if(upcomingCnt > 0 && upcomingCnt < CONFERENCES.length) {
+    const upBtn = document.createElement('button');
+    upBtn.className = 'filter-btn' + (calTagFilter==='upcoming'?' active':'');
+    upBtn.innerHTML = '📅 예정 <span class="btn-count">' + upcomingCnt + '</span>';
+    upBtn.onclick = () => { calTagFilter='upcoming'; renderCal(); };
+    el.appendChild(upBtn);
+  }
 }
+
 
 function daysUntil(dateStr) {
   const now=new Date(); now.setHours(0,0,0,0);
@@ -5594,7 +5794,7 @@ function renderCal() {
   let items=CONFERENCES
     .filter(c=>{
       const haystack=[c.name,c.loc,c.note,c.organizer,c.system,c.duty,c.url].join(' ').toLowerCase();
-      return (calTagFilter==='all'||c.tag===calTagFilter)&&(!q||haystack.includes(q));
+      return (calTagFilter==='all'||(calTagFilter==='upcoming'?new Date(c.start)>=today:c.tag===calTagFilter))&&(!q||haystack.includes(q));
     })
     .sort(sortCalendarByDday);
 
@@ -6386,28 +6586,33 @@ function renderCardiacVideos() {
 }
 
 function buildCardiacVideoFilters() {
-  const make = (id, key, vals) => {
+  const ops  = [...new Set(CARDIAC_VIDEOS.map(v=>v.op ).filter(Boolean))].sort();
+  const syss = [...new Set(CARDIAC_VIDEOS.map(v=>v.sys).filter(Boolean))].sort();
+  const advs = [...new Set(CARDIAC_VIDEOS.map(v=>v.adv).filter(Boolean)).filter(a=>a&&a!=='-')].sort();
+
+  const make = (id, key, vals, filters) => {
     const el = document.getElementById(id); if(!el) return; el.innerHTML='';
-    // 전체 칩
     const all = document.createElement('button');
-    all.className = 'chip-filter-btn' + (cVFilters[key]==='all' ? ' active' : '');
+    all.className = 'chip-filter-btn' + (filters[key]==='all'?' active':'');
     all.textContent = '전체';
-    all.onclick = () => { cVFilters[key]='all'; renderCardiacVideos(); };
+    all.onclick = () => { filters[key]='all'; renderCardiacVideos(); };
     el.appendChild(all);
     vals.forEach(v => {
+      if(!v || v==='-') return;
+      const cnt = CARDIAC_VIDEOS.filter(vi => vi[key]===v).length;
+      if(!cnt) return;
       const btn = document.createElement('button');
-      btn.className = 'chip-filter-btn' + (cVFilters[key]===v ? ' active' : '');
+      btn.className = 'chip-filter-btn' + (filters[key]===v?' active':'');
       btn.textContent = v;
-      btn.onclick = () => { cVFilters[key]=v; renderCardiacVideos(); };
+      btn.onclick = () => { filters[key]=v; renderCardiacVideos(); };
       el.appendChild(btn);
     });
   };
-  make('opFilters','op', uniq(CARDIAC_VIDEOS.map(v=>v.op)));
-  make('sysFilters','sys', uniq(CARDIAC_VIDEOS.map(v=>v.sys)));
-  // ADV. Tech 필터 — VSE & TilePro는 분리해서 각각 매칭
-  const advVals = ['VSE','TilePro','Force Bipolar','Long Bipolar','Suction & Irrigator','ITM'];
-  make('advFilters','adv', advVals);
+  make('cOpFilter',  'op',  ops,  cVFilters);
+  make('cSysFilter', 'sys', syss, cVFilters);
+  make('cAdvFilter', 'adv', advs, cVFilters);
 }
+
 
 function renderCardiacArticles() {
   const q = (document.getElementById('cardiacKolSearch')?.value||'').toLowerCase();
