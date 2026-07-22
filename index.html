@@ -1557,6 +1557,103 @@ body.dark #paperGrid > div {
 @supports not (gap: 1px) {
   .nav-top-left { --gap-fallback: 8px; }
 }
+
+/* ── Monthly Calendar View ── */
+.cal-view-toggle {
+  display:flex; gap:4px; background:var(--surface2);
+  border-radius:8px; padding:3px;
+}
+.cal-view-btn {
+  padding:4px 12px; border:none; border-radius:6px;
+  font-size:11px; font-weight:600; cursor:pointer;
+  font-family:var(--font); color:var(--text3);
+  background:transparent; transition:all 0.15s;
+  display:flex; align-items:center; gap:4px;
+}
+.cal-view-btn.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+
+/* 월 달력 */
+#calMonthView { display:none; }
+.month-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px;
+}
+.month-nav-title { font-size:18px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.month-nav-btn {
+  width:32px; height:32px; border:none; border-radius:8px;
+  background:var(--surface2); color:var(--text2); cursor:pointer;
+  font-size:16px; display:flex; align-items:center; justify-content:center;
+  transition:background 0.15s;
+}
+.month-nav-btn:hover { background:var(--border); }
+.month-grid {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  grid-auto-rows:110px;
+  border:0.5px solid var(--border); border-radius:14px; overflow:hidden;
+}
+.month-weekday {
+  padding:8px 0; text-align:center;
+  font-size:10px; font-weight:700; letter-spacing:0.05em;
+  color:var(--text3); background:var(--surface2);
+  border-bottom:0.5px solid var(--border);
+}
+.month-weekday:first-child, .month-weekday.sun { color:#C0143C; }
+.month-weekday:last-child, .month-weekday.sat  { color:#185FA5; }
+.month-day {
+  height:110px; padding:6px 5px 4px;
+  border-right:0.5px solid var(--border);
+  border-bottom:0.5px solid var(--border);
+  position:relative; overflow:hidden;
+  transition:background 0.12s;
+  display:flex; flex-direction:column;
+}
+.month-day:nth-child(7n) { border-right:none; }
+.month-day:hover { background:var(--surface2); }
+.month-day.other-month { background:var(--bg); }
+.month-day.today { background:var(--primary-soft); }
+.month-day-num {
+  font-size:11px; font-weight:600; color:var(--text2);
+  display:flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:50%; margin-bottom:3px;
+}
+.month-day.today .month-day-num { background:var(--primary); color:white; }
+.month-day.sunday .month-day-num { color:#C0143C; }
+.month-day.saturday .month-day-num { color:#185FA5; }
+.month-events-wrap {
+  flex:1; overflow:hidden; display:flex; flex-direction:column; gap:2px;
+}
+.month-event {
+  font-size:9px; font-weight:600; padding:2px 5px;
+  border-radius:4px; cursor:pointer; flex-shrink:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  line-height:1.5; transition:opacity 0.12s;
+}
+.month-event:hover { opacity:0.8; }
+.month-event.multi-day { border-radius:0; margin:0 -5px 2px; padding:2px 5px; }
+.month-event.multi-start { border-radius:4px 0 0 4px; margin-right:0; }
+.month-event.multi-end { border-radius:0 4px 4px 0; margin-left:0; }
+.month-more {
+  font-size:9px; color:var(--text3); font-weight:600;
+  cursor:pointer; padding:1px 3px;
+}
+.month-more:hover { color:var(--primary); }
+
+/* 이벤트 상세 툴팁 */
+#calEventTooltip {
+  position:fixed; z-index:9000; pointer-events:none;
+  background:var(--surface); border-radius:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18),0 0 0 0.5px rgba(0,0,0,0.07);
+  padding:12px 14px; width:240px;
+  opacity:0; transform:scale(0.95) translateY(4px);
+  transition:opacity 0.15s,transform 0.15s;
+}
+#calEventTooltip.show { opacity:1; transform:scale(1) translateY(0); }
+
+@media (max-width:640px) {
+  .month-day { min-height:52px; padding:3px 2px; }
+  .month-event { font-size:8px; padding:1px 3px; }
+  .month-day-num { font-size:10px; width:18px; height:18px; }
+}
 </style>
 </head>
 <body>
@@ -1818,28 +1915,43 @@ body.dark #paperGrid > div {
   
         <!-- Evidence Level Guide -->
         <div class="sidebar-section" style="margin-top:4px">
-          <div class="sidebar-label">EVIDENCE LEVEL GUIDE</div>
+          <div class="sidebar-label">EVIDENCE STRENGTH</div>
           <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px">
-            <div style="font-size:10px;color:var(--text3);line-height:1.5;padding:5px 8px;background:var(--surface2);border-radius:7px;margin-bottom:2px;font-style:italic">근거 수준 분류 기준 (내부 기준)</div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Randomized controlled trials, systematic reviews, or meta-analyses">
-              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#05996918;color:#059669;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.1</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">RCT / Systematic Review / Meta-analysis</span>
+            <div style="font-size:10px;color:var(--text3);line-height:1.5;padding:5px 8px;background:var(--surface2);border-radius:7px;margin-bottom:2px">높을수록 임상 근거 강함</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:var(--surface2)" title="Randomized controlled trials, systematic reviews, or meta-analyses">
+              <span style="font-size:14px;line-height:1">🟢</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:700;color:#059669">High</div>
+                <div style="font-size:9px;color:var(--text3)">RCT · Systematic Review · Meta-analysis</div>
+              </div>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Prospective comparative studies">
-              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#0891B218;color:#0891B2;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.2</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">Prospective Comparative Study</span>
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:var(--surface2)" title="Prospective comparative studies">
+              <span style="font-size:14px;line-height:1">🔵</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:700;color:#0891B2">Moderate</div>
+                <div style="font-size:9px;color:var(--text3)">Prospective Comparative Study</div>
+              </div>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Retrospective comparative studies or comparative cohort studies">
-              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#7C3AED18;color:#7C3AED;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.3</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">Retrospective Comparative / Cohort Study</span>
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:var(--surface2)" title="Retrospective comparative studies or cohort studies">
+              <span style="font-size:14px;line-height:1">🟣</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:700;color:#7C3AED">Fair</div>
+                <div style="font-size:9px;color:var(--text3)">Retrospective · Comparative Cohort</div>
+              </div>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Case reports, case series, technical notes, or feasibility studies">
-              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#D9770618;color:#D97706;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.4</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">Case Report / Case Series / Technical Note / Feasibility</span>
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:var(--surface2)" title="Case reports, case series, technical notes, or feasibility studies">
+              <span style="font-size:14px;line-height:1">🟡</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:700;color:#D97706">Low</div>
+                <div style="font-size:9px;color:var(--text3)">Case Report · Case Series · Technical Note</div>
+              </div>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:7px;background:var(--surface2)" title="Expert opinion, narrative review, or commentary">
-              <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#DC262618;color:#DC2626;font-family:var(--mono);flex-shrink:0;margin-top:1px">Lv.5</span>
-              <span style="font-size:10px;color:var(--text2);line-height:1.4">Expert Opinion / Narrative Review / Commentary</span>
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:var(--surface2)" title="Expert opinion, narrative review, or commentary">
+              <span style="font-size:14px;line-height:1">⚪</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:700;color:#888780">Expert</div>
+                <div style="font-size:9px;color:var(--text3)">Expert Opinion · Narrative Review</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1915,17 +2027,17 @@ body.dark #paperGrid > div {
         <!-- 수술 종류 -->
         <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
           <span data-ko="수술" style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;white-space:nowrap;flex-shrink:0">수술</span>
-          <div id="opFilters" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
+          <div id="cOpFilter" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
         </div>
         <!-- 시스템 -->
         <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none">
           <span data-ko="시스템" style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;white-space:nowrap;flex-shrink:0">시스템</span>
-          <div id="sysFilters" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
+          <div id="cSysFilter" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
         </div>
         <!-- ADV Tech -->
         <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none">
           <span data-ko="ADV" style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;white-space:nowrap;flex-shrink:0">ADV</span>
-          <div id="advFilters" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
+          <div id="cAdvFilter" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
         </div>
       </div>
       <!-- 활성 필터 칩 -->
@@ -2079,7 +2191,18 @@ body.dark #paperGrid > div {
         </button>
         <div class="active-filters" id="calActiveTags"></div>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="calViewCard" class="cal-view-btn active" onclick="setCalView('card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            카드
+          </button>
+          <button id="calViewMonth" class="cal-view-btn" onclick="setCalView('month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span></div>
       </div>
     </div>
         <div class="tab-disclaimer" id="disc-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
@@ -2091,6 +2214,14 @@ body.dark #paperGrid > div {
       <div id="calUpcomingCards"></div>
     </div>
     <div id="calGrid"></div>
+    <div id="calMonthView">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveMonth(-1)">‹</button>
+        <div class="month-nav-title" id="monthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveMonth(1)">›</button>
+      </div>
+      <div class="month-grid" id="monthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -2218,57 +2349,6 @@ body.dark #paperGrid > div {
 </div>
 
 
-<div class="page" id="page-uro-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-uro-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="uroCalGrid"></div>
-  </div>
-</div>
-
 <div class="page" id="page-cr-video" style="min-height:calc(100vh - 94px)">
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
     <div style="padding:12px 24px 0;border-bottom:1px solid var(--border);background:var(--bg)">
@@ -2391,57 +2471,6 @@ body.dark #paperGrid > div {
   </div>
 </div>
 
-
-<div class="page" id="page-cr-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-cr-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="crCalGrid"></div>
-  </div>
-</div>
 
 <div class="page" id="page-thoracic-video" style="min-height:calc(100vh - 94px)">
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
@@ -2566,57 +2595,6 @@ body.dark #paperGrid > div {
 </div>
 
 
-<div class="page" id="page-thoracic-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-thoracic-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="thoracicCalGrid"></div>
-  </div>
-</div>
-
 <div class="page" id="page-stomach-video" style="min-height:calc(100vh - 94px)">
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
     <div style="padding:12px 24px 0;border-bottom:1px solid var(--border);background:var(--bg)">
@@ -2739,57 +2717,6 @@ body.dark #paperGrid > div {
   </div>
 </div>
 
-
-<div class="page" id="page-stomach-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-stomach-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="stomachCalGrid"></div>
-  </div>
-</div>
 
 <div class="page" id="page-breast-video" style="min-height:calc(100vh - 94px)">
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
@@ -2914,57 +2841,6 @@ body.dark #paperGrid > div {
 </div>
 
 
-<div class="page" id="page-breast-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-breast-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="breastCalGrid"></div>
-  </div>
-</div>
-
 <div class="page" id="page-hn-video" style="min-height:calc(100vh - 94px)">
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
     <div style="padding:12px 24px 0;border-bottom:1px solid var(--border);background:var(--bg)">
@@ -3087,57 +2963,6 @@ body.dark #paperGrid > div {
   </div>
 </div>
 
-
-<div class="page" id="page-hn-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-hn-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="hnCalGrid"></div>
-  </div>
-</div>
 
 <div class="page" id="page-hbp-video" style="min-height:calc(100vh - 94px)">
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
@@ -3262,57 +3087,6 @@ body.dark #paperGrid > div {
 </div>
 
 
-<div class="page" id="page-hbp-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-hbp-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="hbpCalGrid"></div>
-  </div>
-</div>
-
 <div class="page" id="page-hernia-video" style="min-height:calc(100vh - 94px)">
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
     <div style="padding:12px 24px 0;border-bottom:1px solid var(--border);background:var(--bg)">
@@ -3436,68 +3210,6 @@ body.dark #paperGrid > div {
 </div>
 
 
-<div class="page" id="page-hernia-cal" style="min-height:calc(100vh - 94px)">
-  <aside class="sidebar" id="sidebar-cal">
-    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
-      <span data-ko="필터" style="font-size:13px;font-weight:600;color:var(--text)">필터</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
-    </div>
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
-      <span>🔽 필터 / 일정 수정</span>
-      <span class="mfb-arrow">›</span>
-    </button>
-    <div class="sidebar-inner">
-
-      <!-- 일정 추가 버튼 — 상단 -->
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=0" target="_blank" rel="noopener noreferrer" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-decoration:none" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        일정 추가하기
-      </a>
-
-      <div class="filter-section">
-        <div class="filter-label" data-ko="필터">필터</div>
-        <div id="calFilters"></div>
-      </div>
-    </div>
-  </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cal')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-          <span data-ko="분류 필터">분류 필터</span>
-        </button>
-        <div class="active-filters" id="calActiveTags"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="calCount">0</span><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-hernia-cal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="herniaCalGrid"></div>
-  </div>
-</div><span data-ko="개 일정">개 일정</span></div>
-    </div>
-        <div class="tab-disclaimer" id="disc-hernia-cal-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. Duty·System 등 내부 운영 정보는 사내용으로만 활용하십시오.<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span></div>
-    <div id="calUpcomingSection">
-          <div class="cal-upcoming-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            다가오는 일정
-          </div>
-          <div id="calUpcomingCards"></div>
-        </div>
-        <div id="herniaCalGrid2"></div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════ -->
 <!--  UPLOAD MODAL — Video                     -->
@@ -3593,7 +3305,7 @@ body.dark #paperGrid > div {
   </div>
 </div>
 
-<div id="paperModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
+<div id="paperModalOverlay-dup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
   <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:16px;font-weight:700;color:var(--text)">논문 추가하기</div>
@@ -3847,12 +3559,13 @@ async function loadArticlesFromSheet() {
   renderKOL();
 }
 
-function normalizeVideoRow(row, headers) {
+function normalizeVideoRow(row, headers, offset = 0) {
   const normalizedHeaders = headers.map(h => String(h || '').trim().toLowerCase());
+  const r = offset > 0 ? row.slice(offset) : row;  // cOffset 적용
   const get = (...keys) => {
     for (const key of keys) {
       const idx = normalizedHeaders.indexOf(String(key).trim().toLowerCase());
-      if (idx >= 0 && row[idx] !== undefined) return String(row[idx] || '').trim();
+      if (idx >= 0 && r[idx] !== undefined) return String(r[idx] || '').trim();
     }
     return '';
   };
@@ -3863,7 +3576,11 @@ function normalizeVideoRow(row, headers) {
     const urlMatch = url.match(/https?:\/\/[^\s]+/);
     url = urlMatch ? urlMatch[0] : '';
   }
-  const title = get('title', 'name', '영상명', '제목', '주제', '영상 제목', 'video title');
+  // Cardiac: '영상 제목'(4번째) = title, '주제'(5번째) = description
+  // GYN:     '주제'(4번째) = title
+  // → '영상 제목' 먼저, 없으면 '주제' 사용
+  const title = get('영상 제목', 'video title', 'title', 'name', '영상명', '제목', '주제');
+  const description = get('주제', 'description', 'desc', '설명', '내용', 'summary');
   const sys = get('sys', 'system', '시스템', 'platform') || 'Xi';
 
   return {
@@ -3874,10 +3591,12 @@ function normalizeVideoRow(row, headers) {
     title,
     url,
     channel: get('channel', '채널', 'source', '출처', '채널명'),
-    description: get('description', 'desc', '설명', '내용', 'summary'),
+    description,
     surgeon: get('surgeon', '술자', '집도의', 'doctor', 'physician'),
     duration: get('duration', '시간', '길이', 'length', 'runtime'),
-    linkMissing: !url
+    linkMissing: !url,
+    isSeismic: url.includes('seismic'),
+    isLearning: url.includes('learning.intuitive')
   };
 }
 
@@ -4553,19 +4272,43 @@ function renderKOL() {
 
   function showPopup(e, a) {
     popup.onclick = () => { hidePopup(); openArtLightbox(a); };
-    if(!a.image || a.image === '이미지 확인 필요') return;
-    document.getElementById('artImgPopupImg').src = a.image;
-    const info = document.getElementById('artImgPopupInfo');
+
+    const hasImg = a.image && a.image !== '이미지 확인 필요';
     const tagClr = TAG_COLOR[(a.tag||'').toLowerCase()] || '#888';
+    const pImg   = document.getElementById('artImgPopupImg');
+    const pBanner= document.getElementById('artImgPopupBanner');
+    const info   = document.getElementById('artImgPopupInfo');
+
+    // 이미지 영역
+    if(hasImg) {
+      pImg.src = a.image;
+      pImg.style.display = 'block';
+      if(pBanner) pBanner.style.display = 'none';
+    } else {
+      pImg.style.display = 'none';
+      if(pBanner) {
+        pBanner.style.display = 'flex';
+        pBanner.style.background = `linear-gradient(135deg, ${tagClr}cc, ${tagClr}88)`;
+        pBanner.querySelector('.popup-banner-tag').textContent = (a.tag||'').toUpperCase();
+        pBanner.querySelector('.popup-banner-hospital').textContent = a.hospital||'';
+      }
+    }
+
+    // 텍스트 정보
     info.innerHTML = `
-      <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.4;letter-spacing:-0.01em">${a.title||''}</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+      <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.45;letter-spacing:-0.01em">${a.title||''}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
         <span style="font-size:11px;font-weight:600;color:var(--text2)">${a.hospital||''}</span>
         ${a.surgeon?`<span style="font-size:10px;color:var(--text3)">· ${a.surgeon}</span>`:''}
-        <span style="margin-left:auto;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:${tagClr}18;color:${tagClr};font-family:var(--mono)">${(a.tag||'').toUpperCase()}</span>
+        <span style="margin-left:auto;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:${tagClr}18;color:${tagClr};font-family:var(--mono);white-space:nowrap">${(a.tag||'').toUpperCase()}</span>
       </div>
-      ${a.desc && a.desc!==a.title ? `<div style="font-size:11px;color:var(--text3);line-height:1.5;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${a.desc}</div>`:''}
+      ${a.desc && a.desc!==a.title ? `<div style="font-size:11px;color:var(--text3);line-height:1.5;margin-top:5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${a.desc}</div>`:''}
+      <div style="margin-top:6px;font-size:10px;color:var(--text3);font-family:var(--mono);display:flex;align-items:center;gap:4px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        클릭해서 자세히 보기
+      </div>
     `;
+
     popup.style.opacity='1';
     popup.style.transform='scale(1) translateY(0)';
     movePopup(e);
@@ -4887,11 +4630,11 @@ let PF_active = { category:'all', indication:'all', platform:'all', evidence:'al
    Lv.5  Expert Opinion / Narrative Review / Commentary
 ──────────────────────────────────────────────────── */
 const EVIDENCE_DEFS = [
-  { lv:1, label:'Lv.1', desc:'RCT / Systematic Review / Meta-analysis',        color:'#059669', keywords:['meta','systematic','randomized','rct'] },
-  { lv:2, label:'Lv.2', desc:'Prospective Comparative Study',                   color:'#0891B2', keywords:['prospective','registry'] },
-  { lv:3, label:'Lv.3', desc:'Retrospective Comparative Study / Cohort',        color:'#7C3AED', keywords:['retrospective','comparative cohort','cohort'] },
-  { lv:4, label:'Lv.4', desc:'Case Series / Case Report / Technical Note',      color:'#D97706', keywords:['case series','case report','technical note','feasibility','comparative study'] },
-  { lv:5, label:'Lv.5', desc:'Expert Opinion / Narrative Review / Commentary',  color:'#DC2626', keywords:['expert opinion','narrative','commentary','review','case','technical','series','note','video'] },
+  { lv:1, label:'High',     badge:'🟢 High',     desc:'RCT / Systematic Review / Meta-analysis',   color:'#059669', keywords:['meta','systematic','randomized','rct'] },
+  { lv:2, label:'Moderate', badge:'🔵 Moderate', desc:'Prospective Comparative Study',              color:'#0891B2', keywords:['prospective','registry'] },
+  { lv:3, label:'Fair',     badge:'🟣 Fair',     desc:'Retrospective / Comparative Cohort',         color:'#7C3AED', keywords:['retrospective','comparative cohort','cohort'] },
+  { lv:4, label:'Low',      badge:'🟡 Low',      desc:'Case Report / Case Series / Technical Note', color:'#D97706', keywords:['case series','case report','technical note','feasibility','comparative study'] },
+  { lv:5, label:'Expert',   badge:'⚪ Expert',   desc:'Expert Opinion / Narrative Review',          color:'#888780', keywords:['expert opinion','narrative','commentary','review','case','technical','series','note','video'] },
 ];
 
 function pEvidence(v) {
@@ -5033,8 +4776,7 @@ function buildPaperFilters() {
       if(d.k!=='all' && cnt===0) return;
       const btn = document.createElement('button');
       btn.className = 'filter-btn' + (PF_active.evidence===d.k?' active':'');
-      const badge = d.color ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${d.color};margin-right:4px;vertical-align:middle"></span>` : '';
-      btn.innerHTML = badge + d.l + (d.desc?` <span style="font-size:9px;color:var(--text3);font-weight:400">${d.desc}</span>`:'')+' <span class="btn-count">'+cnt+'</span>';
+      btn.innerHTML = d.l + (d.desc?` <span style="font-size:9px;color:var(--text3);font-weight:400">${d.desc}</span>`:'')+' <span class="btn-count">'+cnt+'</span>';
       btn.style.cssText = 'text-align:left;width:100%';
       btn.onclick = () => { PF_active.evidence=d.k; renderPapers(); };
       evEl.appendChild(btn);
@@ -5130,7 +4872,7 @@ function buildPaperCard(p) {
     return { from:'#444441', to:'#888780', text:'#D3D1C7' };
   }
   const jc = getJColor(p.journal);
-  const EV_COLORS = {1:'#059669',2:'#0891B2',3:'#7C3AED',4:'#D97706',5:'#DC2626'};
+  const EV_COLORS = {1:'#059669',2:'#0891B2',3:'#7C3AED',4:'#D97706',5:'#888780'};
   const evColor = ev ? (EV_COLORS[ev.lv]||'#888780') : '#888780';
 
   /* ── 카드 래퍼 ── */
@@ -5196,7 +4938,13 @@ function buildPaperCard(p) {
   if(ev) {
     const evRow = document.createElement('div');
     evRow.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:var(--surface2);border-left:3px solid ${evColor}`;
-    evRow.innerHTML = `<span style="font-size:10px;font-weight:700;color:${evColor};font-family:var(--mono);letter-spacing:0.02em">Lv.${ev.lv}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">${ev.txt}</span>`;
+    const evDef = EVIDENCE_DEFS[ev.lv-1];
+    const evBadge = evDef ? evDef.badge : '● Unknown';
+    const evShortTxt = ev.txt.replace(/level\s*(i{1,3}v?|[1-5])\s*[\(\-]?/gi,'').replace(/[\(\)]/g,'').trim().split('/')[0].trim();
+    evRow.innerHTML = `
+      <span style="font-size:11px;font-weight:700;color:${evColor};letter-spacing:-0.01em">${evBadge}</span>
+      ${evShortTxt ? `<span style="font-size:10px;color:var(--text3);margin-left:5px">${evShortTxt}</span>` : ''}
+    `;
     body.appendChild(evRow);
   }
 
@@ -6233,6 +5981,212 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape') closeArtLightbox({target: document.getElementById('artLightbox')});
 });
 
+
+/* ══════════════════════ MONTHLY CALENDAR VIEW ══════════════════════ */
+let _calView = 'card';   // 'card' | 'month'
+let _calMonth = new Date().getMonth();
+let _calYear  = new Date().getFullYear();
+
+const CAL_EVENT_COLORS = {
+  conference: { bg:'#185FA520', text:'#185FA5', border:'#185FA5' },
+  symposium:  { bg:'#7C3AED20', text:'#7C3AED', border:'#7C3AED' },
+  workshop:   { bg:'#05996920', text:'#059669', border:'#059669' },
+  webinar:    { bg:'#D9770620', text:'#D97706', border:'#D97706' },
+  roadshow:   { bg:'#C0143C20', text:'#C0143C', border:'#C0143C' },
+};
+function calEventColor(tag) {
+  return CAL_EVENT_COLORS[tag] || { bg:'#88878020', text:'#888780', border:'#888780' };
+}
+
+function setCalView(view) {
+  _calView = view;
+  document.getElementById('calViewCard').classList.toggle('active', view==='card');
+  document.getElementById('calViewMonth').classList.toggle('active', view==='month');
+  const cardEl  = document.getElementById('calGrid');
+  const upEl    = document.getElementById('calUpcomingSection');
+  const monthEl = document.getElementById('calMonthView');
+  if(view === 'month') {
+    if(cardEl)  cardEl.style.display  = 'none';
+    if(upEl)    upEl.style.display    = 'none';
+    if(monthEl) monthEl.style.display = 'block';
+    renderMonthView();
+  } else {
+    if(cardEl)  cardEl.style.display  = '';
+    if(upEl)    upEl.style.display    = '';
+    if(monthEl) monthEl.style.display = 'none';
+    renderCal();
+  }
+}
+
+function moveMonth(dir) {
+  _calMonth += dir;
+  if(_calMonth > 11) { _calMonth = 0;  _calYear++; }
+  if(_calMonth < 0)  { _calMonth = 11; _calYear--; }
+  renderMonthView();
+}
+
+function renderMonthView() {
+  const grid    = document.getElementById('monthGrid');
+  const titleEl = document.getElementById('monthNavTitle');
+  if(!grid) return;
+
+  const today  = new Date();
+  const yr     = _calYear;
+  const mo     = _calMonth;
+
+  // 제목
+  const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(titleEl) titleEl.textContent = yr + '년 ' + MONTHS_KO[mo];
+
+  // 이번 달 일수, 시작 요일
+  const firstDay = new Date(yr, mo, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(yr, mo+1, 0).getDate();
+  const daysInPrev  = new Date(yr, mo, 0).getDate();
+
+  grid.innerHTML = '';
+
+  // 요일 헤더
+  const weekdays = ['일','월','화','수','목','금','토'];
+  weekdays.forEach((d, i) => {
+    const el = document.createElement('div');
+    el.className = 'month-weekday' + (i===0?' sun':i===6?' sat':'');
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  // 이번 달 일정 필터링
+  const items = CONFERENCES.filter(e => {
+    if(calTagFilter !== 'all' && calTagFilter !== 'upcoming' && e.tag !== calTagFilter) return false;
+    const eStart = new Date(e.start);
+    const eEnd   = e.end ? new Date(e.end) : eStart;
+    // 이번 달과 겹치는지
+    const moStart = new Date(yr, mo, 1);
+    const moEnd   = new Date(yr, mo+1, 0);
+    return eStart <= moEnd && eEnd >= moStart;
+  });
+
+  // 날짜별 이벤트 맵
+  function getEventsForDay(day) {
+    const d = new Date(yr, mo, day);
+    d.setHours(0,0,0,0);
+    return items.filter(e => {
+      const s = new Date(e.start); s.setHours(0,0,0,0);
+      const en = e.end ? new Date(e.end) : new Date(e.start); en.setHours(0,0,0,0);
+      return s <= d && en >= d;
+    });
+  }
+
+  // 날짜 셀 렌더
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for(let i = 0; i < totalCells; i++) {
+    const cell = document.createElement('div');
+    let dayNum, isCurrentMonth = true;
+
+    if(i < firstDay) {
+      dayNum = daysInPrev - firstDay + i + 1;
+      isCurrentMonth = false;
+    } else if(i >= firstDay + daysInMonth) {
+      dayNum = i - firstDay - daysInMonth + 1;
+      isCurrentMonth = false;
+    } else {
+      dayNum = i - firstDay + 1;
+    }
+
+    const dayOfWeek = i % 7;
+    cell.className = 'month-day' +
+      (!isCurrentMonth ? ' other-month' : '') +
+      (isCurrentMonth && dayNum === today.getDate() && mo === today.getMonth() && yr === today.getFullYear() ? ' today' : '') +
+      (dayOfWeek === 0 ? ' sunday' : '') +
+      (dayOfWeek === 6 ? ' saturday' : '');
+
+    // 날짜 숫자
+    const numEl = document.createElement('div');
+    numEl.className = 'month-day-num';
+    numEl.textContent = dayNum;
+    cell.appendChild(numEl);
+
+    // 이벤트 표시 (현재 달만)
+    if(isCurrentMonth) {
+      const dayEvents = getEventsForDay(dayNum);
+      const MAX_SHOW = 3;
+      const wrap = document.createElement('div');
+      wrap.className = 'month-events-wrap';
+      dayEvents.slice(0, MAX_SHOW).forEach(ev => {
+        const clr = calEventColor(ev.tag);
+        const evEl = document.createElement('div');
+        evEl.className = 'month-event';
+        evEl.style.cssText = `background:${clr.bg};color:${clr.text};border-left:2px solid ${clr.border}`;
+        evEl.textContent = ev.name;
+        evEl.title = ev.name;
+        evEl.onclick = (e) => { e.stopPropagation(); showCalTooltip(e, ev); };
+        wrap.appendChild(evEl);
+      });
+      if(dayEvents.length > MAX_SHOW) {
+        const moreEl = document.createElement('div');
+        moreEl.className = 'month-more';
+        moreEl.textContent = '+' + (dayEvents.length - MAX_SHOW) + '개 더';
+        moreEl.onclick = (e) => { e.stopPropagation(); showCalTooltip(e, dayEvents[MAX_SHOW]); };
+        wrap.appendChild(moreEl);
+      }
+      cell.appendChild(wrap);
+    }
+    grid.appendChild(cell);
+  }
+}
+
+/* ── 이벤트 툴팁 ── */
+let _tooltipTimer;
+function showCalTooltip(e, ev) {
+  const tip = document.getElementById('calEventTooltip');
+  if(!tip) return;
+  const clr = calEventColor(ev.tag);
+  const dateStr = ev.end && ev.end !== ev.start
+    ? ev.start + ' ~ ' + ev.end.slice(5)
+    : ev.start;
+  const ddays = daysUntil(ev.start);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const isPast = effectiveEndTime(ev) < today.getTime();
+  const ddayStr = isPast ? '종료' : ddays===0 ? '오늘!' : ddays>0 ? `D-${ddays}` : `D+${Math.abs(ddays)}`;
+
+  tip.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${clr.border};flex-shrink:0"></span>
+      <span style="font-size:10px;font-weight:700;color:${clr.text};font-family:var(--mono)">${(ev.tag||'').toUpperCase()}</span>
+      <span style="margin-left:auto;font-size:10px;font-weight:700;color:${isPast?'var(--text3)':clr.text};font-family:var(--mono)">${ddayStr}</span>
+    </div>
+    <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:6px">${ev.name}</div>
+    <div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-bottom:3px">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      ${dateStr}
+    </div>
+    ${ev.loc ? `<div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-bottom:3px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${ev.loc}</div>` : ''}
+    ${ev.system ? `<div style="font-size:10px;color:var(--primary);font-family:var(--mono);font-weight:600;margin-top:4px">🤖 ${ev.system}</div>` : ''}
+    ${ev.url ? `<a href="${ev.url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:var(--primary);text-decoration:none;font-weight:600">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      공식 사이트
+    </a>` : ''}
+  `;
+
+  // 위치
+  const pw = 240, ph = 200, mg = 10;
+  let x = e.clientX + mg, y = e.clientY + mg;
+  if(x + pw > window.innerWidth  - mg) x = e.clientX - pw - mg;
+  if(y + ph > window.innerHeight - mg) y = e.clientY - ph - mg;
+  tip.style.left = x+'px'; tip.style.top = y+'px';
+  tip.classList.add('show');
+  tip.style.pointerEvents = 'auto';
+
+  clearTimeout(_tooltipTimer);
+  // 3초 후 자동 닫기
+  _tooltipTimer = setTimeout(() => tip.classList.remove('show'), 3000);
+}
+
+document.addEventListener('click', () => {
+  const tip = document.getElementById('calEventTooltip');
+  if(tip) tip.classList.remove('show');
+});
+
 function toggleYear(yr) {
   const sec=document.getElementById('yr_'+yr);
   const arr=document.getElementById('yarr_'+yr);
@@ -6544,10 +6498,10 @@ async function fetchCSV(url) {
 async function loadCardiacData() {
   const pub = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
   const sheets = [
-    { url: pub+'?gid=46157436&single=true&output=csv',  arr: CARDIAC_VIDEOS,   type:'video' },
-    { url: pub+'?gid=924999404&single=true&output=csv', arr: CARDIAC_ARTICLES, type:'article' },
-    { url: pub+'?gid=1700395267&single=true&output=csv',arr: CARDIAC_PAPERS,   type:'paper' },
-    { url: pub+'?gid=1345374325&single=true&output=csv',arr: CARDIAC_CALS,     type:'cal' },
+    { url: pub+'?gid=924999404&single=true&output=csv',  arr: CARDIAC_VIDEOS,   type:'video' },
+    { url: pub+'?gid=468200524&single=true&output=csv',  arr: CARDIAC_ARTICLES, type:'article' },
+    { url: pub+'?gid=1700395267&single=true&output=csv', arr: CARDIAC_PAPERS,   type:'paper' },
+    { url: pub+'?gid=1345374325&single=true&output=csv', arr: CARDIAC_CALS,     type:'cal' },
     { url: pub+'?gid=SURGEON_GID&single=true&output=csv', arr: CARDIAC_SURGEONS, type:'surgeon' },
   ];
   await Promise.allSettled(sheets.map(async s => {
@@ -6568,7 +6522,7 @@ async function loadCardiacData() {
       s.arr.length = 0;
       rows.slice(1).filter(r=>r.some(c=>c&&c.trim())).forEach(r => {
         if(s.type==='video') {
-          s.arr.push(normalizeVideoRow(r, headers));
+          s.arr.push(normalizeVideoRow(r, headers, cOffset > 0 ? cOffset : 0));
         } else if(s.type==='article') {
           s.arr.push({
             date: get(r,'date'), hospital: get(r,'hospital'), surgeon: get(r,'surgeon'),
@@ -6655,7 +6609,7 @@ function renderCardiacVideos() {
   items.forEach((v,i) => {
     const thumb = getThumb(v.url);
     const subsText = v.subs >= 10000 ? (v.subs/10000).toFixed(1)+'만명' : v.subs >= 1000 ? (v.subs/1000).toFixed(1)+'천명' : v.subs > 0 ? v.subs+'명' : '';
-    const missingBadge = v.linkMissing ? `<span style="position:absolute;top:8px;right:8px;background:rgba(180,60,0,0.88);color:#FFD9B0;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;font-family:var(--mono)">⚠ 링크없음</span>` : '';
+        const missingBadge = v.linkMissing ? `<span style="position:absolute;top:8px;right:8px;background:rgba(180,60,0,0.88);color:#FFD9B0;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:var(--mono);">⚠ 링크없음</span>` : v.isSeismic ? `<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#FFD700;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:var(--mono);">🔒 SEISMIC</span>` : v.isLearning ? `<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#7DF9FF;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:var(--mono);">📚 LEARNING</span>` : '';
 
     const wrap = document.createElement('div');
     wrap.className = 'card-wrap';
@@ -7444,5 +7398,8 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
+
+<!-- Cal event tooltip -->
+<div id="calEventTooltip"></div>
 </body>
 </html>
