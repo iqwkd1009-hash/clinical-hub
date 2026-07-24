@@ -4548,6 +4548,24 @@ function getPaperImage(p) {
   return '';
 }
 
+const CARDIAC_VIDEOS_FALLBACK = [
+  { op:'CABG', sys:'Xi', adv:'IMA Harvesting', title:'Xi IMA Takedown', description:'IMA Takedown 관련 콘텐츠', url:'https://intuitive.seismic.com/Link/Content/DC3TX9GRBgQgR8CVcBV8mG3dcGfj', channel:'Seismic', isSeismic:true, isLearning:false, linkMissing:false },
+  { op:'CABG', sys:'Xi', adv:'IMA Harvesting (Pedicle)', title:'Xi IMA Mobilization – Pedicle', description:'CABG의 기본이 되는 pedicled IMA harvesting technique. Robotic CABG, Hybrid Coronary Revascularization 및 Robotic Mitral Surgery 전문가', url:'https://learning.intuitive.com/activity/47165', channel:'Intuitive Learning', isSeismic:false, isLearning:true, linkMissing:false },
+  { op:'CABG', sys:'Xi', adv:'IMA Harvesting (Skeletonized)', title:'Xi IMA Takedown – Skeletonized', description:'보다 advanced한 skeletonized IMA harvesting technique. Precision 및 conduit length 확보에 초점.', url:'https://learning.intuitive.com/activity/47164', channel:'Intuitive Learning', isSeismic:false, isLearning:true, linkMissing:false },
+  { op:'CABG', sys:'-', adv:'CABG Procedure', title:'Webinar – Robotic-Assisted CABG Surgery', description:'Guest Editor Series Webinar: Robotic-Assisted CABG Surgery—Techniques and Procedures', url:'https://www.youtube.com/watch?v=HHGVMivmlbQ', channel:'CTSNetVideo (구독자 8.33만명)', isSeismic:false, isLearning:false, linkMissing:false },
+  { op:'CABG', sys:'-', adv:'IMA Harvesting', title:'IMA Harvesting – SSi MANTRA', description:'Bilateral Internal Mammary Artery Harvest Using an SSi MANTRA', url:'https://www.youtube.com/watch?v=Nj1vns4mePM', channel:'YouTube', isSeismic:false, isLearning:false, linkMissing:false },
+  { op:'CABG', sys:'-', adv:'TECAB', title:'TECAB – Triple Vessel Disease', description:'Robotic TECAB for AHCR in Patients With Triple Vessel Disease', url:'https://www.youtube.com/watch?v=3uxKV4OvSAM', channel:'YouTube', isSeismic:false, isLearning:false, linkMissing:false },
+  { op:'CABG', sys:'-', adv:'MIDCAB', title:'MIDCAB', description:'Robotic-Assisted Minimally Invasive Direct Coronary Artery Bypass Grafting (MIDCAB)', url:'https://www.youtube.com/watch?v=Z7B9Rcn0ARg', channel:'YouTube', isSeismic:false, isLearning:false, linkMissing:false },
+  { op:'CABG', sys:'-', adv:'IMA Dissection', title:'IMA Dissection – In-Situ Graft', description:'Robotic Bilateral Internal Mammary Artery Dissection', url:'https://www.youtube.com/watch?v=HxQTcytrHO0', channel:'YouTube', isSeismic:false, isLearning:false, linkMissing:false },
+  { op:'CABG', sys:'-', adv:'Total Arterial Revascularization', title:'Artery Graft – Multi-Vessel', description:'Total Arterial Revascularization for Multi-Vessel Coronary Artery Disease', url:'https://www.youtube.com/watch?v=JAdFxspzcq8', channel:'YouTube', isSeismic:false, isLearning:false, linkMissing:false },
+  { op:'Valve Repair', sys:'dV5', adv:'Mitral Valve Repair', title:'dV5 MVR', description:'dV5 Mitral Valve Repair 콘텐츠', url:'https://intuitive.seismic.com/Link/Content/DCMm6cXh9G9C38CCP3TFRjfT2Qb3', channel:'Seismic', isSeismic:true, isLearning:false, linkMissing:false },
+  { op:'Valve Repair', sys:'Xi', adv:'Mitral Valve Repair', title:'Xi MVR', description:'Xi Mitral Valve Repair 콘텐츠', url:'https://intuitive.seismic.com/Link/Content/DC3fPMchXW6Wq8FJdhbPX6XJp6Dj', channel:'Seismic', isSeismic:true, isLearning:false, linkMissing:false },
+  { op:'Valve Repair', sys:'Xi', adv:'Dual Blade Retractor', title:"Drs. Loulmet and Grossi's Xi MVR", description:'대표적인 Robotic Mitral Valve procedure. Dual Blade Retractor 사용. Loulmet: robotic cardiac surgery pioneer / Grossi: minimally invasive & robotic valve surgery expert', url:'https://learning.intuitive.com/activity/47151', channel:'Intuitive Learning', isSeismic:false, isLearning:true, linkMissing:false },
+  { op:'Valve Repair', sys:'dV5', adv:'Mitral Valve Repair', title:'J. Michael Smith – Mitral Valve Repair', description:'Mitral Valve Repair Using the da Vinci 5 Surgical System', url:'https://intuitive.seismic.com/Link/Content/DCjqpfRgm9goX87RRqPB3g7FHPqB', channel:'Seismic', isSeismic:true, isLearning:false, linkMissing:false },
+  { op:'Valve Repair', sys:'Xi', adv:'Mitral Valve Repair', title:'Didier F. Loulmet / Eugene A. Grossi – MVR', description:'Robotic Mitral Valve Repair. Loulmet: Mitral Valve Repair, CABG, Cardiac Tumor Surgery / Grossi: Valvular Heart Disease 및 minimally invasive·robotic techniques', url:'https://learning.intuitive.com/activity/47405', channel:'NYU Langone Health / Intuitive Learning', isSeismic:false, isLearning:true, linkMissing:false },
+  { op:'Valve Repair', sys:'dV5', adv:'Mitral Valve Repair', title:'Didier F. Loulmet / Eugene A. Grossi – dV5 MVR', description:'대표적인 Robotic Mitral Valve procedure. Dual Blade Retractor 사용. Robotic cardiac 및 valve surgery expert 사례', url:'https://intuitive.seismic.com/Link/Content/DCjqpfRgm9goX87RRqPB3g7FHPqB', channel:'Seismic', isSeismic:true, isLearning:false, linkMissing:false },
+];
+
 const CARDIAC_SURGEONS_FALLBACK = [
   { surgeon:'Dr. Michael E. Halkos', institution:'Emory University School of Medicine / Emory Healthcare', specialty:'Robotic CABG, Hybrid Coronary Revascularization, Robotic Mitral Surgery', highlights:'미국 Robotic CABG Program 구축 분야 대표 KOL', country:'USA', system:'da Vinci Xi', category:'CABG', link:'' },
   { surgeon:'Dr. Zhandong Zhou', institution:"St. Joseph's Health", specialty:'Robotic CABG, Skeletonized IMA Harvesting', highlights:'약 20년 이상 Robotic CABG 경험, 다수 Surgeon Proctor', country:'USA', system:'da Vinci Xi', category:'CABG', link:'' },
@@ -7267,6 +7285,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updatePhoneSpecPill('gyn');
   // Cardiac surgeon fallback 초기 세팅
   if(!CARDIAC_SURGEONS.length) CARDIAC_SURGEONS.push(...CARDIAC_SURGEONS_FALLBACK);
+  if(!CARDIAC_VIDEOS.length) CARDIAC_VIDEOS.push(...CARDIAC_VIDEOS_FALLBACK);
   loadVideosFromSheet();
   loadArticlesFromSheet();
   loadConferencesFromSheet();
