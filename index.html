@@ -3479,6 +3479,14 @@ const CARDIAC_PAPER_SHEET   = BASE_PUB + "?gid=1700395267&single=true&output=csv
 const CARDIAC_CAL_SHEET     = BASE_PUB + "?gid=1345374325&single=true&output=csv";
 
 let CARDIAC_VIDEOS   = [];
+let URO_VIDEOS = [];
+let CR_VIDEOS = [];
+let THORACIC_VIDEOS = [];
+let STOMACH_VIDEOS = [];
+let BREAST_VIDEOS = [];
+let HN_VIDEOS = [];
+let HBP_VIDEOS = [];
+let HERNIA_VIDEOS = [];
 let CARDIAC_ARTICLES = [];
 let CARDIAC_PAPERS   = [];
 let CARDIAC_CALS     = [];
@@ -6205,6 +6213,52 @@ document.addEventListener('click', () => {
   if(tip) tip.classList.remove('show');
 });
 
+
+/* ══════════════════════ SPEC VIDEO SHEET LOADERS ══════════════════════ */
+const SPEC_VIDEO_SHEET_GIDS = {
+  uro:     '675837182',
+  cr:      '1380938003',
+  thoracic:'299868161',
+  stomach: '150760111',
+  breast:  '1424460411',
+  hn:      '1400224460',
+  hbp:     '197085167',
+  hernia:  '1404221171',
+};
+
+async function loadSpecVideoFromSheet(spec) {
+  const gid = SPEC_VIDEO_SHEET_GIDS[spec];
+  if(!gid) return;
+  const arrName = spec.toUpperCase() + '_VIDEOS';
+  const arr = eval(arrName);  // 전역 배열 참조
+  if(!arr) return;
+  try {
+    const pub = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
+    const rows = await fetchCSV(pub + '?gid=' + gid + '&single=true&output=csv');
+    if(rows.length < 2) throw new Error('no data');
+    const rawH = rows[0].map(h => String(h||'').trim().toLowerCase());
+    const cOffset = rawH.findIndex(h => h && h.length > 1 && !/^[0-9\s]*$/.test(h));
+    const headers = cOffset > 0 ? rawH.slice(cOffset) : rawH;
+    const loaded = rows.slice(1)
+      .filter(r => r.some(v => v && String(v).trim()))
+      .map(r => normalizeVideoRow(r, headers, cOffset > 0 ? cOffset : 0))
+      .filter(v => v.title || v.url);
+    if(loaded.length > 0) {
+      arr.length = 0;
+      loaded.forEach(v => arr.push(v));
+      console.log(spec + ' videos loaded:', loaded.length);
+    }
+  } catch(e) {
+    console.warn(spec + ' video sheet failed:', e.message);
+  }
+}
+
+async function loadAllSpecVideos() {
+  await Promise.allSettled(
+    Object.keys(SPEC_VIDEO_SHEET_GIDS).map(spec => loadSpecVideoFromSheet(spec))
+  );
+}
+
 function toggleYear(yr) {
   const sec=document.getElementById('yr_'+yr);
   const arr=document.getElementById('yarr_'+yr);
@@ -6516,10 +6570,10 @@ async function fetchCSV(url) {
 async function loadCardiacData() {
   const pub = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
   const sheets = [
-    { url: pub+'?gid=924999404&single=true&output=csv',  arr: CARDIAC_VIDEOS,   type:'video' },
+    { url: pub+'?gid=46157436&single=true&output=csv',   arr: CARDIAC_VIDEOS,   type:'video' },
     { url: pub+'?gid=468200524&single=true&output=csv',  arr: CARDIAC_ARTICLES, type:'article' },
-    { url: pub+'?gid=1700395267&single=true&output=csv', arr: CARDIAC_PAPERS,   type:'paper' },
-    { url: pub+'?gid=1345374325&single=true&output=csv', arr: CARDIAC_CALS,     type:'cal' },
+    { url: pub+'?gid=924999404&single=true&output=csv', arr: CARDIAC_PAPERS,   type:'paper' },
+    { url: pub+'?gid=1700395267&single=true&output=csv', arr: CARDIAC_CALS,     type:'cal' },
     { url: pub+'?gid=SURGEON_GID&single=true&output=csv', arr: CARDIAC_SURGEONS, type:'surgeon' },
   ];
   await Promise.allSettled(sheets.map(async s => {
@@ -6577,12 +6631,10 @@ async function loadCardiacData() {
       console.log('Cardiac', s.type, 'loaded:', s.arr.length);
     } catch(e) { console.warn('Cardiac', s.type, 'failed:', e.message); }
   }));
-  // 시트 로드 후에도 Video가 비어있거나 엉뚱한 데이터면 fallback 복원
-  if(CARDIAC_VIDEOS.length === 0 ||
-     (CARDIAC_VIDEOS.length <= 2 && CARDIAC_VIDEOS.some(v => v.tech === 'vNOTES'))) {
-    CARDIAC_VIDEOS.length = 0;
+  // 시트 로드 후 Video가 비어있으면 fallback 복원
+  if(CARDIAC_VIDEOS.length === 0) {
     CARDIAC_VIDEOS.push(...CARDIAC_VIDEOS_FALLBACK);
-    console.log('Cardiac videos: GID mismatch detected, using fallback');
+    console.log('Cardiac videos: sheet empty, using fallback');
   }
   renderCardiacVideos();
   renderCardiacArticles();
@@ -7297,6 +7349,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadArticlesFromSheet();
   loadConferencesFromSheet();
   loadCardiacData();
+  loadAllSpecVideos();
   loadPapersFromSheet();
   readStateFromURL();
   setTimeout(renderDdayBanner, 1500);
