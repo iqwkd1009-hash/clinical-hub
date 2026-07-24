@@ -6577,6 +6577,13 @@ async function loadCardiacData() {
       console.log('Cardiac', s.type, 'loaded:', s.arr.length);
     } catch(e) { console.warn('Cardiac', s.type, 'failed:', e.message); }
   }));
+  // 시트 로드 후에도 Video가 비어있거나 엉뚱한 데이터면 fallback 복원
+  if(CARDIAC_VIDEOS.length === 0 ||
+     (CARDIAC_VIDEOS.length <= 2 && CARDIAC_VIDEOS.some(v => v.tech === 'vNOTES'))) {
+    CARDIAC_VIDEOS.length = 0;
+    CARDIAC_VIDEOS.push(...CARDIAC_VIDEOS_FALLBACK);
+    console.log('Cardiac videos: GID mismatch detected, using fallback');
+  }
   renderCardiacVideos();
   renderCardiacArticles();
   renderCardiacPapers();
