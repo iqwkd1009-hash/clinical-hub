@@ -3463,7 +3463,7 @@ let VIDEOS = [
 
 
 const VIDEO_SHEET_URLS = [
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=468200524&single=true&output=csv"
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=0&single=true&output=csv"
 ];
 
 // ★ Articles 시트 URL — 시트에 'articles' 탭 추가 후 gid 값으로 교체하세요
@@ -3490,6 +3490,7 @@ let HERNIA_VIDEOS = [];
 let CARDIAC_ARTICLES = [];
 let CARDIAC_PAPERS   = [];
 let CARDIAC_CALS     = [];
+let ALL_CONFERENCES  = [];  // 전체 과 통합 캘린더
 let CARDIAC_SURGEONS = [];
 
 async function loadArticlesFromSheet() {
@@ -6259,6 +6260,334 @@ async function loadAllSpecVideos() {
   );
 }
 
+
+/* ── SPEC별 캘린더 색상 ── */
+const SPEC_CAL_COLORS = {
+  gyn:      { from:'#0071E3', to:'#3395FF', label:'GYN',      dot:'#0071E3' },
+  cardiac:  { from:'#C0143C', to:'#E8365D', label:'Cardiac',  dot:'#C0143C' },
+  uro:      { from:'#7C3AED', to:'#9F60F5', label:'URO',      dot:'#7C3AED' },
+  cr:       { from:'#059669', to:'#1DB97A', label:'CR',        dot:'#059669' },
+  thoracic: { from:'#0891B2', to:'#22B8D8', label:'Thoracic', dot:'#0891B2' },
+  stomach:  { from:'#EA580C', to:'#FF7A30', label:'Stomach',  dot:'#EA580C' },
+  breast:   { from:'#DB2777', to:'#F550A0', label:'Breast',   dot:'#DB2777' },
+  hn:       { from:'#D97706', to:'#F59E0B', label:'H&N',      dot:'#D97706' },
+  hbp:      { from:'#65A30D', to:'#84CC16', label:'HBP',      dot:'#65A30D' },
+  hernia:   { from:'#9333EA', to:'#B44DF5', label:'Hernia',   dot:'#9333EA' },
+};
+
+
+/* ══════════════════════ ALL CALENDAR ══════════════════════ */
+let _allCalView      = 'card';
+let _allCalMonth     = new Date().getMonth();
+let _allCalYear      = new Date().getFullYear();
+let _allCalSpecFilter= 'all';
+let _allCalTagFilter = 'all';
+
+function openAllCal(el) {
+  // 모든 페이지 숨기기
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  // all-cal 페이지 표시
+  const pg = document.getElementById('page-all-cal');
+  if(pg) pg.classList.add('active');
+  if(el) el.classList.add('active');
+  // 전체 일정 집계
+  buildAllConferences();
+  renderAllCal();
+}
+
+function buildAllConferences() {
+  ALL_CONFERENCES.length = 0;
+  // GYN
+  CONFERENCES.forEach(e => ALL_CONFERENCES.push({...e, _spec:'gyn'}));
+  // Cardiac
+  CARDIAC_CALS.forEach(e => ALL_CONFERENCES.push({...e, _spec:'cardiac'}));
+  // 기타 과 - 각 과 CONFERENCES 배열이 있으면 추가
+  const specArrays = {
+    uro: typeof URO_CONFERENCES !== 'undefined' ? URO_CONFERENCES : [],
+    cr:  typeof CR_CONFERENCES  !== 'undefined' ? CR_CONFERENCES  : [],
+    thoracic: typeof THORACIC_CONFERENCES !== 'undefined' ? THORACIC_CONFERENCES : [],
+    stomach:  typeof STOMACH_CONFERENCES  !== 'undefined' ? STOMACH_CONFERENCES  : [],
+    breast:   typeof BREAST_CONFERENCES   !== 'undefined' ? BREAST_CONFERENCES   : [],
+    hn:       typeof HN_CONFERENCES       !== 'undefined' ? HN_CONFERENCES       : [],
+    hbp:      typeof HBP_CONFERENCES      !== 'undefined' ? HBP_CONFERENCES      : [],
+    hernia:   typeof HERNIA_CONFERENCES   !== 'undefined' ? HERNIA_CONFERENCES   : [],
+  };
+  Object.entries(specArrays).forEach(([spec, arr]) => {
+    arr.forEach(e => ALL_CONFERENCES.push({...e, _spec:spec}));
+  });
+  // 날짜순 정렬
+  ALL_CONFERENCES.sort((a,b) => (a.start||'').localeCompare(b.start||''));
+}
+
+function renderAllCal() {
+  const q = (document.getElementById('allCalSearch')?.value||'').toLowerCase();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  let items = ALL_CONFERENCES.filter(e => {
+    if(_allCalSpecFilter !== 'all' && e._spec !== _allCalSpecFilter) return false;
+    if(_allCalTagFilter  !== 'all' && e.tag   !== _allCalTagFilter)  return false;
+    if(q && ![e.name,e.loc,e.note,e.system].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // 카운트
+  const cntEl = document.getElementById('allCalCount');
+  if(cntEl) cntEl.textContent = items.length + ' events';
+
+  // 과 필터 빌드
+  buildAllCalSpecFilter();
+  buildAllCalTagFilter();
+
+  if(_allCalView === 'month') {
+    renderAllCalMonth(items, today);
+    return;
+  }
+
+  // 카드 뷰
+  const grid = document.getElementById('allCalGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  if(!items.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3)">검색 결과가 없습니다</div>';
+    return;
+  }
+
+  // 연도별 그룹
+  const years = [...new Set(items.map(e => e.start?.slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
+  years.forEach(yr => {
+    const grp = items.filter(e => (e.start||'').startsWith(yr));
+    const isThis = yr === String(new Date().getFullYear());
+
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 10px';
+    hdr.innerHTML = `<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>${isThis?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}<div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:var(--text3)">${grp.length}건</span>`;
+    grid.appendChild(hdr);
+
+    const cardGrid = document.createElement('div');
+    cardGrid.className = 'cal-grid-view';
+
+    grp.forEach(e => {
+      const specClr = SPEC_CAL_COLORS[e._spec] || {from:'#888',to:'#aaa'};
+      const isPast = effectiveEndTime(e) < today.getTime();
+      const du = daysUntil(e.start);
+      const duLabel = isPast ? '종료' : du===0 ? '오늘!' : du>0 ? `D-${du}` : `D+${Math.abs(du)}`;
+      const duColor = isPast ? 'rgba(255,255,255,0.5)' : du<=7 ? '#FFD700' : du<=30 ? '#FFA07A' : 'rgba(255,255,255,0.92)';
+      const dateRange = e.end && e.end!==e.start ? `${e.start} ~ ${e.end.slice(5)}` : e.start;
+      const tl = calTagLabel(e.tag);
+
+      const card = document.createElement('div');
+      card.className = 'cal-thumb-card' + (isPast?' past':'');
+
+      // 배너 (과 색상 + 태그)
+      const banner = document.createElement('div');
+      banner.style.cssText = `height:80px;background:linear-gradient(135deg,${specClr.from},${specClr.to});position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:8px 12px`;
+
+      const pat = document.createElement('div');
+      pat.style.cssText = 'position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:16px 16px';
+      banner.appendChild(pat);
+
+      // 과 레이블 (좌상단)
+      const specLbl = document.createElement('div');
+      specLbl.style.cssText = 'position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.2);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:white;font-family:var(--mono);letter-spacing:0.05em';
+      specLbl.textContent = (SPEC_CAL_COLORS[e._spec]?.label || e._spec.toUpperCase());
+      banner.appendChild(specLbl);
+
+      // 태그 (우상단)
+      const tagLbl = document.createElement('div');
+      tagLbl.style.cssText = 'position:absolute;top:8px;right:10px;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);font-family:var(--mono)';
+      tagLbl.textContent = tl;
+      banner.appendChild(tagLbl);
+
+      // D-day
+      const dday = document.createElement('div');
+      dday.style.cssText = `font-size:15px;font-weight:800;font-family:var(--mono);color:${duColor};position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.3)`;
+      dday.textContent = duLabel;
+      banner.appendChild(dday);
+      card.appendChild(banner);
+
+      // 바디
+      const body = document.createElement('div');
+      body.style.cssText = 'padding:10px 13px 8px;display:flex;flex-direction:column;gap:5px;flex:1';
+
+      const nameEl = document.createElement('div');
+      nameEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text);line-height:1.4;letter-spacing:-0.01em';
+      nameEl.textContent = e.name||'';
+      body.appendChild(nameEl);
+
+      const dateEl = document.createElement('div');
+      dateEl.style.cssText = 'font-size:10px;color:var(--text3);font-family:var(--mono)';
+      dateEl.textContent = dateRange;
+      body.appendChild(dateEl);
+
+      if(e.loc) {
+        const locEl = document.createElement('div');
+        locEl.style.cssText = 'font-size:10px;color:var(--text3)';
+        locEl.textContent = '📍 ' + e.loc;
+        body.appendChild(locEl);
+      }
+      if(e.system) {
+        const sysEl = document.createElement('div');
+        sysEl.style.cssText = 'font-size:10px;color:var(--primary);font-family:var(--mono);font-weight:600';
+        sysEl.textContent = '🤖 ' + e.system;
+        body.appendChild(sysEl);
+      }
+      card.appendChild(body);
+
+      // 푸터
+      const foot = document.createElement('div');
+      foot.style.cssText = 'padding:6px 13px 10px;display:flex;align-items:center;justify-content:space-between;border-top:0.5px solid var(--border)';
+      const dutyEl = document.createElement('div');
+      dutyEl.style.cssText = 'font-size:10px;color:var(--text3)';
+      dutyEl.textContent = e.duty ? '👥 '+e.duty : '';
+      foot.appendChild(dutyEl);
+      if(e.url) {
+        const a = document.createElement('a');
+        a.href = e.url; a.target='_blank'; a.rel='noopener';
+        a.style.cssText = 'font-size:10px;font-weight:600;color:var(--primary);text-decoration:none;font-family:var(--mono)';
+        a.textContent = '사이트 →';
+        foot.appendChild(a);
+      }
+      card.appendChild(foot);
+      cardGrid.appendChild(card);
+    });
+    grid.appendChild(cardGrid);
+  });
+}
+
+function buildAllCalSpecFilter() {
+  const el = document.getElementById('allCalSpecFilter');
+  if(!el || el.children.length > 0) return;
+
+  const specs = [...new Set(ALL_CONFERENCES.map(e=>e._spec).filter(Boolean))];
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-btn' + (_allCalSpecFilter==='all'?' active':'');
+  allBtn.innerHTML = '전체 <span class="btn-count">'+ALL_CONFERENCES.length+'</span>';
+  allBtn.onclick = () => { _allCalSpecFilter='all'; el.innerHTML=''; renderAllCal(); };
+  el.appendChild(allBtn);
+
+  specs.forEach(spec => {
+    const clr = SPEC_CAL_COLORS[spec];
+    const cnt = ALL_CONFERENCES.filter(e=>e._spec===spec).length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (_allCalSpecFilter===spec?' active':'');
+    btn.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${clr?.dot||'#888'};margin-right:4px;vertical-align:middle"></span>${clr?.label||spec.toUpperCase()} <span class="btn-count">${cnt}</span>`;
+    btn.onclick = () => { _allCalSpecFilter=spec; el.innerHTML=''; renderAllCal(); };
+    el.appendChild(btn);
+  });
+}
+
+function buildAllCalTagFilter() {
+  const el = document.getElementById('allCalTagFilter');
+  if(!el || el.children.length > 0) return;
+  const TAG_LABEL = {conference:'🏛️ Conference',symposium:'🎤 Symposium',workshop:'🔬 Workshop',webinar:'💻 Webinar',roadshow:'🚗 Roadshow'};
+  const tags = [...new Set(ALL_CONFERENCES.map(e=>e.tag).filter(Boolean))];
+  if(tags.length <= 1) return;
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-btn' + (_allCalTagFilter==='all'?' active':'');
+  allBtn.textContent = '전체 유형';
+  allBtn.onclick = () => { _allCalTagFilter='all'; el.innerHTML=''; renderAllCal(); };
+  el.appendChild(allBtn);
+
+  tags.forEach(tag => {
+    const cnt = ALL_CONFERENCES.filter(e=>e.tag===tag).length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (_allCalTagFilter===tag?' active':'');
+    btn.innerHTML = (TAG_LABEL[tag]||tag) + ' <span class="btn-count">'+cnt+'</span>';
+    btn.onclick = () => { _allCalTagFilter=tag; el.innerHTML=''; renderAllCal(); };
+    el.appendChild(btn);
+  });
+}
+
+function setAllCalView(view) {
+  _allCalView = view;
+  document.getElementById('allCalViewCard').classList.toggle('active', view==='card');
+  document.getElementById('allCalViewMonth').classList.toggle('active', view==='month');
+  document.getElementById('allCalGrid').style.display = view==='card' ? '' : 'none';
+  document.getElementById('allCalMonthView').style.display = view==='month' ? 'block' : 'none';
+  renderAllCal();
+}
+
+function moveAllCalMonth(dir) {
+  _allCalMonth += dir;
+  if(_allCalMonth > 11) { _allCalMonth=0; _allCalYear++; }
+  if(_allCalMonth < 0)  { _allCalMonth=11; _allCalYear--; }
+  renderAllCal();
+}
+
+function renderAllCalMonth(items, today) {
+  const header = document.getElementById('allCalMonthHeader');
+  const grid   = document.getElementById('allCalMonthGrid');
+  const title  = document.getElementById('allCalMonthTitle');
+  if(!grid) return;
+
+  const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  if(title) title.textContent = _allCalYear + '년 ' + MONTHS_KO[_allCalMonth];
+
+  if(header) {
+    header.innerHTML = '';
+    ['일','월','화','수','목','금','토'].forEach((d,i) => {
+      const el = document.createElement('div');
+      el.className = 'month-weekday'+(i===0?' sun':i===6?' sat':'');
+      el.textContent = d;
+      header.appendChild(el);
+    });
+  }
+
+  const firstDay = new Date(_allCalYear, _allCalMonth, 1).getDay();
+  const daysInMonth = new Date(_allCalYear, _allCalMonth+1, 0).getDate();
+  const daysInPrev  = new Date(_allCalYear, _allCalMonth, 0).getDate();
+
+  function eventsForDay(day) {
+    const d = new Date(_allCalYear, _allCalMonth, day); d.setHours(0,0,0,0);
+    return items.filter(e => {
+      const s = new Date(e.start); s.setHours(0,0,0,0);
+      const en = e.end ? new Date(e.end) : new Date(e.start); en.setHours(0,0,0,0);
+      return s <= d && en >= d;
+    });
+  }
+
+  grid.innerHTML = '';
+  const total = Math.ceil((firstDay+daysInMonth)/7)*7;
+  for(let i=0; i<total; i++) {
+    let dayNum, isCurrent=true;
+    if(i < firstDay) { dayNum=daysInPrev-firstDay+i+1; isCurrent=false; }
+    else if(i >= firstDay+daysInMonth) { dayNum=i-firstDay-daysInMonth+1; isCurrent=false; }
+    else { dayNum=i-firstDay+1; }
+
+    const dow=i%7;
+    const isToday=isCurrent&&dayNum===today.getDate()&&_allCalMonth===today.getMonth()&&_allCalYear===today.getFullYear();
+    const cell = document.createElement('div');
+    cell.className='month-day'+((!isCurrent)?' other-month':'')+(isToday?' today':'')+(dow===0?' sunday':dow===6?' saturday':'');
+
+    const num=document.createElement('div'); num.className='month-day-num'; num.textContent=dayNum;
+    cell.appendChild(num);
+
+    if(isCurrent) {
+      const dayEvs=eventsForDay(dayNum);
+      const wrap=document.createElement('div'); wrap.className='month-events-wrap';
+      dayEvs.slice(0,3).forEach(e => {
+        const clr=SPEC_CAL_COLORS[e._spec]||{dot:'#888'};
+        const ev=document.createElement('div'); ev.className='month-event';
+        ev.style.cssText=`background:${clr.dot}20;color:${clr.dot};border-left:2px solid ${clr.dot}`;
+        ev.textContent=e.name; ev.title=e.name;
+        ev.onclick=ev2=>{ev2.stopPropagation();showCalTooltip(ev2,e);};
+        wrap.appendChild(ev);
+      });
+      if(dayEvs.length>3){
+        const more=document.createElement('div'); more.className='month-more';
+        more.textContent='+'+(dayEvs.length-3)+'개 더';
+        more.onclick=ev2=>{ev2.stopPropagation();showCalTooltip(ev2,dayEvs[3]);};
+        wrap.appendChild(more);
+      }
+      cell.appendChild(wrap);
+    }
+    grid.appendChild(cell);
+  }
+}
+
 function toggleYear(yr) {
   const sec=document.getElementById('yr_'+yr);
   const arr=document.getElementById('yarr_'+yr);
@@ -6631,10 +6960,17 @@ async function loadCardiacData() {
       console.log('Cardiac', s.type, 'loaded:', s.arr.length);
     } catch(e) { console.warn('Cardiac', s.type, 'failed:', e.message); }
   }));
-  // 시트 로드 후 Video가 비어있으면 fallback 복원
-  if(CARDIAC_VIDEOS.length === 0) {
+  // 시트 로드 후 검증 - CABG/Valve Repair가 있어야 유효한 Cardiac Video
+  const validCardiacOps = ['CABG','Valve Repair','Valve Replacement','Atrial','MIDCAB','TECAB'];
+  const hasValidOp = CARDIAC_VIDEOS.some(v =>
+    validCardiacOps.some(op => (v.op||'').includes(op))
+  );
+  if(CARDIAC_VIDEOS.length === 0 || !hasValidOp) {
+    CARDIAC_VIDEOS.length = 0;
     CARDIAC_VIDEOS.push(...CARDIAC_VIDEOS_FALLBACK);
-    console.log('Cardiac videos: sheet empty, using fallback');
+    console.log('Cardiac videos: invalid data detected, using fallback (' + CARDIAC_VIDEOS_FALLBACK.length + ' videos)');
+  } else {
+    console.log('Cardiac videos: sheet data OK (' + CARDIAC_VIDEOS.length + ' videos)');
   }
   renderCardiacVideos();
   renderCardiacArticles();
@@ -7428,6 +7764,71 @@ window.addEventListener('DOMContentLoaded', () => {
 
     <!-- 카드 그리드 -->
     <div id="surgeonGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:start"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ALL CALENDAR PAGE                                  -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="page" id="page-all-cal" style="min-height:calc(100vh - 94px)">
+  <div style="flex:1;padding:20px 24px;overflow-y:auto">
+
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;margin:0">전체 학회 일정</h2>
+        <p style="font-size:12px;color:var(--text3);margin:3px 0 0">All Specialties · Clinical Calendar</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <!-- 뷰 토글 -->
+        <div class="cal-view-toggle">
+          <button id="allCalViewCard" class="cal-view-btn active" onclick="setAllCalView('card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            카드
+          </button>
+          <button id="allCalViewMonth" class="cal-view-btn" onclick="setAllCalView('month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            달력
+          </button>
+        </div>
+        <span id="allCalCount" style="font-size:12px;color:var(--text3);font-family:var(--mono)">0 events</span>
+      </div>
+    </div>
+
+    <!-- 과별 필터 -->
+    <div id="allCalSpecFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+
+    <!-- 태그 필터 -->
+    <div id="allCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
+
+    <!-- 검색 -->
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface2);border-radius:10px;margin-bottom:16px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="allCalSearch" type="text" placeholder="학회명, 장소 검색..." oninput="renderAllCal()"
+        style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);outline:none;width:100%">
+    </div>
+
+    <!-- disclaimer -->
+    <div class="tab-disclaimer" id="disc-all-cal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>
+    </div>
+
+    <!-- 카드 그리드 -->
+    <div id="allCalGrid" style="margin-top:8px"></div>
+
+    <!-- 달력 뷰 -->
+    <div id="allCalMonthView" style="display:none;margin-top:8px">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveAllCalMonth(-1)">‹</button>
+        <div class="month-nav-title" id="allCalMonthTitle"></div>
+        <button class="month-nav-btn" onclick="moveAllCalMonth(1)">›</button>
+      </div>
+      <div class="month-grid-header" id="allCalMonthHeader"></div>
+      <div class="month-grid" id="allCalMonthGrid"></div>
+    </div>
+
   </div>
 </div>
 
