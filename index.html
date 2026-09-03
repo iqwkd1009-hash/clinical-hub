@@ -1673,6 +1673,17 @@ body.dark #paperGrid > div {
 .month-grid { border-radius:0 0 14px 14px; border-top:none; }
 .month-weekday.sun { color:#C0143C; }
 .month-weekday.sat { color:#185FA5; }
+
+/* ── main-content (사이드바 옆 메인 영역) ── */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+#allCalCardArea {
+  width: 100%;
+}
 </style>
 </head>
 <body>
@@ -2239,8 +2250,9 @@ body.dark #paperGrid > div {
     <div id="calMonthView">
       <div class="month-nav">
         <button class="month-nav-btn" onclick="moveMonth(-1)">‹</button>
-        <div class="month-nav-title" id="monthNavTitle"></div>
+        <div class="month-nav-title" id="monthNavTitle" style="display:flex;align-items:center;gap:4px"></div>
         <button class="month-nav-btn" onclick="moveMonth(1)">›</button>
+        <button class="month-nav-btn" onclick="goToday()" style="width:auto;padding:0 10px;font-size:11px;font-weight:600;margin-left:8px" title="오늘">오늘</button>
       </div>
       <div class="month-grid" id="monthGrid"></div>
     </div>
@@ -2357,7 +2369,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -2365,11 +2377,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="uroCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('uro','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="uroCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('uro','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="uroUpcomingSection" style="margin-bottom:12px"></div>
 <div id="uroCalGrid"></div>
+    <div id="uroCalCardArea"></div>
+    <div id="uroCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('uro',-1)">‹</button>
+        <div class="month-nav-title" id="uroMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('uro',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="uroMonthHeader"></div>
+      <div class="month-grid" id="uroMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -2483,7 +2515,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -2491,11 +2523,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="crCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('cr','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="crCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('cr','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="crUpcomingSection" style="margin-bottom:12px"></div>
 <div id="crCalGrid"></div>
+    <div id="crCalCardArea"></div>
+    <div id="crCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('cr',-1)">‹</button>
+        <div class="month-nav-title" id="crMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('cr',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="crMonthHeader"></div>
+      <div class="month-grid" id="crMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -2609,7 +2661,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -2617,11 +2669,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="thoracicCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('thoracic','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="thoracicCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('thoracic','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="thoracicUpcomingSection" style="margin-bottom:12px"></div>
 <div id="thoracicCalGrid"></div>
+    <div id="thoracicCalCardArea"></div>
+    <div id="thoracicCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('thoracic',-1)">‹</button>
+        <div class="month-nav-title" id="thoracicMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('thoracic',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="thoracicMonthHeader"></div>
+      <div class="month-grid" id="thoracicMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -2735,7 +2807,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -2743,11 +2815,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="stomachCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('stomach','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="stomachCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('stomach','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="stomachUpcomingSection" style="margin-bottom:12px"></div>
 <div id="stomachCalGrid"></div>
+    <div id="stomachCalCardArea"></div>
+    <div id="stomachCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('stomach',-1)">‹</button>
+        <div class="month-nav-title" id="stomachMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('stomach',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="stomachMonthHeader"></div>
+      <div class="month-grid" id="stomachMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -2861,7 +2953,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -2869,11 +2961,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="breastCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('breast','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="breastCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('breast','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="breastUpcomingSection" style="margin-bottom:12px"></div>
 <div id="breastCalGrid"></div>
+    <div id="breastCalCardArea"></div>
+    <div id="breastCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('breast',-1)">‹</button>
+        <div class="month-nav-title" id="breastMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('breast',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="breastMonthHeader"></div>
+      <div class="month-grid" id="breastMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -2987,7 +3099,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -2995,11 +3107,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="hnCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('hn','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="hnCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('hn','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="hnUpcomingSection" style="margin-bottom:12px"></div>
 <div id="hnCalGrid"></div>
+    <div id="hnCalCardArea"></div>
+    <div id="hnCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('hn',-1)">‹</button>
+        <div class="month-nav-title" id="hnMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('hn',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="hnMonthHeader"></div>
+      <div class="month-grid" id="hnMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -3113,7 +3245,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -3121,11 +3253,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="hbpCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('hbp','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="hbpCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('hbp','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="hbpUpcomingSection" style="margin-bottom:12px"></div>
 <div id="hbpCalGrid"></div>
+    <div id="hbpCalCardArea"></div>
+    <div id="hbpCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('hbp',-1)">‹</button>
+        <div class="month-nav-title" id="hbpMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('hbp',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="hbpMonthHeader"></div>
+      <div class="month-grid" id="hbpMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -3239,7 +3391,7 @@ body.dark #paperGrid > div {
       </a>
     </div>
   </aside>
-  <div style="flex:1;padding:24px 28px;overflow-y:auto">
+  <div class="main-content" style="flex:1;padding:24px 28px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="mobile-filter-btn" onclick="openDrawer('sidebar-cardiac-cal')">
@@ -3247,11 +3399,31 @@ body.dark #paperGrid > div {
           필터
         </button>
       </div>
-      <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="cal-view-toggle">
+          <button id="herniaCalViewCard" class="cal-view-btn active" onclick="setSpecCalView('hernia','card')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
+          </button>
+          <button id="herniaCalViewMonth" class="cal-view-btn" onclick="setSpecCalView('hernia','month')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
+      </div>
     </div>
     
     <div id="herniaUpcomingSection" style="margin-bottom:12px"></div>
 <div id="herniaCalGrid"></div>
+    <div id="herniaCalCardArea"></div>
+    <div id="herniaCalMonthView" style="display:none">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="moveSpecMonth('hernia',-1)">‹</button>
+        <div class="month-nav-title" id="herniaMonthNavTitle"></div>
+        <button class="month-nav-btn" onclick="moveSpecMonth('hernia',1)">›</button>
+      </div>
+      <div class="month-grid-header" id="herniaMonthHeader"></div>
+      <div class="month-grid" id="herniaMonthGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -3798,14 +3970,9 @@ function switchSpec(spec, el) {
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
-  // 탭 기본 활성화
-  if(spec === 'gyn' || spec === 'cardiac') {
-    document.getElementById('sub-video').classList.add('active');
-    updateMobileTabs('video');
-  } else {
-    document.getElementById('sub-cal').classList.add('active');
-    updateMobileTabs('cal');
-  }
+  // 모든 과 캘린더 탭으로 시작
+  document.getElementById('sub-cal').classList.add('active');
+  updateMobileTabs('cal');
 
   // 모든 mode 클래스 제거 후 해당 mode 추가
   const allModes = ['cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode'];
@@ -6239,7 +6406,18 @@ function renderMonthView() {
   // 제목
   const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  if(titleEl) titleEl.textContent = yr + '년 ' + MONTHS_KO[mo];
+  if(titleEl) {
+    titleEl.innerHTML = '';
+    const yBtn = document.createElement('button');
+    yBtn.style.cssText = 'border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);padding:0 2px';
+    yBtn.textContent = yr + '년';
+    yBtn.onclick = () => showYearPicker('_calYear','_calMonth', renderMonthView);
+    const mBtn = document.createElement('button');
+    mBtn.style.cssText = 'border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:0 2px';
+    mBtn.textContent = ' ' + MONTHS_KO[mo];
+    mBtn.onclick = () => showMonthPicker('_calYear','_calMonth', renderMonthView);
+    titleEl.appendChild(yBtn); titleEl.appendChild(mBtn);
+  }
 
   // 이번 달 일수, 시작 요일
   const firstDay = new Date(yr, mo, 1).getDay(); // 0=Sun
@@ -7128,6 +7306,237 @@ function renderSpecVideo(spec) {
     }
     grid.appendChild(card);
   });
+}
+
+
+/* ══════════════════════ SPEC CAL VIEW (기타 과 공통) ══════════════════════ */
+const _specCalViewState = {}; // { spec: { view, year, month } }
+
+function _getSpecState(spec) {
+  if(!_specCalViewState[spec]) {
+    const now = new Date();
+    _specCalViewState[spec] = { view:'card', year:now.getFullYear(), month:now.getMonth() };
+  }
+  return _specCalViewState[spec];
+}
+
+function setSpecCalView(spec, view) {
+  const st = _getSpecState(spec);
+  st.view = view;
+  document.getElementById(spec+'CalViewCard')?.classList.toggle('active', view==='card');
+  document.getElementById(spec+'CalViewMonth')?.classList.toggle('active', view==='month');
+  const gridEl  = document.getElementById(spec+'CalGrid');
+  const monthEl = document.getElementById(spec+'CalMonthView');
+  const upEl    = document.getElementById(spec+'UpcomingSection');
+  if(view === 'month') {
+    if(gridEl)  gridEl.style.display  = 'none';
+    if(upEl)    upEl.style.display    = 'none';
+    if(monthEl) monthEl.style.display = 'block';
+    renderSpecMonth(spec);
+  } else {
+    if(gridEl)  gridEl.style.display  = '';
+    if(upEl)    upEl.style.display    = '';
+    if(monthEl) monthEl.style.display = 'none';
+    renderSpecCal(spec);
+  }
+}
+
+function moveSpecMonth(spec, dir) {
+  const st = _getSpecState(spec);
+  st.month += dir;
+  if(st.month > 11) { st.month = 0;  st.year++; }
+  if(st.month < 0)  { st.month = 11; st.year--; }
+  renderSpecMonth(spec);
+}
+
+function goSpecToday(spec) {
+  const now = new Date();
+  const st = _getSpecState(spec);
+  st.year  = now.getFullYear();
+  st.month = now.getMonth();
+  setSpecCalView(spec, 'month');
+}
+
+function renderSpecMonth(spec) {
+  const st = _getSpecState(spec);
+  const yr = st.year, mo = st.month;
+  const header = document.getElementById(spec+'MonthHeader');
+  const grid   = document.getElementById(spec+'MonthGrid');
+  const titleEl= document.getElementById(spec+'MonthNavTitle');
+  if(!grid) return;
+
+  const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // 제목 (클릭 → year/month picker)
+  if(titleEl) {
+    titleEl.innerHTML = '';
+    const yearBtn = document.createElement('button');
+    yearBtn.style.cssText = 'border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);letter-spacing:-0.02em;padding:0 2px';
+    yearBtn.textContent = yr + '년';
+    yearBtn.onclick = () => showSpecYearPicker(spec);
+    const monthBtn = document.createElement('button');
+    monthBtn.style.cssText = 'border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);letter-spacing:-0.02em;padding:0 2px';
+    monthBtn.textContent = ' ' + MONTHS_KO[mo];
+    monthBtn.onclick = () => showSpecMonthPicker(spec);
+    titleEl.appendChild(yearBtn);
+    titleEl.appendChild(monthBtn);
+  }
+
+  // 요일 헤더
+  if(header) {
+    header.innerHTML = '';
+    ['일','월','화','수','목','금','토'].forEach((d,i) => {
+      const el = document.createElement('div');
+      el.className = 'month-weekday' + (i===0?' sun':i===6?' sat':'');
+      el.textContent = d;
+      header.appendChild(el);
+    });
+  }
+
+  const data = window['_CAL_'+spec.toUpperCase()] || [];
+  const firstDay = new Date(yr, mo, 1).getDay();
+  const daysInMonth = new Date(yr, mo+1, 0).getDate();
+  const daysInPrev  = new Date(yr, mo, 0).getDate();
+
+  const SPEC_COLORS_MAP = {
+    uro:'#7C3AED',cr:'#059669',thoracic:'#0891B2',stomach:'#EA580C',
+    breast:'#DB2777',hn:'#D97706',hbp:'#65A30D',hernia:'#9333EA'
+  };
+  const specClr = SPEC_COLORS_MAP[spec] || '#888';
+
+  function eventsForDay(day) {
+    const d = new Date(yr, mo, day); d.setHours(0,0,0,0);
+    return data.filter(e => {
+      const s = new Date(e.start); s.setHours(0,0,0,0);
+      const en = e.end ? new Date(e.end) : new Date(e.start); en.setHours(0,0,0,0);
+      return s <= d && en >= d;
+    });
+  }
+
+  grid.innerHTML = '';
+  const total = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for(let i = 0; i < total; i++) {
+    let dayNum, isCurrent = true;
+    if(i < firstDay) { dayNum = daysInPrev - firstDay + i + 1; isCurrent = false; }
+    else if(i >= firstDay + daysInMonth) { dayNum = i - firstDay - daysInMonth + 1; isCurrent = false; }
+    else { dayNum = i - firstDay + 1; }
+
+    const dow = i % 7;
+    const isToday = isCurrent && dayNum === today.getDate() && mo === today.getMonth() && yr === today.getFullYear();
+    const cell = document.createElement('div');
+    cell.className = 'month-day' + (!isCurrent?' other-month':'') + (isToday?' today':'') + (dow===0?' sunday':dow===6?' saturday':'');
+
+    const num = document.createElement('div');
+    num.className = 'month-day-num';
+    num.textContent = dayNum;
+    cell.appendChild(num);
+
+    if(isCurrent) {
+      const dayEvs = eventsForDay(dayNum);
+      const wrap = document.createElement('div');
+      wrap.className = 'month-events-wrap';
+      dayEvs.slice(0,3).forEach(ev => {
+        const el = document.createElement('div');
+        el.className = 'month-event';
+        el.style.cssText = 'background:'+specClr+'20;color:'+specClr+';border-left:2px solid '+specClr;
+        el.textContent = ev.name; el.title = ev.name;
+        el.onclick = e2 => { e2.stopPropagation(); showCalTooltip(e2, ev); };
+        wrap.appendChild(el);
+      });
+      if(dayEvs.length > 3) {
+        const more = document.createElement('div');
+        more.className = 'month-more';
+        more.textContent = '+'+(dayEvs.length-3)+'개 더';
+        more.onclick = e2 => { e2.stopPropagation(); showCalTooltip(e2, dayEvs[3]); };
+        wrap.appendChild(more);
+      }
+      cell.appendChild(wrap);
+    }
+    grid.appendChild(cell);
+  }
+}
+
+/* ── Year/Month Picker ── */
+function showSpecYearPicker(spec) {
+  const st = _getSpecState(spec);
+  const overlay = _createPicker();
+  const yr = st.year;
+  const years = [];
+  for(let y = yr-5; y <= yr+5; y++) years.push(y);
+  years.forEach(y => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:'+(y===yr?'700':'400')+';background:'+(y===yr?'var(--primary)':'var(--surface2)')+';color:'+(y===yr?'white':'var(--text)')+';font-family:var(--font)';
+    btn.textContent = y + '년';
+    btn.onclick = () => { st.year = y; document.body.removeChild(overlay); renderSpecMonth(spec); };
+    overlay.querySelector('.picker-grid').appendChild(btn);
+  });
+  document.body.appendChild(overlay);
+}
+
+function showSpecMonthPicker(spec) {
+  const st = _getSpecState(spec);
+  const overlay = _createPicker();
+  const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  MONTHS.forEach((m, i) => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:'+(i===st.month?'700':'400')+';background:'+(i===st.month?'var(--primary)':'var(--surface2)')+';color:'+(i===st.month?'white':'var(--text)')+';font-family:var(--font)';
+    btn.textContent = m;
+    btn.onclick = () => { st.month = i; document.body.removeChild(overlay); renderSpecMonth(spec); };
+    overlay.querySelector('.picker-grid').appendChild(btn);
+  });
+  document.body.appendChild(overlay);
+}
+
+/* GYN/Cardiac/All용 공통 picker도 같은 방식으로 */
+function showYearPicker(yearVar, monthVar, renderFn) {
+  const overlay = _createPicker();
+  const yr = window[yearVar];
+  for(let y = yr-5; y <= yr+5; y++) {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:'+(y===yr?'700':'400')+';background:'+(y===yr?'var(--primary)':'var(--surface2)')+';color:'+(y===yr?'white':'var(--text)')+';font-family:var(--font)';
+    btn.textContent = y + '년';
+    btn.onclick = () => { window[yearVar] = y; document.body.removeChild(overlay); renderFn(); };
+    overlay.querySelector('.picker-grid').appendChild(btn);
+  }
+  document.body.appendChild(overlay);
+}
+
+function showMonthPicker(yearVar, monthVar, renderFn) {
+  const overlay = _createPicker();
+  const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const mo = window[monthVar];
+  MONTHS.forEach((m, i) => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:'+(i===mo?'700':'400')+';background:'+(i===mo?'var(--primary)':'var(--surface2)')+';color:'+(i===mo?'white':'var(--text)')+';font-family:var(--font)';
+    btn.textContent = m;
+    btn.onclick = () => { window[monthVar] = i; document.body.removeChild(overlay); renderFn(); };
+    overlay.querySelector('.picker-grid').appendChild(btn);
+  });
+  document.body.appendChild(overlay);
+}
+
+function _createPicker() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+  overlay.onclick = e => { if(e.target===overlay) document.body.removeChild(overlay); };
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:16px;padding:20px;min-width:280px;box-shadow:0 20px 60px rgba(0,0,0,0.25)';
+  const grid = document.createElement('div');
+  grid.className = 'picker-grid';
+  grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center';
+  box.appendChild(grid);
+  overlay.appendChild(box);
+  return overlay;
+}
+
+
+function goToday() {
+  const now = new Date();
+  _calYear = now.getFullYear();
+  _calMonth = now.getMonth();
+  setCalView('month');
+  renderMonthView();
 }
 
 function toggleYear(yr) {
