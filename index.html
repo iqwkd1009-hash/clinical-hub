@@ -2136,7 +2136,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-cardiac-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1700395267')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2174,7 +2174,7 @@ body.dark #paperGrid > div {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="calSearch" placeholder="학회명, 키워드..." oninput="renderCal()">
     </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)">
+    <button class="mobile-filter-btn" onclick="toggleMobileFilter(this)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=0')" >
       <span>🔽 필터 / 일정 수정</span>
       <span class="mfb-arrow">›</span>
     </button>
@@ -2331,7 +2331,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-uro-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1103866127')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2355,7 +2355,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="uroCalGrid"></div>
+    
+    <div id="uroUpcomingSection" style="margin-bottom:12px"></div>
+<div id="uroCalGrid"></div>
   </div>
 </div>
 
@@ -2455,7 +2457,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-cr-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1214647289')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2479,7 +2481,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="crCalGrid"></div>
+    
+    <div id="crUpcomingSection" style="margin-bottom:12px"></div>
+<div id="crCalGrid"></div>
   </div>
 </div>
 
@@ -2579,7 +2583,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-thoracic-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1333544214')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2603,7 +2607,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="thoracicCalGrid"></div>
+    
+    <div id="thoracicUpcomingSection" style="margin-bottom:12px"></div>
+<div id="thoracicCalGrid"></div>
   </div>
 </div>
 
@@ -2703,7 +2709,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-stomach-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1351379084')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2727,7 +2733,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="stomachCalGrid"></div>
+    
+    <div id="stomachUpcomingSection" style="margin-bottom:12px"></div>
+<div id="stomachCalGrid"></div>
   </div>
 </div>
 
@@ -2827,7 +2835,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-breast-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1715897257')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2851,7 +2859,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="breastCalGrid"></div>
+    
+    <div id="breastUpcomingSection" style="margin-bottom:12px"></div>
+<div id="breastCalGrid"></div>
   </div>
 </div>
 
@@ -2951,7 +2961,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-hn-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1504255784')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2975,7 +2985,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="hnCalGrid"></div>
+    
+    <div id="hnUpcomingSection" style="margin-bottom:12px"></div>
+<div id="hnCalGrid"></div>
   </div>
 </div>
 
@@ -3075,7 +3087,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-hbp-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=614572531')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -3099,7 +3111,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="hbpCalGrid"></div>
+    
+    <div id="hbpUpcomingSection" style="margin-bottom:12px"></div>
+<div id="hbpCalGrid"></div>
   </div>
 </div>
 
@@ -3199,7 +3213,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-hernia-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=971357331')" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -3223,7 +3237,9 @@ body.dark #paperGrid > div {
       </div>
       <div style="font-size:12px;color:var(--text3)"><span id="cardiacCalCount">0</span>개 일정</div>
     </div>
-    <div id="herniaCalGrid"></div>
+    
+    <div id="herniaUpcomingSection" style="margin-bottom:12px"></div>
+<div id="herniaCalGrid"></div>
   </div>
 </div>
 
@@ -6461,30 +6477,73 @@ function buildAllConferences() {
 }
 
 function renderAllCal() {
+  buildAllConferences();
+
   const q = (document.getElementById('allCalSearch')?.value||'').toLowerCase();
   const today = new Date(); today.setHours(0,0,0,0);
 
   let items = ALL_CONFERENCES.filter(e => {
     if(_allCalSpecFilter !== 'all' && e._spec !== _allCalSpecFilter) return false;
     if(_allCalTagFilter  !== 'all' && e.tag   !== _allCalTagFilter)  return false;
-    if(q && ![e.name,e.loc,e.note,e.system].join(' ').toLowerCase().includes(q)) return false;
+    if(q && ![e.name,e.loc,e.note,e.host,e.organizer].join(' ').toLowerCase().includes(q)) return false;
     return true;
   });
 
-  // 카운트
   const cntEl = document.getElementById('allCalCount');
   if(cntEl) cntEl.textContent = items.length + ' events';
 
-  // 과 필터 빌드
-  buildAllCalSpecFilter();
-  buildAllCalTagFilter();
+  // 필터 빌드
+  _buildAllCalFilters();
 
   if(_allCalView === 'month') {
     renderAllCalMonth(items, today);
     return;
   }
 
-  // 카드 뷰
+  // 다가오는 일정
+  const upEl = document.getElementById('allCalUpcomingSection');
+  if(upEl) {
+    const upcoming = ALL_CONFERENCES
+      .filter(e => effectiveEndTime(e) >= today.getTime())
+      .sort((a,b)=>(a.start||'').localeCompare(b.start||''))
+      .slice(0,5);
+    if(upcoming.length) {
+      upEl.innerHTML = '';
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:var(--primary);border-radius:14px;padding:14px 18px;margin-bottom:4px';
+      const ttl = document.createElement('div');
+      ttl.style.cssText = 'display:flex;align-items:center;gap:8px;color:white;font-size:13px;font-weight:700;margin-bottom:10px';
+      ttl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 다가오는 일정';
+      banner.appendChild(ttl);
+      upcoming.forEach(e => {
+        const du = daysUntil(e.start);
+        const duStr = du===0?'오늘!':du>0?'D-'+du:'D+'+Math.abs(du);
+        const duClr = du<=3?'#FFD60A':du<=14?'#FF9F0A':'rgba(255,255,255,0.85)';
+        const specClr = _allSpecColor(e._spec);
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.15);cursor:pointer';
+        row.innerHTML =
+          '<div style="font-family:var(--mono);color:'+duClr+';font-size:13px;font-weight:800;min-width:42px;text-align:center">'+duStr+'</div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:12px;font-weight:600;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.name+'</div>'+
+            '<div style="font-size:10px;color:rgba(255,255,255,0.65);margin-top:1px;display:flex;align-items:center;gap:6px">'+
+              (e.loc?'📍 '+e.loc:'')+'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+specClr+'"></span>'+(e._spec||'').toUpperCase()+
+            '</div>'+
+          '</div>'+
+          '<span style="font-size:9px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:2px 7px;border-radius:10px;font-family:var(--mono);flex-shrink:0">'+
+            (e.start||'').slice(5)+'</span>';
+        banner.appendChild(row);
+      });
+      // 마지막 border 제거
+      const rows = banner.querySelectorAll('div[style*="border-bottom"]');
+      if(rows.length) rows[rows.length-1].style.borderBottom = 'none';
+      upEl.appendChild(banner);
+    } else {
+      upEl.innerHTML = '';
+    }
+  }
+
+  // 카드 그리드
   const grid = document.getElementById('allCalGrid');
   if(!grid) return;
   grid.innerHTML = '';
@@ -6493,152 +6552,144 @@ function renderAllCal() {
     return;
   }
 
-  // 연도별 그룹
-  const years = [...new Set(items.map(e => e.start?.slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
+  const years = [...new Set(items.map(e=>e.start?.slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
   years.forEach(yr => {
-    const grp = items.filter(e => (e.start||'').startsWith(yr));
+    const grp = items.filter(e=>(e.start||'').startsWith(yr));
     const isThis = yr === String(new Date().getFullYear());
-
     const hdr = document.createElement('div');
     hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 10px';
-    hdr.innerHTML = `<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>${isThis?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}<div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:var(--text3)">${grp.length}건</span>`;
+    hdr.innerHTML =
+      '<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">'+yr+'</span>'+
+      (isThis?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':'')+
+      '<div style="flex:1;height:1px;background:var(--border)"></div>'+
+      '<span style="font-size:11px;color:var(--text3)">'+grp.length+'건</span>';
     grid.appendChild(hdr);
 
     const cardGrid = document.createElement('div');
     cardGrid.className = 'cal-grid-view';
 
     grp.forEach(e => {
-      const specClr = SPEC_CAL_COLORS[e._spec] || {from:'#888',to:'#aaa'};
+      const specClr = _allSpecColor(e._spec);
+      const specBg  = _allSpecBg(e._spec);
       const isPast = effectiveEndTime(e) < today.getTime();
       const du = daysUntil(e.start);
-      const duLabel = isPast ? '종료' : du===0 ? '오늘!' : du>0 ? `D-${du}` : `D+${Math.abs(du)}`;
-      const duColor = isPast ? 'rgba(255,255,255,0.5)' : du<=7 ? '#FFD700' : du<=30 ? '#FFA07A' : 'rgba(255,255,255,0.92)';
-      const dateRange = e.end && e.end!==e.start ? `${e.start} ~ ${e.end.slice(5)}` : e.start;
+      const duLabel = isPast?'종료':du===0?'오늘!':du>0?'D-'+du:'D+'+Math.abs(du);
+      const duClr = isPast?'var(--text3)':du<=3?'#FF3B30':du<=14?'#FF9500':'white';
       const tl = calTagLabel(e.tag);
+      const dateRange = e.end && e.end!==e.start ? e.start+' ~ '+e.end.slice(5) : e.start;
 
       const card = document.createElement('div');
-      card.className = 'cal-thumb-card' + (isPast?' past':'');
+      card.className = 'cal-thumb-card'+(isPast?' past':'');
 
-      // 배너 (과 색상 + 태그)
-      const banner = document.createElement('div');
-      banner.style.cssText = `height:80px;background:linear-gradient(135deg,${specClr.from},${specClr.to});position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:8px 12px`;
+      const ban = document.createElement('div');
+      ban.style.cssText = 'background:'+specBg+';position:relative;height:80px;display:flex;align-items:flex-end;padding:8px 12px;overflow:hidden;border-radius:12px 12px 0 0';
 
       const pat = document.createElement('div');
       pat.style.cssText = 'position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:16px 16px';
-      banner.appendChild(pat);
+      ban.appendChild(pat);
 
-      // 과 레이블 (좌상단)
-      const specLbl = document.createElement('div');
-      specLbl.style.cssText = 'position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.2);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:white;font-family:var(--mono);letter-spacing:0.05em';
-      specLbl.textContent = (SPEC_CAL_COLORS[e._spec]?.label || e._spec.toUpperCase());
-      banner.appendChild(specLbl);
+      // 과 배지 (좌상단)
+      const specBadge = document.createElement('div');
+      specBadge.style.cssText = 'position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.2);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:white;font-family:var(--mono)';
+      specBadge.textContent = (e._spec||'').toUpperCase();
+      ban.appendChild(specBadge);
 
-      // 태그 (우상단)
-      const tagLbl = document.createElement('div');
-      tagLbl.style.cssText = 'position:absolute;top:8px;right:10px;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);font-family:var(--mono)';
-      tagLbl.textContent = tl;
-      banner.appendChild(tagLbl);
+      const tagBadge = document.createElement('div');
+      tagBadge.style.cssText = 'position:absolute;top:8px;right:10px;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);font-family:var(--mono)';
+      tagBadge.textContent = tl;
+      ban.appendChild(tagBadge);
 
-      // D-day
-      const dday = document.createElement('div');
-      dday.style.cssText = `font-size:15px;font-weight:800;font-family:var(--mono);color:${duColor};position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.3)`;
-      dday.textContent = duLabel;
-      banner.appendChild(dday);
-      card.appendChild(banner);
+      const duEl = document.createElement('div');
+      duEl.style.cssText = 'font-size:15px;font-weight:800;font-family:var(--mono);color:'+duClr+';position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.3)';
+      duEl.textContent = duLabel;
+      ban.appendChild(duEl);
+      card.appendChild(ban);
 
-      // 바디
       const body = document.createElement('div');
-      body.style.cssText = 'padding:10px 13px 8px;display:flex;flex-direction:column;gap:5px;flex:1';
-
-      const nameEl = document.createElement('div');
-      nameEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text);line-height:1.4;letter-spacing:-0.01em';
-      nameEl.textContent = e.name||'';
-      body.appendChild(nameEl);
-
-      const dateEl = document.createElement('div');
-      dateEl.style.cssText = 'font-size:10px;color:var(--text3);font-family:var(--mono)';
-      dateEl.textContent = dateRange;
-      body.appendChild(dateEl);
-
-      if(e.loc) {
-        const locEl = document.createElement('div');
-        locEl.style.cssText = 'font-size:10px;color:var(--text3)';
-        locEl.textContent = '📍 ' + e.loc;
-        body.appendChild(locEl);
-      }
-      if(e.system) {
-        const sysEl = document.createElement('div');
-        sysEl.style.cssText = 'font-size:10px;color:var(--primary);font-family:var(--mono);font-weight:600';
-        sysEl.textContent = '🤖 ' + e.system;
-        body.appendChild(sysEl);
-      }
+      body.style.cssText = 'padding:10px 13px 6px;display:flex;flex-direction:column;gap:4px;flex:1';
+      body.innerHTML =
+        '<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.4">'+e.name+'</div>'+
+        '<div style="font-size:10px;color:var(--text3);font-family:var(--mono)">'+dateRange+'</div>'+
+        (e.loc?'<div style="font-size:10px;color:var(--text3)">📍 '+e.loc+'</div>':'')+
+        (e.system?'<div style="font-size:10px;color:'+specClr+';font-family:var(--mono);font-weight:600">🤖 '+e.system+'</div>':'');
       card.appendChild(body);
 
-      // 푸터
-      const foot = document.createElement('div');
-      foot.style.cssText = 'padding:6px 13px 10px;display:flex;align-items:center;justify-content:space-between;border-top:0.5px solid var(--border)';
-      const dutyEl = document.createElement('div');
-      dutyEl.style.cssText = 'font-size:10px;color:var(--text3)';
-      dutyEl.textContent = e.duty ? '👥 '+e.duty : '';
-      foot.appendChild(dutyEl);
       if(e.url) {
+        const foot = document.createElement('div');
+        foot.style.cssText = 'padding:5px 13px 10px;border-top:0.5px solid var(--border)';
         const a = document.createElement('a');
-        a.href = e.url; a.target='_blank'; a.rel='noopener';
-        a.style.cssText = 'font-size:10px;font-weight:600;color:var(--primary);text-decoration:none;font-family:var(--mono)';
+        a.href=e.url; a.target='_blank'; a.rel='noopener';
+        a.style.cssText = 'font-size:10px;font-weight:600;color:'+specClr+';text-decoration:none';
         a.textContent = '사이트 →';
         foot.appendChild(a);
+        card.appendChild(foot);
       }
-      card.appendChild(foot);
       cardGrid.appendChild(card);
     });
     grid.appendChild(cardGrid);
   });
 }
 
-function buildAllCalSpecFilter() {
-  const el = document.getElementById('allCalSpecFilter');
-  if(!el || el.children.length > 0) return;
+// 과별 색상 헬퍼
+const _SPEC_COLORS_MAP = {
+  gyn:     { clr:'#0071E3', bg:'linear-gradient(135deg,#0071E3,#3395FF)' },
+  cardiac: { clr:'#C0143C', bg:'linear-gradient(135deg,#C0143C,#E8365D)' },
+  uro:     { clr:'#7C3AED', bg:'linear-gradient(135deg,#7C3AED,#9F60F5)' },
+  cr:      { clr:'#059669', bg:'linear-gradient(135deg,#059669,#1DB97A)' },
+  thoracic:{ clr:'#0891B2', bg:'linear-gradient(135deg,#0891B2,#22B8D8)' },
+  stomach: { clr:'#EA580C', bg:'linear-gradient(135deg,#EA580C,#FF7A30)' },
+  breast:  { clr:'#DB2777', bg:'linear-gradient(135deg,#DB2777,#F550A0)' },
+  hn:      { clr:'#D97706', bg:'linear-gradient(135deg,#D97706,#F59E0B)' },
+  hbp:     { clr:'#65A30D', bg:'linear-gradient(135deg,#65A30D,#84CC16)' },
+  hernia:  { clr:'#9333EA', bg:'linear-gradient(135deg,#9333EA,#B44DF5)' },
+};
+function _allSpecColor(spec) { return (_SPEC_COLORS_MAP[spec]||{clr:'#888'}).clr; }
+function _allSpecBg(spec)    { return (_SPEC_COLORS_MAP[spec]||{bg:'linear-gradient(135deg,#888,#aaa)'}).bg; }
 
-  const specs = [...new Set(ALL_CONFERENCES.map(e=>e._spec).filter(Boolean))];
-  const allBtn = document.createElement('button');
-  allBtn.className = 'filter-btn' + (_allCalSpecFilter==='all'?' active':'');
-  allBtn.innerHTML = '전체 <span class="btn-count">'+ALL_CONFERENCES.length+'</span>';
-  allBtn.onclick = () => { _allCalSpecFilter='all'; el.innerHTML=''; renderAllCal(); };
-  el.appendChild(allBtn);
-
-  specs.forEach(spec => {
-    const clr = SPEC_CAL_COLORS[spec];
-    const cnt = ALL_CONFERENCES.filter(e=>e._spec===spec).length;
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (_allCalSpecFilter===spec?' active':'');
-    btn.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${clr?.dot||'#888'};margin-right:4px;vertical-align:middle"></span>${clr?.label||spec.toUpperCase()} <span class="btn-count">${cnt}</span>`;
-    btn.onclick = () => { _allCalSpecFilter=spec; el.innerHTML=''; renderAllCal(); };
-    el.appendChild(btn);
-  });
+function _buildAllCalFilters() {
+  // 과별 필터
+  const spEl = document.getElementById('allCalSpecFilter');
+  if(spEl && spEl.children.length === 0) {
+    const specs = [...new Set(ALL_CONFERENCES.map(e=>e._spec).filter(Boolean))];
+    const SPEC_LABELS = {gyn:'GYN',cardiac:'Cardiac',uro:'URO',cr:'CR',thoracic:'Thoracic',stomach:'Stomach',breast:'Breast',hn:'H&N',hbp:'HBP',hernia:'Hernia'};
+    // 전체
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (_allCalSpecFilter==='all'?' active':'');
+    allBtn.innerHTML = '전체 <span class="btn-count">'+ALL_CONFERENCES.length+'</span>';
+    allBtn.onclick = () => { _allCalSpecFilter='all'; spEl.innerHTML=''; document.getElementById('allCalTagFilter').innerHTML=''; renderAllCal(); };
+    spEl.appendChild(allBtn);
+    specs.forEach(spec => {
+      const cnt = ALL_CONFERENCES.filter(e=>e._spec===spec).length;
+      const clr = _allSpecColor(spec);
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (_allCalSpecFilter===spec?' active':'');
+      btn.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+clr+';margin-right:5px;vertical-align:middle"></span>'+(SPEC_LABELS[spec]||spec)+' <span class="btn-count">'+cnt+'</span>';
+      btn.onclick = () => { _allCalSpecFilter=spec; spEl.innerHTML=''; document.getElementById('allCalTagFilter').innerHTML=''; renderAllCal(); };
+      spEl.appendChild(btn);
+    });
+  }
+  // 유형 필터
+  const tgEl = document.getElementById('allCalTagFilter');
+  if(tgEl && tgEl.children.length === 0) {
+    const filtered = _allCalSpecFilter==='all' ? ALL_CONFERENCES : ALL_CONFERENCES.filter(e=>e._spec===_allCalSpecFilter);
+    const tagCounts = {};
+    filtered.forEach(e=>{ if(e.tag) tagCounts[e.tag]=(tagCounts[e.tag]||0)+1; });
+    const TAG_LABEL = {conference:'🏛️ Conference',symposium:'🎤 Symposium',workshop:'🔬 Workshop',webinar:'💻 Webinar',roadshow:'🚗 Roadshow'};
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (_allCalTagFilter==='all'?' active':'');
+    allBtn.innerHTML = '전체 유형 <span class="btn-count">'+filtered.length+'</span>';
+    allBtn.onclick = () => { _allCalTagFilter='all'; tgEl.innerHTML=''; renderAllCal(); };
+    tgEl.appendChild(allBtn);
+    Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).forEach(([tag,cnt]) => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (_allCalTagFilter===tag?' active':'');
+      btn.innerHTML = (TAG_LABEL[tag]||tag)+' <span class="btn-count">'+cnt+'</span>';
+      btn.onclick = () => { _allCalTagFilter=tag; tgEl.innerHTML=''; renderAllCal(); };
+      tgEl.appendChild(btn);
+    });
+  }
 }
 
-function buildAllCalTagFilter() {
-  const el = document.getElementById('allCalTagFilter');
-  if(!el || el.children.length > 0) return;
-  const TAG_LABEL = {conference:'🏛️ Conference',symposium:'🎤 Symposium',workshop:'🔬 Workshop',webinar:'💻 Webinar',roadshow:'🚗 Roadshow'};
-  const tags = [...new Set(ALL_CONFERENCES.map(e=>e.tag).filter(Boolean))];
-  if(tags.length <= 1) return;
-
-  const allBtn = document.createElement('button');
-  allBtn.className = 'filter-btn' + (_allCalTagFilter==='all'?' active':'');
-  allBtn.textContent = '전체 유형';
-  allBtn.onclick = () => { _allCalTagFilter='all'; el.innerHTML=''; renderAllCal(); };
-  el.appendChild(allBtn);
-
-  tags.forEach(tag => {
-    const cnt = ALL_CONFERENCES.filter(e=>e.tag===tag).length;
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (_allCalTagFilter===tag?' active':'');
-    btn.innerHTML = (TAG_LABEL[tag]||tag) + ' <span class="btn-count">'+cnt+'</span>';
-    btn.onclick = () => { _allCalTagFilter=tag; el.innerHTML=''; renderAllCal(); };
-    el.appendChild(btn);
-  });
-}
 
 function setAllCalView(view) {
   _allCalView = view;
@@ -6811,6 +6862,46 @@ function renderSpecCal(spec) {
   });
 
   if(countEl) countEl.textContent = items.length + '개 일정';
+
+  // ── 다가오는 일정
+  const upEl = document.getElementById(spec + 'UpcomingSection');
+  if(upEl) {
+    const upcoming = data
+      .filter(e => effectiveEndTime(e) >= today.getTime())
+      .sort((a,b)=>(a.start||'').localeCompare(b.start||''))
+      .slice(0,5);
+    if(upcoming.length) {
+      const SPEC_COLORS = {uro:'#7C3AED',cr:'#059669',thoracic:'#0891B2',stomach:'#EA580C',breast:'#DB2777',hn:'#D97706',hbp:'#65A30D',hernia:'#9333EA'};
+      const specClr = SPEC_COLORS[spec] || '#0071E3';
+      upEl.innerHTML = '';
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:'+specClr+';border-radius:14px;padding:14px 18px;margin-bottom:4px';
+      const ttl = document.createElement('div');
+      ttl.style.cssText = 'display:flex;align-items:center;gap:8px;color:white;font-size:13px;font-weight:700;margin-bottom:10px';
+      ttl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 다가오는 일정';
+      banner.appendChild(ttl);
+      upcoming.forEach((e,i) => {
+        const du = daysUntil(e.start);
+        const duStr = du===0?'오늘!':du>0?'D-'+du:'D+'+Math.abs(du);
+        const duClr = du<=3?'#FFD60A':du<=14?'#FF9F0A':'rgba(255,255,255,0.85)';
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:8px 0;'+(i<upcoming.length-1?'border-bottom:0.5px solid rgba(255,255,255,0.15)':'');
+        row.innerHTML =
+          '<div style="font-family:var(--mono);color:'+duClr+';font-size:13px;font-weight:800;min-width:42px;text-align:center">'+duStr+'</div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:12px;font-weight:600;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.name+'</div>'+
+            (e.loc?'<div style="font-size:10px;color:rgba(255,255,255,0.65);margin-top:1px">📍 '+e.loc+'</div>':'')+
+          '</div>'+
+          '<span style="font-size:9px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:2px 7px;border-radius:10px;font-family:var(--mono);flex-shrink:0">'+
+            (e.start||'').slice(5)+'</span>';
+        banner.appendChild(row);
+      });
+      upEl.appendChild(banner);
+    } else {
+      upEl.innerHTML = '';
+    }
+  }
+
 
   // 사이드바 필터 동적 생성
   buildSpecCalFilters(spec, data);
@@ -8209,52 +8300,52 @@ window.addEventListener('DOMContentLoaded', () => {
 <!-- ALL CALENDAR PAGE                                  -->
 <!-- ══════════════════════════════════════════════════ -->
 <div class="page" id="page-all-cal" style="min-height:calc(100vh - 94px)">
-  <div style="flex:1;padding:20px 24px;overflow-y:auto">
-
+  <aside class="sidebar" id="sidebar-all-cal">
+    <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
+      <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;color:var(--text2)">닫기</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="sidebar-label">과별 필터</div>
+    </div>
+    <div id="allCalSpecFilter" style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px"></div>
+    <div class="sidebar-label" style="margin-bottom:8px">유형</div>
+    <div id="allCalTagFilter" style="display:flex;flex-direction:column;gap:4px"></div>
+  </aside>
+  <div class="main-content">
     <!-- 헤더 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div>
-        <h2 style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;margin:0">전체 학회 일정</h2>
-        <p style="font-size:12px;color:var(--text3);margin:3px 0 0">All Specialties · Clinical Calendar</p>
+        <h2 style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.02em;margin:0">전체 학회 일정</h2>
+        <p style="font-size:11px;color:var(--text3);margin:2px 0 0">All Specialties · Clinical Calendar</p>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <!-- 뷰 토글 -->
         <div class="cal-view-toggle">
           <button id="allCalViewCard" class="cal-view-btn active" onclick="setAllCalView('card')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            카드
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드
           </button>
           <button id="allCalViewMonth" class="cal-view-btn" onclick="setAllCalView('month')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            달력
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
         <span id="allCalCount" style="font-size:12px;color:var(--text3);font-family:var(--mono)">0 events</span>
       </div>
     </div>
-
-    <!-- 과별 필터 -->
-    <div id="allCalSpecFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
-
-    <!-- 태그 필터 -->
-    <div id="allCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
-
     <!-- 검색 -->
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface2);border-radius:10px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface2);border-radius:10px;margin-bottom:14px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="allCalSearch" type="text" placeholder="학회명, 장소 검색..." oninput="renderAllCal()"
         style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);outline:none;width:100%">
     </div>
-
     <!-- disclaimer -->
     <div class="tab-disclaimer" id="disc-all-cal">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. 일정 변경이 있을 수 있으니 중요 일정은 공식 채널에서 재확인하십시오. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>
+      <span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>
     </div>
-
+    <!-- 다가오는 일정 -->
+    <div id="allCalUpcomingSection" style="margin-bottom:16px"></div>
     <!-- 카드 그리드 -->
-    <div id="allCalGrid" style="margin-top:8px"></div>
-
+    <div id="allCalGrid"></div>
     <!-- 달력 뷰 -->
     <div id="allCalMonthView" style="display:none;margin-top:8px">
       <div class="month-nav">
@@ -8265,7 +8356,6 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="month-grid-header" id="allCalMonthHeader"></div>
       <div class="month-grid" id="allCalMonthGrid"></div>
     </div>
-
   </div>
 </div>
 
