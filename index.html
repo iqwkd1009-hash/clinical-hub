@@ -6697,6 +6697,15 @@ function setAllCalView(view) {
   document.getElementById('allCalViewMonth').classList.toggle('active', view==='month');
   document.getElementById('allCalGrid').style.display = view==='card' ? '' : 'none';
   document.getElementById('allCalMonthView').style.display = view==='month' ? 'block' : 'none';
+
+  // 달력 뷰: 다가오는 일정 + 검색 숨기기
+  const upEl = document.getElementById('allCalUpcomingSection');
+  const srEl = document.getElementById('allCalSearch');
+  const discEl = document.getElementById('disc-all-cal');
+  if(upEl)   upEl.style.display   = view==='month' ? 'none' : '';
+  if(srEl)   srEl.closest('div[style*="border-radius:10px"]').style.display = view==='month' ? 'none' : '';
+  if(discEl) discEl.style.display = view==='month' ? 'none' : '';
+
   renderAllCal();
 }
 
@@ -8342,12 +8351,8 @@ window.addEventListener('DOMContentLoaded', () => {
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>
     </div>
-    <!-- 다가오는 일정 -->
-    <div id="allCalUpcomingSection" style="margin-bottom:16px"></div>
-    <!-- 카드 그리드 -->
-    <div id="allCalGrid"></div>
     <!-- 달력 뷰 -->
-    <div id="allCalMonthView" style="display:none;margin-top:8px">
+    <div id="allCalMonthView" style="display:none;margin-top:0">
       <div class="month-nav">
         <button class="month-nav-btn" onclick="moveAllCalMonth(-1)">‹</button>
         <div class="month-nav-title" id="allCalMonthTitle"></div>
@@ -8355,58 +8360,11 @@ window.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="month-grid-header" id="allCalMonthHeader"></div>
       <div class="month-grid" id="allCalMonthGrid"></div>
-    </div>
+    
+    <!-- 다가오는 일정 -->
+    <div id="allCalUpcomingSection" style="margin-bottom:16px"></div>
+    <!-- 카드 그리드 -->
+    <div id="allCalGrid"></div>
   </div>
 </div>
 
-
-<!-- ── 하단 탭바 (모바일 전용) ── -->
-<nav class="mobile-tab-bar">
-  <button class="mobile-tab-item active" id="mtab-video" onclick="switchTab('video',document.getElementById('sub-video'));updateMobileTabs('video')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="15" height="10" rx="2"/><path d="m17 11 5-3v8l-5-3z"/></svg>
-    <span class="mobile-tab-label">수술영상</span>
-  </button>
-  <button class="mobile-tab-item" id="mtab-kol" onclick="switchTab('kol',document.getElementById('sub-kol'));updateMobileTabs('kol')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M4 11h8"/><path d="M4 7h4"/><path d="M4 15h8"/><path d="M2 17h2a2 2 0 0 1 0 4H2v-4z"/></svg>
-    <span class="mobile-tab-label">기사</span>
-  </button>
-  <button class="mobile-tab-item" id="mtab-paper" onclick="switchTab('paper',document.getElementById('sub-paper'));updateMobileTabs('paper')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-    <span class="mobile-tab-label">논문</span>
-  </button>
-  <button class="mobile-tab-item" id="mtab-cal" onclick="switchTab('cal',document.getElementById('sub-cal'));updateMobileTabs('cal')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    <span class="mobile-tab-label">캘린더</span>
-  </button>
-</nav>
-
-<!-- ── Article Image Lightbox ── -->
-<div id="artLightbox" onclick="closeArtLightbox(event)">
-  <div id="artLightboxCard">
-    <button id="artLightboxClose" onclick="closeArtLightbox()" aria-label="닫기">✕</button>
-    <img id="artLightboxImg" src="" alt="">
-    <div id="artLightboxBody">
-      <div id="artLightboxTag" style="display:flex;align-items:center;gap:8px"></div>
-      <div id="artLightboxTitle" style="font-size:17px;font-weight:700;color:var(--text);line-height:1.45;letter-spacing:-0.02em"></div>
-      <div id="artLightboxMeta" style="font-size:13px;color:var(--text2)"></div>
-      <div id="artLightboxDesc" style="font-size:13px;color:var(--text3);line-height:1.6;padding:12px 14px;background:var(--surface2);border-radius:10px"></div>
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <a id="artLightboxLink" href="#" target="_blank" rel="noopener"
-           style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:10px;background:var(--primary);color:white;text-decoration:none;font-size:13px;font-weight:600;font-family:var(--font)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          기사 원문 보기
-        </a>
-        <button onclick="closeArtLightbox()"
-           style="padding:10px 16px;border-radius:10px;background:var(--surface2);color:var(--text2);border:0.5px solid var(--border);cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font)">
-          닫기
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- Cal event tooltip -->
-<div id="calEventTooltip"></div>
-</body>
-</html>
