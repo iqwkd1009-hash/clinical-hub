@@ -1654,6 +1654,13 @@ body.dark #paperGrid > div {
   .month-event { font-size:8px; padding:1px 3px; }
   .month-day-num { font-size:10px; width:18px; height:18px; }
 }
+
+/* ── All spec 버튼 ── */
+#spec-all.active {
+  background: linear-gradient(135deg, #0071E310, #C0143C10) !important;
+  border-color: #0071E3 !important;
+  color: var(--text) !important;
+}
 </style>
 </head>
 <body>
@@ -1672,6 +1679,9 @@ body.dark #paperGrid > div {
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="specialty-tabs">
+      <button class="spec-btn" id="spec-all" onclick="switchSpecAll(this)">
+        <span class="spec-dot" style="background:linear-gradient(135deg,#0071E3,#C0143C)"></span> All
+      </button>
       <button class="spec-btn active" id="spec-gyn" onclick="switchSpec('gyn',this)">
         <span class="spec-dot" style="background:#0071E3"></span> GYN
       </button>
@@ -3714,6 +3724,35 @@ const KOLS = [
 
 /* ══════════════════════ TAB SWITCH ══════════════════════ */
 let currentSpec = 'gyn';
+
+
+function switchSpecAll(el) {
+  closeDrawer();
+  currentSpec = 'all';
+  document.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  document.body.className = document.body.className.replace(/\b\w+-mode\b/g,'').trim();
+  document.getElementById('headerCount').textContent = 'ALL';
+  document.getElementById('sub-cal').classList.add('active');
+  updateMobileTabs('cal');
+
+  // page-all-cal 페이지 표시
+  const pg = document.getElementById('page-all-cal');
+  if(pg) {
+    pg.classList.add('active');
+    buildAllConferences();
+    // 필터 초기화
+    _allCalSpecFilter = 'all';
+    _allCalTagFilter  = 'all';
+    const sfEl = document.getElementById('allCalSpecFilter');
+    const tfEl = document.getElementById('allCalTagFilter');
+    if(sfEl) sfEl.innerHTML = '';
+    if(tfEl) tfEl.innerHTML = '';
+    renderAllCal();
+  }
+}
 
 function switchSpec(spec, el) {
   closeDrawer();
@@ -6403,19 +6442,11 @@ function buildAllConferences() {
   CONFERENCES.forEach(e => ALL_CONFERENCES.push({...e, _spec:'gyn'}));
   // Cardiac
   CARDIAC_CALS.forEach(e => ALL_CONFERENCES.push({...e, _spec:'cardiac'}));
-  // 기타 과 - 각 과 CONFERENCES 배열이 있으면 추가
-  const specArrays = {
-    uro: typeof URO_CONFERENCES !== 'undefined' ? URO_CONFERENCES : [],
-    cr:  typeof CR_CONFERENCES  !== 'undefined' ? CR_CONFERENCES  : [],
-    thoracic: typeof THORACIC_CONFERENCES !== 'undefined' ? THORACIC_CONFERENCES : [],
-    stomach:  typeof STOMACH_CONFERENCES  !== 'undefined' ? STOMACH_CONFERENCES  : [],
-    breast:   typeof BREAST_CONFERENCES   !== 'undefined' ? BREAST_CONFERENCES   : [],
-    hn:       typeof HN_CONFERENCES       !== 'undefined' ? HN_CONFERENCES       : [],
-    hbp:      typeof HBP_CONFERENCES      !== 'undefined' ? HBP_CONFERENCES      : [],
-    hernia:   typeof HERNIA_CONFERENCES   !== 'undefined' ? HERNIA_CONFERENCES   : [],
-  };
-  Object.entries(specArrays).forEach(([spec, arr]) => {
-    arr.forEach(e => ALL_CONFERENCES.push({...e, _spec:spec}));
+  // 기타 과 - window._CAL_{SPEC} 배열 사용 (loadSpecCalFromSheet가 채움)
+  const specKeys = ['uro','cr','thoracic','stomach','breast','hn','hbp','hernia'];
+  specKeys.forEach(spec => {
+    const arr = window['_CAL_' + spec.toUpperCase()] || [];
+    arr.forEach(e => ALL_CONFERENCES.push({...e, _spec: e._spec || spec}));
   });
   // 날짜순 정렬
   ALL_CONFERENCES.sort((a,b) => (a.start||'').localeCompare(b.start||''));
