@@ -3463,7 +3463,7 @@ let VIDEOS = [
 
 
 const VIDEO_SHEET_URLS = [
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=0&single=true&output=csv"
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=468200524&single=true&output=csv"
 ];
 
 // ★ Articles 시트 URL — 시트에 'articles' 탭 추가 후 gid 값으로 교체하세요
@@ -3472,11 +3472,32 @@ const ARTICLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Ta
 const PAPER_SHEET_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=1951995012&single=true&output=csv";
 
 // ── Cardiac Sheet URLs ──
+
+const SPEC_SHEET_GIDS = {
+  gyn:     { video:'468200524', articles:'1711701439', paper:'1951995012', calendar:'0' },
+  cardiac: { video:'46157436',  articles:'1345374325', paper:'924999404',  calendar:'1700395267' },
+  uro:     { video:'675837182', articles:null, paper:null, calendar:'1103866127' },
+  cr:      { video:'1380938003',articles:null, paper:null, calendar:'1214647289' },
+  thoracic:{ video:'299868161', articles:null, paper:null, calendar:'1333544214' },
+  stomach: { video:'150760111', articles:null, paper:null, calendar:'1351379084' },
+  breast:  { video:'1424460411',articles:null, paper:null, calendar:'1715897257' },
+  hn:      { video:'1400224460',articles:null, paper:null, calendar:'1504255784' },
+  hbp:     { video:'197085167', articles:null, paper:null, calendar:'614572531'  },
+  hernia:  { video:'1404221171',articles:null, paper:null, calendar:'971357331'  },
+};
 const BASE_PUB = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
+
+/* ── 통합 시트 GID (4개로 통합 후 여기에 GID 입력) ──
+   구글 시트 탭 클릭 → URL의 #gid=숫자 확인
+const UNIFIED_VIDEOS_GID   = 'GID입력';
+const UNIFIED_ARTICLES_GID = 'GID입력';
+const UNIFIED_PAPERS_GID   = 'GID입력';
+const UNIFIED_CALENDAR_GID = 'GID입력';
+── 통합 완료 전까지는 기존 방식으로 동작 ── */
 const CARDIAC_VIDEO_SHEET   = BASE_PUB + "?gid=46157436&single=true&output=csv";
 const CARDIAC_ARTICLE_SHEET = BASE_PUB + "?gid=924999404&single=true&output=csv";
 const CARDIAC_PAPER_SHEET   = BASE_PUB + "?gid=1700395267&single=true&output=csv";
-const CARDIAC_CAL_SHEET     = BASE_PUB + "?gid=1345374325&single=true&output=csv";
+const CARDIAC_CAL_SHEET     = BASE_PUB + "?gid=0&single=true&output=csv";
 
 let CARDIAC_VIDEOS   = [];
 let URO_VIDEOS = [];
@@ -3557,9 +3578,12 @@ async function loadArticlesFromSheet() {
         })()
       }))
       .filter(a => a.title || a.hospital);
-    if(items.length) {
+    // Spec별 분류
+    const isUnifiedArt = items.some(a => a._spec && a._spec !== 'gyn');
+    const gynArts = isUnifiedArt ? items.filter(a => (a._spec||'gyn') === 'gyn') : items;
+    if(gynArts.length) {
       ARTICLES.length = 0;
-      items.forEach(a => ARTICLES.push(a));
+      gynArts.forEach(a => ARTICLES.push(a));
       console.log('Articles loaded from sheet:', items.length);
     }
   } catch(err) {
@@ -3623,10 +3647,38 @@ async function loadVideosFromSheet() {
       if (rows.length < 2) continue;
 
       const headers = rows[0].map(h => String(h || '').trim());
-      const items = rows
+      const specIdx_v = headers.map(h=>h.toLowerCase()).indexOf('spec');
+      const allVids = rows
         .slice(1)
-        .map(row => normalizeVideoRow(row, headers))
+        .map(row => {
+          const v = normalizeVideoRow(row, headers);
+          v._spec = specIdx_v >= 0 ? String(row[specIdx_v]||'').trim().toLowerCase() : 'gyn';
+          return v;
+        })
         .filter(v => v.title || v.url);
+
+      // 통합 시트: GYN만 VIDEOS에, 나머지는 spec별 배열에 분배
+      const isUnifiedVid = allVids.some(v => v._spec && v._spec !== 'gyn');
+      const items = isUnifiedVid ? allVids.filter(v => (v._spec||'gyn')==='gyn') : allVids;
+
+      if(isUnifiedVid) {
+        // 기타 과 Videos 분배
+        const specVideoArrays = {
+          cardiac: CARDIAC_VIDEOS, uro: typeof URO_VIDEOS!=='undefined'?URO_VIDEOS:[],
+          cr: typeof CR_VIDEOS!=='undefined'?CR_VIDEOS:[],
+          thoracic: typeof THORACIC_VIDEOS!=='undefined'?THORACIC_VIDEOS:[],
+          stomach: typeof STOMACH_VIDEOS!=='undefined'?STOMACH_VIDEOS:[],
+          breast: typeof BREAST_VIDEOS!=='undefined'?BREAST_VIDEOS:[],
+          hn: typeof HN_VIDEOS!=='undefined'?HN_VIDEOS:[],
+          hbp: typeof HBP_VIDEOS!=='undefined'?HBP_VIDEOS:[],
+          hernia: typeof HERNIA_VIDEOS!=='undefined'?HERNIA_VIDEOS:[],
+        };
+        Object.values(specVideoArrays).forEach(arr => { if(arr) arr.length=0; });
+        allVids.filter(v=>(v._spec||'gyn')!=='gyn').forEach(v => {
+          const arr = specVideoArrays[v._spec];
+          if(arr) arr.push(v);
+        });
+      }
 
       if (items.length) {
         VIDEOS = items;
@@ -3671,8 +3723,11 @@ function switchSpec(spec, el) {
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('sub-video').classList.add('active');
-  updateMobileTabs('video');
+  // GYN/Cardiac만 video 탭 기본, 기타 과는 각 spec에서 처리
+  if(spec === 'gyn' || spec === 'cardiac') {
+    document.getElementById('sub-video').classList.add('active');
+    updateMobileTabs('video');
+  }
 
   // 모든 mode 클래스 제거 후 해당 mode 추가
   const allModes = ['cardiac-mode','uro-mode','cr-mode','thoracic-mode','stomach-mode','breast-mode','hn-mode','hbp-mode','hernia-mode'];
@@ -3690,9 +3745,22 @@ function switchSpec(spec, el) {
     const modeMap = { uro:'uro-mode', cr:'cr-mode', thoracic:'thoracic-mode', stomach:'stomach-mode', breast:'breast-mode', hn:'hn-mode', hbp:'hbp-mode', hernia:'hernia-mode' };
     const labelMap = { uro:'URO', cr:'CR', thoracic:'Thoracic', stomach:'Stomach', breast:'Breast', hn:'H&N', hbp:'HBP', hernia:'Hernia' };
     if(modeMap[spec]) document.body.classList.add(modeMap[spec]);
-    const pageEl = document.getElementById(`page-${spec}-video`);
-    if(pageEl) pageEl.classList.add('active');
     document.getElementById('headerCount').textContent = labelMap[spec] || spec.toUpperCase();
+
+    // 기타 과: 캘린더 탭을 첫 화면으로
+    const calPage = document.getElementById(`page-${spec}-cal`);
+    if(calPage) {
+      calPage.classList.add('active');
+      // sub-btn 캘린더 활성화
+      // 공용 nav-sub에서 캘린더 버튼 활성화
+      document.getElementById('sub-cal').classList.add('active');
+      updateMobileTabs('cal');
+      renderSpecCal(spec);
+    } else {
+      // 캘린더 페이지 없으면 video
+      const pageEl = document.getElementById(`page-${spec}-video`);
+      if(pageEl) pageEl.classList.add('active');
+    }
   }
 }
 
@@ -3709,7 +3777,20 @@ function switchTab(tab, el) {
     const pageEl = document.getElementById(pageId);
     if(pageEl) {
       pageEl.classList.add('active');
-      document.getElementById('headerCount').textContent = spec.toUpperCase();
+      const labelMap = { uro:'URO', cr:'CR', thoracic:'Thoracic', stomach:'Stomach', breast:'Breast', hn:'H&N', hbp:'HBP', hernia:'Hernia', cardiac:'Cardiac' };
+      document.getElementById('headerCount').textContent = labelMap[spec] || spec.toUpperCase();
+    }
+    // 렌더 함수 호출
+    if(spec === 'cardiac') {
+      if(tab === 'video')   renderCardiacVideos();
+      else if(tab === 'kol')    renderCardiacArticles();
+      else if(tab === 'paper')  renderCardiacPapers();
+      else if(tab === 'cal')    renderCardiacCal();
+      else if(tab === 'surgeon') renderCardiacSurgeons();
+    } else {
+      // 기타 과
+      if(tab === 'video')  renderSpecVideo(spec);
+      else if(tab === 'cal') renderSpecCal(spec);
     }
   } else {
     const pageEl = document.getElementById('page-' + tab);
@@ -5141,9 +5222,11 @@ async function loadPapersFromSheet() {
       return '';
     };
 
-    const loaded = rows.slice(1)
+    const specIdx_p = rows[0]?.map(h=>String(h||'').trim().toLowerCase()).indexOf('spec') ?? -1;
+    const allLoaded = rows.slice(1)
       .filter(r => r.some(c => c && String(c).trim()))
       .map(r => ({
+        _spec:        specIdx_p >= 0 ? String(r[specIdx_p]||'').trim().toLowerCase() : 'gyn',
         title:        get(r,'title','제목'),
         authors:      get(r,'authors','author','저자'),
         year:         get(r,'year','연도'),
@@ -5162,9 +5245,12 @@ async function loadPapersFromSheet() {
       }))
       .filter(p => p.title);
 
-    if(loaded.length > 0) {
+    const loaded = allLoaded;
+    const isUnifiedPap = loaded.some(p => p._spec && p._spec !== 'gyn');
+    const gynPapers = isUnifiedPap ? loaded.filter(p => (p._spec||'gyn') === 'gyn') : loaded;
+    if(gynPapers.length > 0) {
       PAPERS.length = 0;
-      loaded.forEach(p => PAPERS.push(p));
+      gynPapers.forEach(p => PAPERS.push(p));
       console.log('Papers loaded from sheet:', loaded.length);
     }
   } catch(err) {
@@ -5459,6 +5545,7 @@ function normalizeCalendarRow(row, headers) {
   const end = get('end', '종료일') || start;
 
   return {
+    _spec: get('spec', 'Spec') || 'gyn',
     name: get('name', '학회명', '이벤트명', 'event', 'title'),
     start,
     end,
@@ -5500,7 +5587,17 @@ async function loadConferencesFromSheet() {
       .map(row => { const r = offset > 0 ? row.slice(offset) : row; return normalizeCalendarRow(r, headers); })
       .filter(item => item.name && item.start)
       .sort((a, b) => new Date(a.start) - new Date(b.start));
-    if (loaded.length > 0) { CONFERENCES = loaded; sheetLoaded = true; }
+    if (loaded.length > 0) {
+      const isUnifiedCal = loaded.some(item => item._spec && item._spec !== 'gyn');
+      if(isUnifiedCal) {
+        CONFERENCES = loaded.filter(i => (i._spec||'gyn') === 'gyn');
+        const cardiacCals = loaded.filter(i => i._spec === 'cardiac');
+        if(cardiacCals.length) { CARDIAC_CALS.length=0; cardiacCals.forEach(i=>CARDIAC_CALS.push(i)); }
+      } else {
+        CONFERENCES = loaded;
+      }
+      sheetLoaded = true;
+    }
     else throw new Error('0 rows parsed');
   } catch (err) {
     console.warn('Calendar sheet failed:', err.message, '— using fallback');
@@ -6588,6 +6685,222 @@ function renderAllCalMonth(items, today) {
   }
 }
 
+
+/* ══ 과별 캘린더 시트 로더 ══ */
+const SPEC_CAL_SHEET_GIDS = {
+  uro:     '1103866127',
+  cr:      '1214647289',
+  thoracic:'1333544214',
+  stomach: '1351379084',
+  breast:  '1715897257',
+  hn:      '1504255784',
+  hbp:     '614572531',
+  hernia:  '971357331',
+};
+
+async function loadSpecCalFromSheet(spec) {
+  const gid = SPEC_CAL_SHEET_GIDS[spec];
+  if(!gid) return;
+  try {
+    const rows = await fetchCSV(`https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=${gid}&single=true&output=csv`);
+    if(rows.length < 2) return;
+    const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+    const items = rows.slice(1)
+      .filter(r => r.some(v => v && String(v).trim()))
+      .map(r => normalizeCalendarRow(r, headers))
+      .filter(i => i.name && i.start)
+      .map(i => ({...i, _spec: spec}))
+      .sort((a,b) => new Date(a.start) - new Date(b.start));
+    if(items.length > 0) {
+      // 전역 spec별 배열에 저장
+      window['_CAL_' + spec.toUpperCase()] = items;
+      console.log(spec + ' calendar loaded:', items.length);
+    }
+  } catch(e) {
+    console.warn(spec + ' calendar failed:', e.message);
+  }
+}
+
+async function loadAllSpecCalendars() {
+  await Promise.allSettled(
+    Object.keys(SPEC_CAL_SHEET_GIDS).map(spec => loadSpecCalFromSheet(spec))
+  );
+  // ALL_CONFERENCES 재집계 (전체일정 탭)
+  if(typeof buildAllConferences === 'function') buildAllConferences();
+  // 현재 캘린더 탭이면 재렌더
+  const activeCal = document.querySelector('.page.active[id$="-cal"]');
+  if(activeCal) {
+    const spec = activeCal.id.replace('page-','').replace('-cal','');
+    if(spec && spec !== 'gyn' && spec !== 'cardiac' && spec !== 'all') {
+      renderSpecCal(spec);
+    }
+  }
+}
+
+
+/* ══ 기타 과 캘린더 공통 렌더 ══ */
+function renderSpecCal(spec) {
+  const gridId = spec + 'CalGrid';
+  const countId = spec + 'CalCount';
+  const upcomingId = spec + 'UpcomingSection';
+  const grid = document.getElementById(gridId);
+  const countEl = document.getElementById(countId);
+  if(!grid) return;
+
+  // 데이터 소스: window._CAL_{SPEC} 또는 빈 배열
+  const data = window['_CAL_' + spec.toUpperCase()] || [];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  if(countEl) countEl.textContent = data.length + '개 일정';
+
+  if(!data.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text3)">' +
+      '<div style="font-size:32px;margin-bottom:12px">📅</div>' +
+      '<div style="font-size:14px;font-weight:600;margin-bottom:6px">일정 없음</div>' +
+      '<div style="font-size:12px">시트에 일정을 추가하면 자동으로 표시됩니다</div></div>';
+    return;
+  }
+
+  // 연도별 그룹
+  grid.innerHTML = '';
+  const years = [...new Set(data.map(e=>e.start?.slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
+  years.forEach(yr => {
+    const grp = data.filter(e=>(e.start||'').startsWith(yr));
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 10px';
+    const isThis = yr === String(new Date().getFullYear());
+    hdr.innerHTML = '<span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">' + yr + '</span>' +
+      (isThis ? '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>' : '') +
+      '<div style="flex:1;height:1px;background:var(--border)"></div>' +
+      '<span style="font-size:11px;color:var(--text3)">' + grp.length + '건</span>';
+    grid.appendChild(hdr);
+
+    const cardGrid = document.createElement('div');
+    cardGrid.className = 'cal-grid-view';
+    grp.forEach(e => {
+      const isPast = effectiveEndTime(e) < today.getTime();
+      const du = daysUntil(e.start);
+      const duLabel = isPast ? '종료' : du===0?'오늘!':du>0?'D-'+du:'D+'+Math.abs(du);
+      const duClr = isPast?'var(--text3)':du<=7?'#FF6B35':du<=30?'#F59E0B':'var(--primary)';
+      const tl = calTagLabel(e.tag);
+      const dateRange = e.end && e.end!==e.start ? e.start+' ~ '+e.end.slice(5) : e.start;
+
+      const card = buildSpecCalCard(e, duLabel, duClr, tl, dateRange, isPast, spec);
+      cardGrid.appendChild(card);
+    });
+    grid.appendChild(cardGrid);
+  });
+}
+
+function buildSpecCalCard(e, duLabel, duClr, tl, dateRange, isPast, spec) {
+  const SPEC_COLORS = {
+    uro:'#7C3AED', cr:'#059669', thoracic:'#0891B2',
+    stomach:'#EA580C', breast:'#DB2777', hn:'#D97706',
+    hbp:'#65A30D', hernia:'#9333EA'
+  };
+  const clr = SPEC_COLORS[spec] || '#888';
+
+  const card = document.createElement('div');
+  card.className = 'cal-thumb-card' + (isPast?' past':'');
+
+  const banner = document.createElement('div');
+  banner.style.cssText = 'height:80px;background:linear-gradient(135deg,'+clr+','+clr+'99);position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:8px 12px';
+  const pat = document.createElement('div');
+  pat.style.cssText = 'position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:16px 16px';
+  banner.appendChild(pat);
+
+  const tagEl = document.createElement('div');
+  tagEl.style.cssText = 'position:absolute;top:8px;right:10px;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);font-family:var(--mono)';
+  tagEl.textContent = tl;
+  banner.appendChild(tagEl);
+
+  const ddayEl = document.createElement('div');
+  ddayEl.style.cssText = 'font-size:15px;font-weight:800;font-family:var(--mono);color:white;position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.3)';
+  ddayEl.textContent = duLabel;
+  banner.appendChild(ddayEl);
+  card.appendChild(banner);
+
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:10px 13px 8px;display:flex;flex-direction:column;gap:5px;flex:1';
+  body.innerHTML =
+    '<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.4">' + (e.name||'') + '</div>' +
+    '<div style="font-size:10px;color:var(--text3);font-family:var(--mono)">' + dateRange + '</div>' +
+    (e.loc ? '<div style="font-size:10px;color:var(--text3)">📍 '+e.loc+'</div>' : '') +
+    (e.system ? '<div style="font-size:10px;color:var(--primary);font-family:var(--mono);font-weight:600">🤖 '+e.system+'</div>' : '');
+  card.appendChild(body);
+
+  if(e.url) {
+    const foot = document.createElement('div');
+    foot.style.cssText = 'padding:6px 13px 10px;border-top:0.5px solid var(--border)';
+    const a = document.createElement('a');
+    a.href=e.url; a.target='_blank'; a.rel='noopener';
+    a.style.cssText = 'font-size:10px;font-weight:600;color:var(--primary);text-decoration:none';
+    a.textContent = '사이트 →';
+    foot.appendChild(a);
+    card.appendChild(foot);
+  }
+  return card;
+}
+
+
+function renderSpecVideo(spec) {
+  const pageId = 'page-' + spec + '-video';
+  const page = document.getElementById(pageId);
+  if(!page) return;
+  const grid = page.querySelector('[id$="VideoGrid"]') || page.querySelector('.yt-grid');
+  if(!grid) return;
+
+  // 데이터: 각 과 VIDEOS 배열 (loadSpecVideoFromSheet로 로드됨)
+  const arrMap = {
+    uro: typeof URO_VIDEOS!=='undefined'?URO_VIDEOS:[],
+    cr:  typeof CR_VIDEOS!=='undefined'?CR_VIDEOS:[],
+    thoracic: typeof THORACIC_VIDEOS!=='undefined'?THORACIC_VIDEOS:[],
+    stomach:  typeof STOMACH_VIDEOS!=='undefined'?STOMACH_VIDEOS:[],
+    breast:   typeof BREAST_VIDEOS!=='undefined'?BREAST_VIDEOS:[],
+    hn:       typeof HN_VIDEOS!=='undefined'?HN_VIDEOS:[],
+    hbp:      typeof HBP_VIDEOS!=='undefined'?HBP_VIDEOS:[],
+    hernia:   typeof HERNIA_VIDEOS!=='undefined'?HERNIA_VIDEOS:[],
+  };
+  const videos = arrMap[spec] || [];
+  if(!videos.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text3)">'+
+      '<div style="font-size:32px;margin-bottom:12px">🎬</div>'+
+      '<div style="font-size:14px;font-weight:600">영상 없음</div>'+
+      '<div style="font-size:12px;margin-top:6px">시트에 데이터를 추가하면 자동으로 표시됩니다</div></div>';
+    return;
+  }
+  // 기존 yt-card 방식으로 렌더
+  grid.innerHTML = '';
+  videos.forEach(v => {
+    const thumb = v.thumb || (v.url ? getThumb(v.url) : '');
+    const card = document.createElement('div');
+    card.className = 'yt-card';
+    const isYT = v.url && (v.url.includes('youtube')||v.url.includes('youtu.be'));
+    card.innerHTML =
+      '<div class="yt-thumb">' +
+        (thumb ? '<img src="'+thumb+'" alt="'+v.title+'" loading="lazy" onerror="this.style.display=&quot;none&quot;">' :
+          '<div style="background:#1a1714;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">🎬</div>') +
+        (v.isSeismic?'<span class="sys-badge-thumb" style="background:#FFD70033;color:#FFD700;font-size:9px;padding:2px 7px;border-radius:10px;position:absolute;top:8px;right:8px">🔒 SEISMIC</span>':
+         v.isLearning?'<span class="sys-badge-thumb" style="background:#7DF9FF33;color:#7DF9FF;font-size:9px;padding:2px 7px;border-radius:10px;position:absolute;top:8px;right:8px">📚 LEARNING</span>':
+         v.linkMissing?'<span style="position:absolute;top:8px;right:8px;background:rgba(180,60,0,0.88);color:#FFD9B0;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px">⚠ 링크없음</span>':'') +
+        (!v.linkMissing && isYT ? '<div class="play-overlay"><div class="play-btn">▶</div></div>' : '') +
+      '</div>' +
+      '<div class="yt-info">' +
+        '<div class="yt-title">' + (v.title||'') + '</div>' +
+        '<div class="yt-channel">' + (v.channel||'') + '</div>' +
+        '<div class="yt-tags">' +
+          (v.op?'<span class="tag-op">'+v.op+'</span>':'') +
+          (v.sys&&v.sys!=='-'?'<span class="sys-badge '+sysClass(v.sys)+'">'+v.sys+'</span>':'') +
+        '</div>' +
+      '</div>';
+    if(!v.linkMissing && v.url) {
+      card.style.cursor = 'pointer';
+      card.onclick = () => window.open(v.url, '_blank', 'noopener');
+    }
+    grid.appendChild(card);
+  });
+}
+
 function toggleYear(yr) {
   const sec=document.getElementById('yr_'+yr);
   const arr=document.getElementById('yarr_'+yr);
@@ -6900,8 +7213,8 @@ async function loadCardiacData() {
   const pub = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
   const sheets = [
     { url: pub+'?gid=46157436&single=true&output=csv',   arr: CARDIAC_VIDEOS,   type:'video' },
-    { url: pub+'?gid=468200524&single=true&output=csv',  arr: CARDIAC_ARTICLES, type:'article' },
-    { url: pub+'?gid=924999404&single=true&output=csv', arr: CARDIAC_PAPERS,   type:'paper' },
+    { url: pub+'?gid=1345374325&single=true&output=csv', arr: CARDIAC_ARTICLES, type:'article' },
+    { url: pub+'?gid=924999404&single=true&output=csv',  arr: CARDIAC_PAPERS,   type:'paper' },
     { url: pub+'?gid=1700395267&single=true&output=csv', arr: CARDIAC_CALS,     type:'cal' },
     { url: pub+'?gid=SURGEON_GID&single=true&output=csv', arr: CARDIAC_SURGEONS, type:'surgeon' },
   ];
