@@ -1713,10 +1713,10 @@ body.dark #paperGrid > div {
 
 <!-- NAV SUB: Section tabs (per specialty) -->
 <div class="nav-sub" id="navSub">
+  <button class="sub-btn" id="sub-cal" onclick="switchTab('cal',this)">📅 캘린더</button>
   <button class="sub-btn active" id="sub-video" onclick="switchTab('video',this)">🎬 수술영상</button>
   <button class="sub-btn" id="sub-kol" onclick="switchTab('kol',this)">📰 기사</button>
   <button class="sub-btn" id="sub-paper" onclick="switchTab('paper',this)">📄 논문</button>
-  <button class="sub-btn" id="sub-cal" onclick="switchTab('cal',this)">📅 캘린더</button>
 </div>
 
 <!-- D-day 배너 -->
@@ -3723,10 +3723,13 @@ function switchSpec(spec, el) {
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
-  // GYN/Cardiac만 video 탭 기본, 기타 과는 각 spec에서 처리
+  // 탭 기본 활성화
   if(spec === 'gyn' || spec === 'cardiac') {
     document.getElementById('sub-video').classList.add('active');
     updateMobileTabs('video');
+  } else {
+    document.getElementById('sub-cal').classList.add('active');
+    updateMobileTabs('cal');
   }
 
   // 모든 mode 클래스 제거 후 해당 mode 추가
@@ -3734,13 +3737,13 @@ function switchSpec(spec, el) {
   document.body.classList.remove(...allModes);
 
   if(spec === 'gyn') {
-    document.getElementById('page-video').classList.add('active');
-    renderVideos();
+    document.getElementById('page-cal').classList.add('active');
+    renderCal();
   } else if(spec === 'cardiac') {
     document.body.classList.add('cardiac-mode');
-    document.getElementById('page-cardiac-video').classList.add('active');
+    document.getElementById('page-cardiac-cal').classList.add('active');
     document.getElementById('headerCount').textContent = 'Cardiac';
-    renderCardiacVideos();
+    renderCardiacCal();
   } else {
     const modeMap = { uro:'uro-mode', cr:'cr-mode', thoracic:'thoracic-mode', stomach:'stomach-mode', breast:'breast-mode', hn:'hn-mode', hbp:'hbp-mode', hernia:'hernia-mode' };
     const labelMap = { uro:'URO', cr:'CR', thoracic:'Thoracic', stomach:'Stomach', breast:'Breast', hn:'H&N', hbp:'HBP', hernia:'Hernia' };
@@ -7999,6 +8002,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadConferencesFromSheet();
   loadCardiacData();
   loadAllSpecVideos();
+  loadAllSpecCalendars();
   loadPapersFromSheet();
   readStateFromURL();
   setTimeout(renderDdayBanner, 1500);
