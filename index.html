@@ -1661,6 +1661,18 @@ body.dark #paperGrid > div {
   border-color: #0071E3 !important;
   color: var(--text) !important;
 }
+
+/* ── Month grid header (요일 행) ── */
+.month-grid-header {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  border:0.5px solid var(--border);
+  border-bottom:none;
+  border-radius:14px 14px 0 0;
+  overflow:hidden;
+}
+.month-grid { border-radius:0 0 14px 14px; border-top:none; }
+.month-weekday.sun { color:#C0143C; }
+.month-weekday.sat { color:#185FA5; }
 </style>
 </head>
 <body>
@@ -6695,17 +6707,11 @@ function setAllCalView(view) {
   _allCalView = view;
   document.getElementById('allCalViewCard').classList.toggle('active', view==='card');
   document.getElementById('allCalViewMonth').classList.toggle('active', view==='month');
-  document.getElementById('allCalGrid').style.display = view==='card' ? '' : 'none';
-  document.getElementById('allCalMonthView').style.display = view==='month' ? 'block' : 'none';
-
-  // 달력 뷰: 다가오는 일정 + 검색 숨기기
-  const upEl = document.getElementById('allCalUpcomingSection');
-  const srEl = document.getElementById('allCalSearch');
-  const discEl = document.getElementById('disc-all-cal');
-  if(upEl)   upEl.style.display   = view==='month' ? 'none' : '';
-  if(srEl)   srEl.closest('div[style*="border-radius:10px"]').style.display = view==='month' ? 'none' : '';
-  if(discEl) discEl.style.display = view==='month' ? 'none' : '';
-
+  // 카드/달력 영역 토글
+  const cardArea  = document.getElementById('allCalCardArea');
+  const monthArea = document.getElementById('allCalMonthView');
+  if(cardArea)  cardArea.style.display  = view==='card'  ? '' : 'none';
+  if(monthArea) monthArea.style.display = view==='month' ? 'block' : 'none';
   renderAllCal();
 }
 
@@ -8314,9 +8320,7 @@ window.addEventListener('DOMContentLoaded', () => {
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
       <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;color:var(--text2)">닫기</button>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div class="sidebar-label">과별 필터</div>
-    </div>
+    <div class="sidebar-label" style="margin-bottom:8px">과별 필터</div>
     <div id="allCalSpecFilter" style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px"></div>
     <div class="sidebar-label" style="margin-bottom:8px">유형</div>
     <div id="allCalTagFilter" style="display:flex;flex-direction:column;gap:4px"></div>
@@ -8340,19 +8344,28 @@ window.addEventListener('DOMContentLoaded', () => {
         <span id="allCalCount" style="font-size:12px;color:var(--text3);font-family:var(--mono)">0 events</span>
       </div>
     </div>
-    <!-- 검색 -->
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface2);border-radius:10px;margin-bottom:14px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input id="allCalSearch" type="text" placeholder="학회명, 장소 검색..." oninput="renderAllCal()"
-        style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);outline:none;width:100%">
+
+    <!-- 카드 뷰 영역 -->
+    <div id="allCalCardArea">
+      <!-- 검색 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface2);border-radius:10px;margin-bottom:14px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="allCalSearch" type="text" placeholder="학회명, 장소 검색..." oninput="renderAllCal()"
+          style="border:none;background:transparent;font-family:var(--font);font-size:13px;color:var(--text);outline:none;width:100%">
+      </div>
+      <!-- disclaimer -->
+      <div class="tab-disclaimer" id="disc-all-cal">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>
+      </div>
+      <!-- 다가오는 일정 -->
+      <div id="allCalUpcomingSection" style="margin-bottom:12px"></div>
+      <!-- 카드 그리드 -->
+      <div id="allCalGrid"></div>
     </div>
-    <!-- disclaimer -->
-    <div class="tab-disclaimer" id="disc-all-cal">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>학회 일정은 <b>각 학회 공식 홈페이지 및 공개 안내문</b> 기반입니다. <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:var(--mono);vertical-align:middle;margin-left:4px">🔒 INTERNAL USE ONLY</span></span>
-    </div>
-    <!-- 달력 뷰 -->
-    <div id="allCalMonthView" style="display:none;margin-top:0">
+
+    <!-- 달력 뷰 영역 (토글) -->
+    <div id="allCalMonthView" style="display:none">
       <div class="month-nav">
         <button class="month-nav-btn" onclick="moveAllCalMonth(-1)">‹</button>
         <div class="month-nav-title" id="allCalMonthTitle"></div>
@@ -8360,11 +8373,8 @@ window.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="month-grid-header" id="allCalMonthHeader"></div>
       <div class="month-grid" id="allCalMonthGrid"></div>
-    
-    <!-- 다가오는 일정 -->
-    <div id="allCalUpcomingSection" style="margin-bottom:16px"></div>
-    <!-- 카드 그리드 -->
-    <div id="allCalGrid"></div>
+    </div>
+
   </div>
 </div>
 
