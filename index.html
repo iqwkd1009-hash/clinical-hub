@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="2026-09-04-fix4">
+<meta name="build" content="2026-09-04-fix7">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -6984,6 +6984,7 @@ function renderMonthView() {
   );
 }
 
+let _tooltipTimer = null;
 function showCalTooltip(e, ev) {
   let tip = document.getElementById('calEventTooltip');
   if(!tip) {
@@ -7055,7 +7056,8 @@ async function loadSpecVideoFromSheet(spec) {
   const gid = SPEC_VIDEO_SHEET_GIDS[spec];
   if(!gid) return;
   const arrName = spec.toUpperCase() + '_VIDEOS';
-  const arr = eval(arrName);  // 전역 배열 참조
+  let arr = null;
+  try { arr = eval(arrName); } catch(e) { console.error('[loadSpecVideoFromSheet] '+arrName+' 없음'); return; }
   if(!arr) return;
   try {
     const pub = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
@@ -7937,8 +7939,8 @@ function renderSpecCal(spec){
   _renderCalendarCardSections(grid,filtered,{showSpec:false,fallbackSpec:spec});
 }
 function renderCardiacCal(){ renderSpecCal('cardiac'); }
-function setSpecCalView(spec,view){ _specCalView[spec]=view; const card=document.getElementById(spec+'CalGrid'), month=document.getElementById(spec+'CalMonthView'); document.getElementById(spec+'CalViewCard')?.classList.toggle('active',view==='card'); document.getElementById(spec+'CalViewMonth')?.classList.toggle('active',view==='month'); if(card)card.style.display=view==='card'?'':'none'; if(month)month.style.display=view==='month'?'block':'none'; if(view==='month')renderSpecMonth(spec); }
-function moveSpecMonth(spec,dir){ const d=_specCalDate[spec]||new Date(); d.setMonth(d.getMonth()+dir); _specCalDate[spec]=d; renderSpecMonth(spec); }
+function setSpecCalView(spec,view){ _specCalView[spec]=view; _getSpecState(spec).view=view; const card=document.getElementById(spec+'CalGrid'), month=document.getElementById(spec+'CalMonthView'); document.getElementById(spec+'CalViewCard')?.classList.toggle('active',view==='card'); document.getElementById(spec+'CalViewMonth')?.classList.toggle('active',view==='month'); if(card)card.style.display=view==='card'?'':'none'; if(month)month.style.display=view==='month'?'block':'none'; if(view==='month')renderSpecMonth(spec); }
+function moveSpecMonth(spec,dir){ const st=_getSpecState(spec); const d=new Date(st.year,st.month+dir,1); st.year=d.getFullYear(); st.month=d.getMonth(); _specCalDate[spec]=d; renderSpecMonth(spec); }
 function renderSpecMonth(spec) {
   const st=_getSpecState(spec);
   const yr=st.year, mo=st.month;
@@ -8083,6 +8085,10 @@ async function loadAllSpecCalendars() {
   }
 }
 ;
+const _SPEC_LABELS_CF = {
+  gyn:'GYN', cardiac:'Cardiac', uro:'URO', cr:'CR', thoracic:'Thoracic',
+  stomach:'Stomach', breast:'Breast', hn:'H&N', hbp:'HBP', hernia:'Hernia',
+};
 const _TYPE_META_CF = {
   conference:{ icon:'🏛', label:'Conference' },
   symposium: { icon:'🎤', label:'Symposium' },
@@ -8193,7 +8199,7 @@ function bindCalendarPreview(el,ev){
 }
 
 function goAllToday(){ _allCalMonth=new Date().getMonth(); _allCalYear=new Date().getFullYear(); renderAllCal(); }
-function goSpecToday(spec){ const d=new Date(); _specCalDate[spec]=new Date(d.getFullYear(),d.getMonth(),1); renderSpecMonth(spec); }
+function goSpecToday(spec){ const n=new Date(); const st=_getSpecState(spec); st.year=n.getFullYear(); st.month=n.getMonth(); _specCalDate[spec]=new Date(n.getFullYear(),n.getMonth(),1); renderSpecMonth(spec); }
 
 function cfSearchBoxFromSidebar(sidebar,inputId){
   const inp=document.getElementById(inputId); if(!inp) return null;
@@ -8401,7 +8407,7 @@ calendarFirstInit = function(){
 };
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-04-fix4';
+window.CLINICAL_HUB_BUILD='2026-09-04-fix7';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
