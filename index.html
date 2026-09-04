@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Clinical Hub</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="build" content="2026-09-04-fix3">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -7514,12 +7518,15 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
   const evLayouts=items.map(ev=>{
     const evS=new Date(ev.start);evS.setHours(0,0,0,0);
     const evE=ev.end?new Date(ev.end):new Date(ev.start);evE.setHours(0,0,0,0);
+    if(Number.isNaN(evS.getTime())||Number.isNaN(evE.getTime())) return null;
+    // 이번 달과 겹치지 않는 일정은 제외 (없으면 다른 달 일정이 이번 달로 끌려옴)
+    if(evE<moStart||evS>moEnd) return null;
     const cs=evS<moStart?moStart:evS;
     const ce=evE>moEnd?moEnd:evE;
     const startCell=cells.findIndex(c=>c.isCurrent&&c.dayNum===cs.getDate());
     const endCell=cells.findIndex(c=>c.isCurrent&&c.dayNum===ce.getDate());
     return{ev,startCell,endCell,evS,evE};
-  }).filter(l=>l.startCell>=0);
+  }).filter(l=>l&&l.startCell>=0&&l.endCell>=l.startCell);
 
   // 슬롯 배정 (주 단위)
   const rowSlots=Array.from({length:totalCells},()=>[]);
@@ -8385,14 +8392,17 @@ calendarFirstInit = function(){
 };
 
 // Initialization safeguards
+window.CLINICAL_HUB_BUILD='2026-09-04-fix3';
 window.addEventListener('DOMContentLoaded',()=>{
-  applyLang();
-  calendarFirstInit();
-  buildPhoneSpecSheet(); updatePhoneSpecPill(currentSpec||'gyn'); updateMobileTabs(document.querySelector('.sub-btn.active')?.id?.replace('sub-','')||'video');
+  console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
+  const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
+  _safe('applyLang',()=>applyLang());
+  _safe('calendarFirstInit',()=>calendarFirstInit());
+  _safe('phoneUI',()=>{ buildPhoneSpecSheet(); updatePhoneSpecPill(currentSpec||'gyn'); updateMobileTabs(document.querySelector('.sub-btn.active')?.id?.replace('sub-','')||'video'); });
   // Render embedded data immediately so the UI is clickable even when external CSV loading is blocked.
   try{ renderVideos(); }catch(e){ console.error('Initial video render failed',e); }
   Promise.allSettled([loadVideosFromSheet(),loadArticlesFromSheet(),loadPapersFromSheet(),loadConferencesFromSheet(),loadCardiacResources(),loadAllSpecVideos(),loadAllSpecCalendars()])
-    .then(()=>{ calendarFirstInit(); if(currentSpec && !['gyn','all'].includes(currentSpec)){ renderSpecCal(currentSpec); if((_specCalView[currentSpec]||'month')==='month') renderSpecMonth(currentSpec); } else if(currentSpec==='all'){ renderAllCal(); } else if(currentSpec==='gyn'&&_calView==='month'){ renderMonthView(); } });
+    .then(()=>{ _safe('calendarFirstInit(2)',()=>calendarFirstInit()); if(currentSpec && !['gyn','all'].includes(currentSpec)){ renderSpecCal(currentSpec); if((_specCalView[currentSpec]||'month')==='month') renderSpecMonth(currentSpec); } else if(currentSpec==='all'){ renderAllCal(); } else if(currentSpec==='gyn'&&_calView==='month'){ renderMonthView(); } });
 });
 
 
