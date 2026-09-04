@@ -921,7 +921,7 @@ body.dark .mobile-tab-bar { background: rgba(28,28,30,0.92) !important; }
     inset: 0;
     z-index: 500;
   }
-  #phoneSpecSheet.open { display: block; }
+  #phoneSpecSheet.open:not([hidden]) { display: block; }
   #phoneSpecSheetOverlay {
     position: absolute;
     inset: 0;
@@ -1586,6 +1586,13 @@ body.dark #paperGrid > div {
   transition:background 0.15s;
 }
 .month-nav-btn:hover { background:var(--border); }
+#allCalMonthHeader {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  width:100%;
+}
+#allCalMonthHeader .month-weekday { min-width:0; }
+
 .month-grid {
   display:grid; grid-template-columns:repeat(7,1fr);
   grid-auto-rows:110px;
@@ -1774,14 +1781,19 @@ body.dark #paperGrid > div {
 
 /* ══ Mobile-only specialty controls: hidden by default on desktop ══ */
 #phoneSpecSheet { display: none; }
+#phoneSpecSheet[hidden] { display: none !important; }
 #phoneSpecPill { display: none; }
+@media (min-width: 901px) {
+  #phoneSpecSheet, #phoneSpecSheet.open { display: none !important; }
+  #phoneSpecPill { display: none !important; }
+}
 
 /* ══ Final responsive QA fixes ══ */
 @media (max-width: 900px) {
   .specialty-tabs { display:none !important; }
   #phoneSpecPill { display:inline-flex !important; align-items:center; gap:5px; padding:4px 10px; background:var(--primary-soft); border:1px solid var(--primary-mid); border-radius:20px; font-size:12px; font-weight:600; color:var(--primary); cursor:pointer; font-family:var(--font); white-space:nowrap; }
   #phoneSpecSheet { display:none; position:fixed; inset:0; z-index:500; }
-  #phoneSpecSheet.open { display:block; }
+  #phoneSpecSheet.open:not([hidden]) { display:block; }
   #phoneSpecSheetOverlay { position:absolute; inset:0; background:rgba(0,0,0,.4); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
   #phoneSpecSheetPanel { position:absolute; bottom:0; left:0; right:0; background:var(--surface); border-radius:20px 20px 0 0; padding:12px 0 calc(12px + env(safe-area-inset-bottom)); box-shadow:0 -4px 40px rgba(0,0,0,.15); max-height:82dvh; overflow-y:auto; animation:slideUp .25s cubic-bezier(.25,.46,.45,.94); }
   .spec-sheet-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
@@ -1793,6 +1805,210 @@ body.dark #paperGrid > div {
   .mobile-tab-item:disabled, .sub-btn:disabled { opacity:.35 !important; cursor:default !important; pointer-events:none; }
 }
 @media (max-width: 520px) { .spec-sheet-grid { grid-template-columns:1fr 1fr; } }
+
+
+
+/* ═══════════════════════════════════════════════════════════
+   CALENDAR FIRST — v5
+   Calendar is the primary workspace; card view is secondary.
+   ═══════════════════════════════════════════════════════════ */
+#page-cal > .sidebar,
+#page-cardiac-cal > .sidebar,
+#page-uro-cal > .sidebar,
+#page-cr-cal > .sidebar,
+#page-thoracic-cal > .sidebar,
+#page-stomach-cal > .sidebar,
+#page-breast-cal > .sidebar,
+#page-hn-cal > .sidebar,
+#page-hbp-cal > .sidebar,
+#page-hernia-cal > .sidebar,
+#page-all-cal > .sidebar { display:none !important; }
+
+.calendar-first-main {
+  flex:1 !important;
+  min-width:0 !important;
+  width:100% !important;
+  padding:18px 24px 28px !important;
+  overflow-y:auto !important;
+}
+.calendar-first-toolbar {
+  display:flex; flex-direction:column; gap:10px;
+  margin-bottom:14px;
+}
+.calendar-first-topline {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  min-width:0;
+}
+.calendar-first-left,
+.calendar-first-right { display:flex; align-items:center; gap:8px; min-width:0; }
+.calendar-first-left { flex:1; }
+.calendar-first-search {
+  display:flex; align-items:center; gap:7px;
+  width:min(360px,100%); min-width:180px;
+  padding:7px 12px; border:1px solid var(--border); border-radius:10px;
+  background:var(--surface); box-shadow:0 1px 2px rgba(0,0,0,.025);
+}
+.calendar-first-search svg { width:14px; height:14px; flex-shrink:0; color:var(--text3); }
+.calendar-first-search input {
+  width:100%; min-width:0; border:0 !important; outline:0 !important;
+  background:transparent !important; color:var(--text); font-family:var(--font); font-size:12px;
+}
+.calendar-first-add,
+.calendar-today-btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  height:30px; padding:0 10px; border-radius:8px; white-space:nowrap;
+  font-family:var(--font); font-size:11px; font-weight:600; text-decoration:none;
+  cursor:pointer; transition:.15s;
+}
+.calendar-first-add { border:1px dashed var(--primary-mid); color:var(--primary); background:var(--primary-soft); }
+.calendar-first-add:hover { background:var(--primary); color:white; }
+.calendar-today-btn { border:1px solid var(--border); background:var(--surface); color:var(--text2); }
+.calendar-today-btn:hover { border-color:var(--primary-mid); color:var(--primary); }
+.calendar-first-count { color:var(--text3); font-size:11px; white-space:nowrap; }
+
+.calendar-filter-strip {
+  display:flex; flex-direction:column; gap:6px;
+  border-top:1px solid var(--border); padding-top:9px;
+}
+.calendar-filter-line { display:flex; align-items:center; gap:7px; min-width:0; }
+.calendar-filter-label {
+  width:58px; flex:0 0 58px; font-size:9px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--text3); font-family:var(--mono);
+}
+.calendar-filter-scroll {
+  display:flex; align-items:center; gap:5px; min-width:0; overflow-x:auto;
+  scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:1px 1px 2px;
+}
+.calendar-filter-scroll::-webkit-scrollbar { display:none; }
+.calendar-filter-scroll .filter-btn,
+.calendar-filter-scroll .chip-filter-btn,
+.calendar-type-chip {
+  width:auto !important; display:inline-flex !important; align-items:center !important; justify-content:center !important;
+  flex:0 0 auto; gap:5px; margin:0 !important; padding:5px 10px !important;
+  border:1px solid var(--border) !important; border-radius:999px !important;
+  background:var(--surface) !important; color:var(--text2) !important;
+  font-size:10px !important; font-weight:600 !important; line-height:1.2 !important; white-space:nowrap;
+}
+.calendar-filter-scroll .filter-btn:hover,
+.calendar-filter-scroll .chip-filter-btn:hover,
+.calendar-type-chip:hover { border-color:var(--primary-mid) !important; color:var(--primary) !important; }
+.calendar-filter-scroll .filter-btn.active,
+.calendar-filter-scroll .chip-filter-btn.active,
+.calendar-type-chip.active {
+  border-color:var(--primary-mid) !important; background:var(--primary-soft) !important;
+  color:var(--primary) !important;
+}
+.calendar-filter-scroll .btn-count { font-size:8px !important; padding:1px 5px !important; }
+
+.calendar-first-old-header { display:none !important; }
+.calendar-first-main .tab-disclaimer { margin-bottom:10px; padding:7px 10px; font-size:10px; }
+
+/* Month canvas */
+.calendar-first-main .month-nav {
+  margin:2px 0 10px; min-height:38px;
+  position:relative; justify-content:center;
+}
+.calendar-first-main .month-nav > .month-nav-btn:first-child { position:absolute; left:0; }
+.calendar-first-main .month-nav > .month-nav-btn:nth-last-of-type(1) { position:absolute; right:0; }
+.calendar-first-main .month-nav-title { font-size:20px; }
+#allCalMonthHeader,
+.month-grid-header { grid-template-columns:repeat(7,minmax(0,1fr)) !important; }
+.calendar-first-main .month-grid {
+  width:100%; grid-template-columns:repeat(7,minmax(0,1fr)) !important;
+  grid-auto-rows:minmax(118px,auto) !important;
+  border-color:rgba(0,0,0,.08); background:var(--surface);
+  box-shadow:0 1px 4px rgba(0,0,0,.03);
+}
+body.dark .calendar-first-main .month-grid { border-color:rgba(255,255,255,.10); }
+.calendar-first-main .month-weekday { padding:9px 0; font-size:10px; }
+.calendar-first-main .month-day {
+  height:auto !important; min-height:118px !important; padding:7px 6px 5px;
+  overflow:visible; background:var(--surface);
+}
+.calendar-first-main .month-day.other-month { background:var(--bg); opacity:.55; }
+.calendar-first-main .month-day.today { background:color-mix(in srgb, var(--primary-soft) 62%, var(--surface)); }
+.calendar-first-main .month-day-num { font-size:11px; margin-bottom:5px; }
+.calendar-first-main .month-events-wrap { gap:3px; }
+.calendar-first-main .month-event {
+  min-height:20px; display:flex; align-items:center; gap:4px;
+  font-size:9px; line-height:1.25; padding:3px 5px; border-radius:5px;
+  transition:transform .12s, box-shadow .12s, opacity .12s;
+}
+.calendar-first-main .month-event:hover {
+  opacity:1; transform:translateY(-1px); box-shadow:0 3px 10px rgba(0,0,0,.10); z-index:4;
+}
+.cal-type-icon { flex:0 0 auto; font-size:9px; line-height:1; }
+.cal-event-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-first-main .month-more { padding:2px 4px; font-size:9px; }
+
+/* Desktop hover preview */
+#calendarHoverCard {
+  position:fixed; z-index:12000; width:292px; max-width:calc(100vw - 24px);
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.20); padding:14px;
+  opacity:0; visibility:hidden; transform:translateY(5px) scale(.98);
+  transition:opacity .12s, transform .12s, visibility .12s; pointer-events:auto;
+}
+#calendarHoverCard.show { opacity:1; visibility:visible; transform:none; }
+.cal-preview-head { display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+.cal-preview-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.cal-preview-spec { font-size:10px; font-weight:800; font-family:var(--mono); }
+.cal-preview-type { margin-left:auto; font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px; background:var(--surface2); color:var(--text2); }
+.cal-preview-title { font-size:14px; font-weight:700; line-height:1.4; color:var(--text); margin-bottom:9px; }
+.cal-preview-row { display:flex; align-items:flex-start; gap:7px; color:var(--text3); font-size:11px; line-height:1.5; margin-top:4px; }
+.cal-preview-row .k { width:14px; text-align:center; flex-shrink:0; }
+.cal-preview-actions { display:flex; gap:7px; margin-top:11px; padding-top:10px; border-top:1px solid var(--border); }
+.cal-preview-btn { flex:1; border:0; border-radius:8px; padding:7px 8px; font:600 11px var(--font); cursor:pointer; }
+.cal-preview-btn.primary { background:var(--primary); color:white; }
+.cal-preview-btn.secondary { background:var(--surface2); color:var(--text2); }
+
+/* Mobile tap sheet */
+#calendarMobileSheet { display:none; position:fixed; inset:0; z-index:13000; }
+#calendarMobileSheet.open { display:block; }
+#calendarMobileSheetOverlay { position:absolute; inset:0; background:rgba(0,0,0,.42); backdrop-filter:blur(3px); }
+#calendarMobileSheetPanel {
+  position:absolute; left:0; right:0; bottom:0; background:var(--surface);
+  border-radius:20px 20px 0 0; padding:10px 18px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:0 -14px 50px rgba(0,0,0,.22); max-height:78dvh; overflow:auto;
+}
+.calendar-sheet-handle { width:34px; height:4px; background:var(--border); border-radius:99px; margin:0 auto 14px; }
+
+@media (max-width:900px) {
+  .calendar-first-main { padding:12px 12px calc(72px + env(safe-area-inset-bottom)) !important; }
+  .calendar-first-topline { align-items:flex-start; }
+  .calendar-first-left { flex-wrap:wrap; }
+  .calendar-first-search { width:100%; max-width:none; }
+  .calendar-first-right { flex-wrap:wrap; justify-content:flex-end; }
+  .calendar-filter-label { width:48px; flex-basis:48px; }
+  .calendar-first-main .month-grid { grid-auto-rows:minmax(86px,auto) !important; }
+  .calendar-first-main .month-day { min-height:86px !important; padding:5px 4px; }
+  .calendar-first-main .month-event { font-size:8px; min-height:17px; padding:2px 4px; }
+}
+@media (max-width:560px) {
+  .calendar-first-toolbar { gap:7px; }
+  .calendar-first-topline { flex-direction:column; align-items:stretch; }
+  .calendar-first-right { justify-content:space-between; width:100%; }
+  .calendar-first-add { display:none; }
+  .calendar-first-count { margin-left:auto; }
+  .calendar-filter-strip { padding-top:7px; }
+  .calendar-filter-line { gap:4px; }
+  .calendar-filter-label { display:none; }
+  .calendar-first-main .month-nav { margin-top:0; }
+  .calendar-first-main .month-nav-title { font-size:17px; }
+  .calendar-first-main .month-grid { grid-auto-rows:64px !important; }
+  .calendar-first-main .month-day { min-height:64px !important; padding:3px 2px; overflow:hidden; }
+  .calendar-first-main .month-day-num { width:18px; height:18px; font-size:9px; margin-bottom:2px; }
+  .calendar-first-main .month-events-wrap { flex-direction:row; flex-wrap:wrap; align-content:flex-start; gap:3px; padding-left:2px; }
+  .calendar-first-main .month-event {
+    width:7px !important; height:7px !important; min-height:7px !important; padding:0 !important;
+    border:0 !important; border-radius:50% !important; font-size:0 !important; flex:0 0 7px;
+    box-shadow:none !important; transform:none !important; margin:0 !important;
+  }
+  .calendar-first-main .month-event .cal-type-icon,
+  .calendar-first-main .month-event .cal-event-label { display:none !important; }
+  .calendar-first-main .month-more { font-size:7px; padding:0; line-height:1.2; }
+  #calendarHoverCard { display:none !important; }
+}
 
 </style>
 </head>
@@ -3778,7 +3994,7 @@ body.dark #paperGrid > div {
   <button class="mobile-tab-item" data-tab="paper" onclick="mobileSwitchTab('paper')"><span aria-hidden="true">📄</span><span class="mobile-tab-label">논문</span></button>
 </nav>
 
-<div id="phoneSpecSheet" aria-hidden="true">
+<div id="phoneSpecSheet" hidden aria-hidden="true" style="display:none">
   <div id="phoneSpecSheetOverlay" onclick="closePhoneSpecSheet()"></div>
   <div id="phoneSpecSheetPanel" role="dialog" aria-modal="true" aria-label="Specialty selection">
     <div class="spec-sheet-handle"></div>
@@ -4129,11 +4345,13 @@ function switchSpec(spec, el) {
   if(spec === 'gyn') {
     document.getElementById('page-cal').classList.add('active');
     renderCal();
+    if(_calView==='month') setCalView('month');
   } else if(spec === 'cardiac') {
     document.body.classList.add('cardiac-mode');
     document.getElementById('page-cardiac-cal').classList.add('active');
     document.getElementById('headerCount').textContent = 'Cardiac';
     renderCardiacCal();
+    setSpecCalView('cardiac','month');
   } else {
     const modeMap = { uro:'uro-mode', cr:'cr-mode', thoracic:'thoracic-mode', stomach:'stomach-mode', breast:'breast-mode', hn:'hn-mode', hbp:'hbp-mode', hernia:'hernia-mode' };
     const labelMap = { uro:'URO', cr:'CR', thoracic:'Thoracic', stomach:'Stomach', breast:'Breast', hn:'H&N', hbp:'HBP', hernia:'Hernia' };
@@ -4149,6 +4367,7 @@ function switchSpec(spec, el) {
       document.getElementById('sub-cal').classList.add('active');
       updateMobileTabs('cal');
       renderSpecCal(spec);
+      setSpecCalView(spec,'month');
       if(_specCalLoadState[spec]==='idle' || _specCalLoadState[spec]==='error') loadSpecCalendarFromSheet(spec,false);
     } else {
       // 캘린더 페이지 없으면 video
@@ -4191,12 +4410,12 @@ function switchTab(tab, el) {
       if(tab === 'video')   renderCardiacVideos();
       else if(tab === 'kol')    renderCardiacArticles();
       else if(tab === 'paper')  renderCardiacPapers();
-      else if(tab === 'cal')    renderCardiacCal();
+      else if(tab === 'cal') { renderCardiacCal(); setSpecCalView('cardiac','month'); }
       else if(tab === 'surgeon') renderCardiacSurgeons();
     } else {
       // 기타 과
       if(tab === 'video')  renderSpecVideo(spec);
-      else if(tab === 'cal') renderSpecCal(spec);
+      else if(tab === 'cal') { renderSpecCal(spec); setSpecCalView(spec,'month'); }
     }
   } else {
     const pageEl = document.getElementById('page-' + tab);
@@ -4204,7 +4423,7 @@ function switchTab(tab, el) {
     if(tab === 'video') renderVideos();
     else if(tab === 'kol') renderKOL();
     else if(tab === 'paper') renderPapers();
-    else if(tab === 'cal') renderCal();
+    else if(tab === 'cal') { renderCal(); setCalView('month'); }
     else if(tab === 'surgeon') renderCardiacSurgeons();
     else if(tab === 'dashboard') renderDashboard();
   }
@@ -6050,13 +6269,13 @@ const CAL_TAG_LABEL = {conference:'학회',symposium:'심포지엄',workshop:'�
 
 function buildCalFilters() {
   const TAG_LABEL = {
-    conference:'🏛️ Conference', symposium:'🎤 Symposium',
-    workshop:'🔬 Workshop', webinar:'💻 Webinar', roadshow:'🚗 Roadshow',
+    conference:'🏛 Conference', symposium:'🎤 Symposium', itp:'● ITP',
+    workshop:'◇ Workshop', webinar:'▣ Webinar', roadshow:'↗ Roadshow', other:'• Other',
   };
   const el = document.getElementById('calFilters'); if(!el) return; el.innerHTML='';
-  // 실제 데이터에서 tag 추출
+  // 실제 데이터의 tag/name/duty를 공통 Type으로 정규화
   const tagCounts = {};
-  CONFERENCES.forEach(c => { const t=c.tag||''; if(t) tagCounts[t]=(tagCounts[t]||0)+1; });
+  CONFERENCES.forEach(c => { const t=calendarTypeKey(c); if(t) tagCounts[t]=(tagCounts[t]||0)+1; });
 
   const allBtn = document.createElement('button');
   allBtn.className = 'filter-btn' + (calTagFilter==='all'?' active':'');
@@ -6152,7 +6371,7 @@ function renderCal() {
   let items=CONFERENCES
     .filter(c=>{
       const haystack=[c.name,c.loc,c.note,c.organizer,c.system,c.duty,c.url].join(' ').toLowerCase();
-      return (calTagFilter==='all'||(calTagFilter==='upcoming'?new Date(c.start)>=today:c.tag===calTagFilter))&&(!q||haystack.includes(q));
+      return (calTagFilter==='all'||(calTagFilter==='upcoming'?new Date(c.start)>=today:calendarTypeKey(c)===calTagFilter))&&(!q||haystack.includes(q));
     })
     .sort(sortCalendarByDday);
 
@@ -6554,7 +6773,7 @@ document.addEventListener('keydown', e => {
 
 
 /* ══════════════════════ MONTHLY CALENDAR VIEW ══════════════════════ */
-let _calView = 'card';   // 'card' | 'month'
+let _calView = 'month';  // calendar-first default
 let _calMonth = new Date().getMonth();
 let _calYear  = new Date().getFullYear();
 
@@ -6571,8 +6790,8 @@ function calEventColor(tag) {
 
 function setCalView(view) {
   _calView = view;
-  document.getElementById('calViewCard').classList.toggle('active', view==='card');
-  document.getElementById('calViewMonth').classList.toggle('active', view==='month');
+  document.getElementById('calViewCard')?.classList.toggle('active', view==='card');
+  document.getElementById('calViewMonth')?.classList.toggle('active', view==='month');
   const cardEl  = document.getElementById('calGrid');
   const upEl    = document.getElementById('calUpcomingSection');
   const monthEl = document.getElementById('calMonthView');
@@ -6639,7 +6858,7 @@ function renderMonthView() {
 
   // 이번 달 일정 필터링
   const items = CONFERENCES.filter(e => {
-    if(calTagFilter !== 'all' && calTagFilter !== 'upcoming' && e.tag !== calTagFilter) return false;
+    if(calTagFilter !== 'all' && calTagFilter !== 'upcoming' && calendarTypeKey(e) !== calTagFilter) return false;
     const eStart = new Date(e.start);
     const eEnd   = e.end ? new Date(e.end) : eStart;
     // 이번 달과 겹치는지
@@ -6695,13 +6914,14 @@ function renderMonthView() {
       const wrap = document.createElement('div');
       wrap.className = 'month-events-wrap';
       dayEvents.slice(0, MAX_SHOW).forEach(ev => {
-        const clr = calEventColor(ev.tag);
+        const gynClr=_allSpecColor('gyn');
+        const clr={bg:gynClr+'20',text:gynClr,border:gynClr};
         const evEl = document.createElement('div');
         evEl.className = 'month-event';
         evEl.style.cssText = `background:${clr.bg};color:${clr.text};border-left:2px solid ${clr.border}`;
-        evEl.textContent = ev.name;
+        evEl.innerHTML = '<span class="cal-type-icon">'+calendarTypeMeta(ev).icon+'</span><span class="cal-event-label">'+_safeText(ev.name||'Event')+'</span>';
         evEl.title = ev.name;
-        evEl.onclick = (e) => { e.stopPropagation(); showCalTooltip(e, ev); };
+        bindCalendarPreview(evEl, {...ev,_spec:'gyn'});
         wrap.appendChild(evEl);
       });
       if(dayEvents.length > MAX_SHOW) {
@@ -6836,7 +7056,7 @@ const SPEC_CAL_COLORS = {
 
 
 /* ══════════════════════ ALL CALENDAR ══════════════════════ */
-let _allCalView      = 'card';
+let _allCalView      = 'month';
 let _allCalMonth     = new Date().getMonth();
 let _allCalYear      = new Date().getFullYear();
 let _allCalSpecFilter= 'all';
@@ -6880,7 +7100,7 @@ function renderAllCal() {
 
   let items = ALL_CONFERENCES.filter(e => {
     if(_allCalSpecFilter !== 'all' && e._spec !== _allCalSpecFilter) return false;
-    if(_allCalTagFilter  !== 'all' && e.tag   !== _allCalTagFilter)  return false;
+    if(_allCalTagFilter  !== 'all' && calendarTypeKey(e) !== _allCalTagFilter) return false;
     if(q && ![e.name,e.loc,e.note,e.host,e.organizer].join(' ').toLowerCase().includes(q)) return false;
     return true;
   });
@@ -7045,7 +7265,8 @@ function _allSpecBg(spec)    { return (_SPEC_COLORS_MAP[spec]||{bg:'linear-gradi
 function _buildAllCalFilters() {
   // 과별 필터
   const spEl = document.getElementById('allCalSpecFilter');
-  if(spEl && spEl.children.length === 0) {
+  if(spEl) {
+    spEl.innerHTML='';
     const specs = [...new Set(ALL_CONFERENCES.map(e=>e._spec).filter(Boolean))];
     const SPEC_LABELS = {gyn:'GYN',cardiac:'Cardiac',uro:'URO',cr:'CR',thoracic:'Thoracic',stomach:'Stomach',breast:'Breast',hn:'H&N',hbp:'HBP',hernia:'Hernia'};
     // 전체
@@ -7066,11 +7287,12 @@ function _buildAllCalFilters() {
   }
   // 유형 필터
   const tgEl = document.getElementById('allCalTagFilter');
-  if(tgEl && tgEl.children.length === 0) {
+  if(tgEl) {
+    tgEl.innerHTML='';
     const filtered = _allCalSpecFilter==='all' ? ALL_CONFERENCES : ALL_CONFERENCES.filter(e=>e._spec===_allCalSpecFilter);
     const tagCounts = {};
-    filtered.forEach(e=>{ if(e.tag) tagCounts[e.tag]=(tagCounts[e.tag]||0)+1; });
-    const TAG_LABEL = {conference:'🏛️ Conference',symposium:'🎤 Symposium',workshop:'🔬 Workshop',webinar:'💻 Webinar',roadshow:'🚗 Roadshow'};
+    filtered.forEach(e=>{ const k=calendarTypeKey(e); if(k) tagCounts[k]=(tagCounts[k]||0)+1; });
+    const TAG_LABEL = {conference:'🏛 Conference',symposium:'🎤 Symposium',itp:'● ITP',workshop:'◇ Workshop',webinar:'▣ Webinar',roadshow:'↗ Roadshow',other:'• Other'};
     const allBtn = document.createElement('button');
     allBtn.className = 'filter-btn' + (_allCalTagFilter==='all'?' active':'');
     allBtn.innerHTML = '전체 유형 <span class="btn-count">'+filtered.length+'</span>';
@@ -7089,8 +7311,8 @@ function _buildAllCalFilters() {
 
 function setAllCalView(view) {
   _allCalView = view;
-  document.getElementById('allCalViewCard').classList.toggle('active', view==='card');
-  document.getElementById('allCalViewMonth').classList.toggle('active', view==='month');
+  document.getElementById('allCalViewCard')?.classList.toggle('active', view==='card');
+  document.getElementById('allCalViewMonth')?.classList.toggle('active', view==='month');
   // 카드/달력 영역 토글
   const cardArea  = document.getElementById('allCalCardArea');
   const monthArea = document.getElementById('allCalMonthView');
@@ -7157,16 +7379,28 @@ function renderAllCalMonth(items, today) {
   function dateOf(y,m,d){const dt=new Date(y,m,d);dt.setHours(0,0,0,0);return dt;}
   const moStart=dateOf(yr,mo,1), moEnd=dateOf(yr,mo,daysInMonth);
 
-  // 이벤트 → cellIndex 범위
+  // 이벤트 → 현재 표시 월과 실제로 겹치는 일정만 cellIndex 범위 계산
+  // 중요: 월 밖의 과거/미래 일정을 day-of-month 숫자만으로 매칭하면
+  // 4월 4일 일정이 9월 4일에 나타나는 식의 phantom event가 생긴다.
   const evLayouts=items.map(ev=>{
-    const evS=new Date(ev.start);evS.setHours(0,0,0,0);
-    const evE=ev.end?new Date(ev.end):new Date(ev.start);evE.setHours(0,0,0,0);
+    const evS=new Date(ev.start);
+    const evE=ev.end?new Date(ev.end):new Date(ev.start);
+    if(Number.isNaN(evS.getTime()) || Number.isNaN(evE.getTime())) return null;
+    evS.setHours(0,0,0,0); evE.setHours(0,0,0,0);
+
+    // 잘못 입력된 역전 날짜는 단일일 일정처럼 처리하지 않고 제외
+    if(evE < evS) return null;
+
+    // 현재 월과 전혀 겹치지 않으면 반드시 제외
+    if(evE < moStart || evS > moEnd) return null;
+
     const cs=evS<moStart?moStart:evS;
     const ce=evE>moEnd?moEnd:evE;
     const startCell=cells.findIndex(c=>c.isCurrent&&c.dayNum===cs.getDate());
     const endCell=cells.findIndex(c=>c.isCurrent&&c.dayNum===ce.getDate());
+    if(startCell<0 || endCell<0 || endCell<startCell) return null;
     return{ev,startCell,endCell};
-  }).filter(l=>l.startCell>=0);
+  }).filter(Boolean);
 
   // 슬롯 배정 (주 단위)
   const rowSlots=Array.from({length:totalCells},()=>[]);
@@ -7234,9 +7468,10 @@ function renderAllCalMonth(items, today) {
           el.style.cssText='background:'+specClr+'22;color:'+specClr+';border-left:2px solid '+specClr+';margin-bottom:2px;border-radius:'+(spanClass==='span-start'?'4px 0 0 4px':'4px');
         }
 
-        el.textContent=(isStart||dow===0)?ev.name:' ';
+        const showLabel=(isStart||dow===0);
+        el.innerHTML=showLabel?('<span class="cal-type-icon">'+calendarTypeMeta(ev).icon+'</span><span class="cal-event-label">'+_safeText(ev.name||'Event')+'</span>'):'&nbsp;';
         el.title=ev.name;
-        el.onclick=e2=>{e2.stopPropagation();openConfModal(ev);};
+        bindCalendarPreview(el, ev);
         cell.appendChild(el);
       }
 
@@ -7433,8 +7668,50 @@ function buildPhoneSpecSheet(){
   });
   updatePhoneSpecPill(currentSpec||'gyn');
 }
-function openPhoneSpecSheet(){ buildPhoneSpecSheet(); const s=document.getElementById('phoneSpecSheet'); if(s){s.classList.add('open');s.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';} }
-function closePhoneSpecSheet(){ const s=document.getElementById('phoneSpecSheet'); if(s){s.classList.remove('open');s.setAttribute('aria-hidden','true');} document.body.style.overflow=''; }
+function openPhoneSpecSheet(){
+  // Mobile/tablet only. Never expose the mobile specialty sheet on desktop.
+  if (window.matchMedia && !window.matchMedia('(max-width: 900px)').matches) {
+    closePhoneSpecSheet();
+    return;
+  }
+  buildPhoneSpecSheet();
+  const s=document.getElementById('phoneSpecSheet');
+  if(s){
+    s.hidden=false;
+    s.style.display='block';
+    s.classList.add('open');
+    s.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  }
+}
+function closePhoneSpecSheet(){
+  const s=document.getElementById('phoneSpecSheet');
+  if(s){
+    s.classList.remove('open');
+    s.setAttribute('aria-hidden','true');
+    s.hidden=true;
+    s.style.display='none';
+  }
+  document.body.style.overflow='';
+}
+
+// Hard guard: the mobile selector must never leak into desktop layout.
+function enforcePhoneSpecVisibility(){
+  const s=document.getElementById('phoneSpecSheet');
+  if(!s) return;
+  if(window.innerWidth > 900){
+    s.classList.remove('open');
+    s.setAttribute('aria-hidden','true');
+    s.hidden=true;
+    s.style.display='none';
+    document.body.style.overflow='';
+  } else if(!s.classList.contains('open')) {
+    s.hidden=true;
+    s.style.display='none';
+  }
+}
+window.addEventListener('resize', enforcePhoneSpecVisibility);
+window.addEventListener('DOMContentLoaded', enforcePhoneSpecVisibility);
 function setSectionTabAvailability(){
   const allOnly = currentSpec === 'all';
   document.querySelectorAll('.sub-btn').forEach(b=>{
@@ -7493,7 +7770,9 @@ const _specCalLoadError = {};
 function renderSpecCal(spec){
   const items=_specCalArray(spec);
   const q=(document.getElementById(spec+'CalSearch')?.value||'').toLowerCase();
-  const filtered=items.filter(e=>!q||JSON.stringify(e).toLowerCase().includes(q));
+  const typeFilter=(_specCalTypeFilter[spec]||'all');
+  const filtered=items.filter(e=>(!q||JSON.stringify(e).toLowerCase().includes(q)) && (typeFilter==='all'||calendarTypeKey(e)===typeFilter));
+  buildSpecTypeChips(spec,items);
   const cnt=document.getElementById(spec+'CalCount'); if(cnt)cnt.textContent=filtered.length;
   const grid=document.getElementById(spec+'CalGrid');
   if(!grid) return;
@@ -7532,7 +7811,10 @@ function renderSpecMonth(spec){
     });
   }
   const q=(document.getElementById(spec+'CalSearch')?.value||'').toLowerCase();
-  const items=_specCalArray(spec).filter(e=>!q||JSON.stringify(e).toLowerCase().includes(q));
+  const typeFilter=(_specCalTypeFilter[spec]||'all');
+  const sourceItems=_specCalArray(spec);
+  const items=sourceItems.filter(e=>(!q||JSON.stringify(e).toLowerCase().includes(q)) && (typeFilter==='all'||calendarTypeKey(e)===typeFilter));
+  buildSpecTypeChips(spec,sourceItems);
   const firstDay=new Date(yr,mo,1).getDay(), daysInMonth=new Date(yr,mo+1,0).getDate(), daysInPrev=new Date(yr,mo,0).getDate();
   const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
   const today=new Date(); today.setHours(0,0,0,0);
@@ -7557,8 +7839,10 @@ function renderSpecMonth(spec){
       const wrap=document.createElement('div'); wrap.className='month-events-wrap'; const dayEvents=eventsForDay(dayNum); const MAX_SHOW=3;
       dayEvents.slice(0,MAX_SHOW).forEach(ev=>{
         const clr=calEventColor(ev.tag), evEl=document.createElement('div'); evEl.className='month-event';
-        evEl.style.cssText=`background:${clr.bg};color:${clr.text};border-left:2px solid ${clr.border}`; evEl.textContent=ev.name||'Event'; evEl.title=ev.name||'';
-        evEl.onclick=(evt)=>{evt.stopPropagation();openConfModal(ev);}; wrap.appendChild(evEl);
+        const specClr=_allSpecColor(spec);
+        evEl.style.cssText=`background:${specClr}20;color:${specClr};border-left:2px solid ${specClr}`;
+        evEl.innerHTML='<span class="cal-type-icon">'+calendarTypeMeta(ev).icon+'</span><span class="cal-event-label">'+_safeText(ev.name||'Event')+'</span>'; evEl.title=ev.name||'';
+        bindCalendarPreview(evEl,{...ev,_spec:spec}); wrap.appendChild(evEl);
       });
       if(dayEvents.length>MAX_SHOW){
         const more=document.createElement('div'); more.className='month-more'; more.textContent='+'+(dayEvents.length-MAX_SHOW)+'개 더';
@@ -7673,14 +7957,193 @@ async function loadAllSpecCalendars(){ return loadSpecCalendars(); }
 const _origSwitchTab=switchTab;
 switchTab=function(tab,el){ _origSwitchTab(tab,el); if(currentSpec!=='gyn'&&currentSpec!=='cardiac'){ if(tab==='kol')renderSpecArticles(currentSpec); else if(tab==='paper')renderSpecPapers(currentSpec); } };
 
+
+/* ══════════════════════ CALENDAR FIRST UX v5 ══════════════════════ */
+const _specCalTypeFilter = {};
+const _SPEC_LABELS_CF = {gyn:'GYN',cardiac:'Cardiac',uro:'URO',cr:'CR',thoracic:'Thoracic',stomach:'Stomach',breast:'Breast',hn:'H&N',hbp:'HBP',hernia:'Hernia'};
+const _TYPE_META_CF = {
+  conference:{label:'Conference',icon:'🏛'}, symposium:{label:'Symposium',icon:'🎤'},
+  itp:{label:'ITP',icon:'●'}, workshop:{label:'Workshop',icon:'◇'},
+  webinar:{label:'Webinar',icon:'▣'}, roadshow:{label:'Roadshow',icon:'↗'}, other:{label:'Other',icon:'•'}
+};
+function calendarTypeKey(ev){
+  const raw=[ev?.tag,ev?.type,ev?.duty,ev?.name].filter(Boolean).join(' ').toLowerCase();
+  if(/\bitp\b|live\s*surgery|observation/.test(raw)) return 'itp';
+  if(/symposium|심포지엄/.test(raw)) return 'symposium';
+  if(/workshop|hands[- ]?on|워크샵|워크숍/.test(raw)) return 'workshop';
+  if(/webinar|웨비나/.test(raw)) return 'webinar';
+  if(/roadshow|road show/.test(raw)) return 'roadshow';
+  if(/conference|congress|society|meeting|forum|학회|학술|joint/.test(raw)) return 'conference';
+  return 'other';
+}
+function calendarTypeMeta(ev){ return _TYPE_META_CF[calendarTypeKey(ev)]||_TYPE_META_CF.other; }
+function calendarEventSpec(ev,fallback){ return ev?._spec||fallback||currentSpec||'gyn'; }
+function calendarDateText(ev){ return ev?.end&&ev.end!==ev.start ? (ev.start+' ~ '+ev.end) : (ev?.start||''); }
+
+function buildSpecTypeChips(spec,items){
+  let host=document.getElementById(spec+'CalTagFilter');
+  if(!host){
+    // Cardiac does not have a legacy type-filter host; create one in its filter line.
+    host=document.getElementById('cf-type-'+spec);
+  }
+  if(!host) return;
+  host.classList.add('calendar-filter-scroll');
+  host.innerHTML='';
+  const counts={};
+  (items||[]).forEach(ev=>{const k=calendarTypeKey(ev);counts[k]=(counts[k]||0)+1;});
+  const order=['conference','symposium','itp','workshop','webinar','roadshow','other'];
+  const add=(key,label,count)=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='calendar-type-chip'+(((_specCalTypeFilter[spec]||'all')===key)?' active':'');
+    b.innerHTML=label+(count!=null?' <span class="btn-count">'+count+'</span>':'');
+    b.onclick=()=>{_specCalTypeFilter[spec]=key; renderSpecCal(spec); if((_specCalView[spec]||'month')==='month')renderSpecMonth(spec);};
+    host.appendChild(b);
+  };
+  add('all','전체',items?.length||0);
+  order.filter(k=>counts[k]).forEach(k=>add(k,_TYPE_META_CF[k].icon+' '+_TYPE_META_CF[k].label,counts[k]));
+}
+
+let _calendarPreviewHideTimer=null;
+function ensureCalendarPreviewUI(){
+  if(!document.getElementById('calendarHoverCard')){
+    const c=document.createElement('div'); c.id='calendarHoverCard';
+    c.addEventListener('mouseenter',()=>clearTimeout(_calendarPreviewHideTimer));
+    c.addEventListener('mouseleave',hideCalendarPreviewSoon);
+    document.body.appendChild(c);
+  }
+  if(!document.getElementById('calendarMobileSheet')){
+    const sh=document.createElement('div'); sh.id='calendarMobileSheet'; sh.setAttribute('aria-hidden','true');
+    sh.innerHTML='<div id="calendarMobileSheetOverlay"></div><div id="calendarMobileSheetPanel" role="dialog" aria-modal="true"><div class="calendar-sheet-handle"></div><div id="calendarMobileSheetBody"></div></div>';
+    sh.querySelector('#calendarMobileSheetOverlay').onclick=closeCalendarMobileSheet;
+    document.body.appendChild(sh);
+  }
+}
+function calendarDetailHTML(ev,actions=true){
+  const spec=calendarEventSpec(ev); const clr=_allSpecColor(spec); const meta=calendarTypeMeta(ev);
+  const safe=x=>_safeText(x||'');
+  const rows=[];
+  if(ev.start) rows.push('<div class="cal-preview-row"><span class="k">▣</span><span>'+safe(calendarDateText(ev))+'</span></div>');
+  if(ev.loc) rows.push('<div class="cal-preview-row"><span class="k">⌖</span><span>'+safe(ev.loc)+'</span></div>');
+  const host=ev.host||ev.organizer||ev['주최']; if(host) rows.push('<div class="cal-preview-row"><span class="k">◎</span><span>'+safe(host)+'</span></div>');
+  if(ev.system) rows.push('<div class="cal-preview-row"><span class="k">◈</span><span>'+safe(ev.system)+'</span></div>');
+  if(ev.duty) rows.push('<div class="cal-preview-row"><span class="k">✓</span><span>'+safe(ev.duty)+'</span></div>');
+  return '<div class="cal-preview-head"><span class="cal-preview-dot" style="background:'+clr+'"></span><span class="cal-preview-spec" style="color:'+clr+'">'+safe(_SPEC_LABELS_CF[spec]||spec.toUpperCase())+'</span><span class="cal-preview-type">'+meta.icon+' '+meta.label+'</span></div>'+
+    '<div class="cal-preview-title">'+safe(ev.name||'Event')+'</div>'+rows.join('')+
+    (actions?'<div class="cal-preview-actions"><button type="button" class="cal-preview-btn primary" data-detail>상세 보기</button>'+(ev.url?'<button type="button" class="cal-preview-btn secondary" data-link>사이트</button>':'')+'</div>':'');
+}
+function positionCalendarPreview(anchor,card){
+  const r=anchor.getBoundingClientRect(); const w=card.offsetWidth||292; const h=card.offsetHeight||220; const pad=10;
+  let left=r.right+10, top=r.top;
+  if(left+w>window.innerWidth-pad) left=r.left-w-10;
+  if(left<pad) left=Math.min(Math.max(pad,r.left),window.innerWidth-w-pad);
+  if(top+h>window.innerHeight-pad) top=window.innerHeight-h-pad;
+  if(top<pad) top=pad;
+  card.style.left=left+'px'; card.style.top=top+'px';
+}
+function showCalendarPreview(ev,anchor){
+  if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  ensureCalendarPreviewUI(); clearTimeout(_calendarPreviewHideTimer);
+  const c=document.getElementById('calendarHoverCard');
+  c.innerHTML=calendarDetailHTML(ev,true); c.classList.add('show'); positionCalendarPreview(anchor,c);
+  c.querySelector('[data-detail]')?.addEventListener('click',()=>{hideCalendarPreview();openConfModal(ev);});
+  c.querySelector('[data-link]')?.addEventListener('click',()=>window.open(ev.url,'_blank','noopener'));
+}
+function hideCalendarPreview(){ const c=document.getElementById('calendarHoverCard'); if(c)c.classList.remove('show'); }
+function hideCalendarPreviewSoon(){ clearTimeout(_calendarPreviewHideTimer); _calendarPreviewHideTimer=setTimeout(hideCalendarPreview,150); }
+function openCalendarMobileSheet(ev){
+  ensureCalendarPreviewUI(); const sh=document.getElementById('calendarMobileSheet'); const body=document.getElementById('calendarMobileSheetBody');
+  body.innerHTML=calendarDetailHTML(ev,true); sh.classList.add('open'); sh.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+  body.querySelector('[data-detail]')?.addEventListener('click',()=>{closeCalendarMobileSheet();openConfModal(ev);});
+  body.querySelector('[data-link]')?.addEventListener('click',()=>window.open(ev.url,'_blank','noopener'));
+}
+function closeCalendarMobileSheet(){ const sh=document.getElementById('calendarMobileSheet'); if(sh){sh.classList.remove('open');sh.setAttribute('aria-hidden','true');} document.body.style.overflow=''; }
+function bindCalendarPreview(el,ev){
+  el._calendarEvent=ev; el.tabIndex=0;
+  el.onclick=(e)=>{e.stopPropagation(); if(window.matchMedia('(hover:hover) and (pointer:fine)').matches) openConfModal(ev); else openCalendarMobileSheet(ev);};
+  el.addEventListener('mouseenter',()=>showCalendarPreview(ev,el));
+  el.addEventListener('mouseleave',hideCalendarPreviewSoon);
+  el.addEventListener('focus',()=>showCalendarPreview(ev,el));
+  el.addEventListener('blur',hideCalendarPreviewSoon);
+}
+
+function goAllToday(){ _allCalMonth=new Date().getMonth(); _allCalYear=new Date().getFullYear(); renderAllCal(); }
+function goSpecToday(spec){ const d=new Date(); _specCalDate[spec]=new Date(d.getFullYear(),d.getMonth(),1); renderSpecMonth(spec); }
+
+function cfSearchBoxFromSidebar(sidebar,inputId){
+  const inp=document.getElementById(inputId); if(!inp) return null;
+  const old=inp.closest('.search-box'); if(!old) return null;
+  old.classList.add('calendar-first-search'); old.style.margin='0'; old.style.background='var(--surface)';
+  return old;
+}
+function cfAddLinkFromSidebar(sidebar){
+  if(!sidebar) return null;
+  const links=[...sidebar.querySelectorAll('a[target="_blank"]')];
+  const a=links.find(x=>(x.textContent||'').includes('일정 추가'));
+  if(!a) return null;
+  a.className='calendar-first-add'; a.removeAttribute('style');
+  a.innerHTML='+ 일정 추가'; return a;
+}
+function cfCreateToday(handler){ const b=document.createElement('button');b.type='button';b.className='calendar-today-btn';b.textContent='오늘';b.onclick=handler;return b; }
+function cfCreateFilterLine(label,host){
+  if(!host)return null; host.classList.add('calendar-filter-scroll');
+  const row=document.createElement('div');row.className='calendar-filter-line';
+  const l=document.createElement('span');l.className='calendar-filter-label';l.textContent=label; row.appendChild(l); row.appendChild(host); return row;
+}
+function cfMainOf(page){ return [...page.children].find(x=>x.tagName!=='ASIDE')||null; }
+
+function upgradeAllCalendarPage(){
+  const page=document.getElementById('page-all-cal'); if(!page||page.dataset.cf==='1')return; page.dataset.cf='1';
+  const sidebar=page.querySelector(':scope > aside'); const main=cfMainOf(page); if(!main)return; main.classList.add('calendar-first-main');
+  const oldHeader=[...main.children].find(x=>x.querySelector?.('#allCalViewCard')); if(oldHeader)oldHeader.classList.add('calendar-first-old-header');
+  const toolbar=document.createElement('div');toolbar.className='calendar-first-toolbar';
+  const top=document.createElement('div');top.className='calendar-first-topline';const left=document.createElement('div');left.className='calendar-first-left';const right=document.createElement('div');right.className='calendar-first-right';
+  const search=cfSearchBoxFromSidebar(sidebar,'allCalSearch'); if(search)left.appendChild(search);
+  const add=document.createElement('a');add.href='https://docs.google.com/spreadsheets/d/'+SOURCE_SHEET_ID+'/edit';add.target='_blank';add.rel='noopener';add.className='calendar-first-add';add.textContent='+ 일정 추가';left.appendChild(add);
+  const toggle=oldHeader?.querySelector('.cal-view-toggle'); if(toggle){right.appendChild(toggle); document.getElementById('allCalViewCard')?.classList.remove('active');document.getElementById('allCalViewMonth')?.classList.add('active');}
+  right.appendChild(cfCreateToday(goAllToday)); const count=document.getElementById('allCalCount'); if(count){count.classList.add('calendar-first-count');right.appendChild(count);} top.append(left,right);toolbar.appendChild(top);
+  const strip=document.createElement('div');strip.className='calendar-filter-strip'; const sp=document.getElementById('allCalSpecFilter'),tg=document.getElementById('allCalTagFilter'); const r1=cfCreateFilterLine('Specialty',sp),r2=cfCreateFilterLine('Type',tg); if(r1)strip.appendChild(r1);if(r2)strip.appendChild(r2);toolbar.appendChild(strip);
+  main.insertBefore(toolbar,main.firstChild);
+  _allCalView='month'; setAllCalView('month');
+}
+function upgradeGynCalendarPage(){
+  const page=document.getElementById('page-cal'); if(!page||page.dataset.cf==='1')return;page.dataset.cf='1';
+  const sidebar=page.querySelector(':scope > aside');const main=cfMainOf(page);if(!main)return;main.classList.add('calendar-first-main');
+  const oldHeader=[...main.children].find(x=>x.querySelector?.('#calViewCard'));if(oldHeader)oldHeader.classList.add('calendar-first-old-header');
+  const toolbar=document.createElement('div');toolbar.className='calendar-first-toolbar';const top=document.createElement('div');top.className='calendar-first-topline';const left=document.createElement('div');left.className='calendar-first-left';const right=document.createElement('div');right.className='calendar-first-right';
+  const search=cfSearchBoxFromSidebar(sidebar,'calSearch');if(search)left.appendChild(search);const add=cfAddLinkFromSidebar(sidebar);if(add)left.appendChild(add);
+  const toggle=oldHeader?.querySelector('.cal-view-toggle');if(toggle){right.appendChild(toggle);document.getElementById('calViewCard')?.classList.remove('active');document.getElementById('calViewMonth')?.classList.add('active');} right.appendChild(cfCreateToday(()=>{goToday();setCalView('month');}));const cnt=document.getElementById('calCount');if(cnt){cnt.classList.add('calendar-first-count');right.appendChild(cnt);}top.append(left,right);toolbar.appendChild(top);
+  const strip=document.createElement('div');strip.className='calendar-filter-strip';const filters=document.getElementById('calFilters');const row=cfCreateFilterLine('Type',filters);if(row)strip.appendChild(row);toolbar.appendChild(strip);main.insertBefore(toolbar,main.firstChild);
+  _calView='month';setCalView('month');
+}
+function ensureCardiacMonthMarkup(main){
+  if(document.getElementById('cardiacCalMonthView'))return;
+  const m=document.createElement('div');m.id='cardiacCalMonthView';m.style.display='none';m.innerHTML='<div class="month-nav"><button class="month-nav-btn" onclick="moveSpecMonth(\'cardiac\',-1)">‹</button><div class="month-nav-title" id="cardiacMonthNavTitle"></div><button class="month-nav-btn" onclick="moveSpecMonth(\'cardiac\',1)">›</button></div><div class="month-grid-header" id="cardiacMonthHeader"></div><div class="month-grid" id="cardiacMonthGrid"></div>'; main.appendChild(m);
+  const legacyGrid=document.getElementById('cardiacCalGrid'); if(legacyGrid&&!document.getElementById('cardiacCalCardArea')){const holder=document.createElement('div');holder.id='cardiacCalCardArea';legacyGrid.parentNode.insertBefore(holder,legacyGrid);holder.appendChild(legacyGrid);}
+}
+function upgradeSpecCalendarPage(spec){
+  const page=document.getElementById('page-'+spec+'-cal');if(!page||page.dataset.cf==='1')return;page.dataset.cf='1';
+  const sidebar=page.querySelector(':scope > aside');const main=cfMainOf(page);if(!main)return;main.classList.add('calendar-first-main');if(spec==='cardiac')ensureCardiacMonthMarkup(main);
+  let oldHeader=[...main.children].find(x=>x.querySelector?.('#'+spec+'CalCount'));if(oldHeader)oldHeader.classList.add('calendar-first-old-header');
+  const toolbar=document.createElement('div');toolbar.className='calendar-first-toolbar';const top=document.createElement('div');top.className='calendar-first-topline';const left=document.createElement('div');left.className='calendar-first-left';const right=document.createElement('div');right.className='calendar-first-right';
+  const search=cfSearchBoxFromSidebar(sidebar,spec+'CalSearch');if(search)left.appendChild(search);const add=cfAddLinkFromSidebar(sidebar);if(add)left.appendChild(add);
+  let toggle=oldHeader?.querySelector('.cal-view-toggle');if(!toggle){toggle=document.createElement('div');toggle.className='cal-view-toggle';toggle.innerHTML='<button id="'+spec+'CalViewCard" class="cal-view-btn" onclick="setSpecCalView(\''+spec+'\',\'card\')">▦ 카드</button><button id="'+spec+'CalViewMonth" class="cal-view-btn active" onclick="setSpecCalView(\''+spec+'\',\'month\')">▣ 달력</button>';}else{document.getElementById(spec+'CalViewCard')?.classList.remove('active');document.getElementById(spec+'CalViewMonth')?.classList.add('active');}right.appendChild(toggle);right.appendChild(cfCreateToday(()=>goSpecToday(spec)));const cnt=document.getElementById(spec+'CalCount');if(cnt){const wrap=cnt.closest('div');if(wrap&&wrap!==oldHeader){wrap.classList.add('calendar-first-count');right.appendChild(wrap);}else{cnt.classList.add('calendar-first-count');right.appendChild(cnt);}}
+  top.append(left,right);toolbar.appendChild(top);
+  const strip=document.createElement('div');strip.className='calendar-filter-strip';let host=document.getElementById(spec+'CalTagFilter');if(!host){host=document.createElement('div');host.id='cf-type-'+spec;}const row=cfCreateFilterLine('Type',host);if(row)strip.appendChild(row);toolbar.appendChild(strip);main.insertBefore(toolbar,main.firstChild);
+  _specCalView[spec]='month';if(!_specCalDate[spec]){const d=new Date();_specCalDate[spec]=new Date(d.getFullYear(),d.getMonth(),1);}setSpecCalView(spec,'month');buildSpecTypeChips(spec,_specCalArray(spec));
+}
+function calendarFirstInit(){
+  ensureCalendarPreviewUI();upgradeAllCalendarPage();upgradeGynCalendarPage();['cardiac','uro','cr','thoracic','stomach','breast','hn','hbp','hernia'].forEach(upgradeSpecCalendarPage);
+}
+
 // Initialization safeguards
 window.addEventListener('DOMContentLoaded',()=>{
   applyLang();
+  calendarFirstInit();
   buildPhoneSpecSheet(); updatePhoneSpecPill(currentSpec||'gyn'); updateMobileTabs(document.querySelector('.sub-btn.active')?.id?.replace('sub-','')||'video');
   // Render embedded data immediately so the UI is clickable even when external CSV loading is blocked.
   try{ renderVideos(); }catch(e){ console.error('Initial video render failed',e); }
   Promise.allSettled([loadVideosFromSheet(),loadArticlesFromSheet(),loadPapersFromSheet(),loadConferencesFromSheet(),loadCardiacResources(),loadAllSpecVideos(),loadAllSpecCalendars()])
-    .then(()=>{ if(currentSpec && !['gyn','cardiac','all'].includes(currentSpec)){ renderSpecVideo(currentSpec); renderSpecCal(currentSpec); if(_specCalView[currentSpec]==='month') renderSpecMonth(currentSpec); } else if(currentSpec==='all'){ renderAllCal(); } });
+    .then(()=>{ calendarFirstInit(); if(currentSpec && !['gyn','all'].includes(currentSpec)){ renderSpecCal(currentSpec); if((_specCalView[currentSpec]||'month')==='month') renderSpecMonth(currentSpec); } else if(currentSpec==='all'){ renderAllCal(); } else if(currentSpec==='gyn'&&_calView==='month'){ renderMonthView(); } });
 });
 
 
