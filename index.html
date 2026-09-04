@@ -1772,6 +1772,10 @@ body.dark #paperGrid > div {
 }
 
 
+/* ══ Mobile-only specialty controls: hidden by default on desktop ══ */
+#phoneSpecSheet { display: none; }
+#phoneSpecPill { display: none; }
+
 /* ══ Final responsive QA fixes ══ */
 @media (max-width: 900px) {
   .specialty-tabs { display:none !important; }
@@ -2469,7 +2473,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="uroCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1103866127" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -2492,7 +2496,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="uroCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="uroCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('uro',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -2615,7 +2619,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="crCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1214647289" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -2638,7 +2642,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="crCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="crCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('cr',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -2761,7 +2765,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="thoracicCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1333544214" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -2784,7 +2788,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="thoracicCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="thoracicCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('thoracic',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -2907,7 +2911,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="stomachCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1351379084" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -2930,7 +2934,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="stomachCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="stomachCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('stomach',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -3053,7 +3057,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="breastCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1715897257" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -3076,7 +3080,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="breastCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="breastCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('breast',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -3199,7 +3203,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="hnCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1504255784" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -3222,7 +3226,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="hnCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="hnCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('hn',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -3345,7 +3349,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="hbpCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=614572531" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -3368,7 +3372,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="hbpCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="hbpCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('hbp',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -3491,7 +3495,7 @@ body.dark #paperGrid > div {
     </div>
       <div id="herniaCalTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="sidebar-inner">
-      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=1345374325" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
+      <a href="https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit#gid=971357331" target="_blank" rel="noopener" style="width:100%;margin-bottom:14px;padding:8px 12px;border-radius:9px;border:1.5px dashed var(--primary-mid);background:var(--primary-soft);color:var(--primary);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='var(--primary-soft)';this.style.color='var(--primary)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         일정 추가하기
       </a>
@@ -3514,7 +3518,7 @@ body.dark #paperGrid > div {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력
           </button>
         </div>
-        <div style="font-size:12px;color:var(--text3)"><span id="herniaCalCount">0</span>개 일정</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span><span id="herniaCalCount">0</span>개 일정</span><button type="button" onclick="loadSpecCalendarFromSheet('hernia',true)" title="캘린더 새로고침" style="border:1px solid var(--border);background:var(--surface);color:var(--text3);border-radius:7px;padding:4px 7px;cursor:pointer;font-family:var(--font);font-size:10px">↻ 새로고침</button></div>
       </div>
     </div>
     
@@ -3845,6 +3849,7 @@ const SPEC_SHEET_GIDS = {
   hernia:  { video:'1404221171',articles:null, paper:null, calendar:'971357331'  },
 };
 const BASE_PUB = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub";
+const SOURCE_SHEET_ID = "1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw";
 
 /* ── 통합 시트 GID (4개로 통합 후 여기에 GID 입력) ──
    구글 시트 탭 클릭 → URL의 #gid=숫자 확인
@@ -4144,6 +4149,7 @@ function switchSpec(spec, el) {
       document.getElementById('sub-cal').classList.add('active');
       updateMobileTabs('cal');
       renderSpecCal(spec);
+      if(_specCalLoadState[spec]==='idle' || _specCalLoadState[spec]==='error') loadSpecCalendarFromSheet(spec,false);
     } else {
       // 캘린더 페이지 없으면 video
       const pageEl = document.getElementById(`page-${spec}-video`);
@@ -7482,10 +7488,29 @@ function renderSpecPapers(spec){ const g=document.getElementById(spec+'PaperGrid
 
 const _specCalView={}; const _specCalDate={};
 function _specCalArray(spec){ if(spec==='cardiac') return CARDIAC_CALS; return window['_CAL_'+spec.toUpperCase()]||[]; }
+const _specCalLoadState = { uro:'idle', cr:'idle', thoracic:'idle', stomach:'idle', breast:'idle', hn:'idle', hbp:'idle', hernia:'idle' };
+const _specCalLoadError = {};
 function renderSpecCal(spec){
-  const items=_specCalArray(spec); const q=(document.getElementById(spec+'CalSearch')?.value||'').toLowerCase(); const filtered=items.filter(e=>!q||JSON.stringify(e).toLowerCase().includes(q));
+  const items=_specCalArray(spec);
+  const q=(document.getElementById(spec+'CalSearch')?.value||'').toLowerCase();
+  const filtered=items.filter(e=>!q||JSON.stringify(e).toLowerCase().includes(q));
   const cnt=document.getElementById(spec+'CalCount'); if(cnt)cnt.textContent=filtered.length;
-  const grid=document.getElementById(spec+'CalGrid'); if(grid){ grid.innerHTML=filtered.length?filtered.map(e=>'<div class="insight-card" style="margin-bottom:8px;cursor:pointer" onclick=\'openConfModal('+JSON.stringify(e).replace(/'/g,"&#39;")+')\'><div style="font-size:12px;color:var(--primary);font-family:var(--mono);font-weight:700">'+_safeText(e.start||'')+(e.end&&e.end!==e.start?' ~ '+_safeText(e.end):'')+'</div><div style="font-size:14px;font-weight:650;margin-top:4px">'+_safeText(e.name||'Event')+'</div><div style="font-size:11px;color:var(--text3);margin-top:4px">'+_safeText(e.loc||'')+'</div></div>').join(''):'<div class="empty-state">등록된 일정이 없습니다.</div>'; }
+  const grid=document.getElementById(spec+'CalGrid');
+  if(!grid) return;
+
+  // For URO~Hernia, distinguish "still loading / failed" from a true empty sheet.
+  const state=_specCalLoadState[spec];
+  if(state==='loading' && !items.length){
+    grid.innerHTML='<div class="empty-state"><div style="font-weight:600;color:var(--text2);margin-bottom:6px">캘린더를 불러오는 중입니다.</div><div style="font-size:11px">Google Sheet 데이터를 확인하고 있습니다.</div></div>';
+    return;
+  }
+  if(state==='error' && !items.length){
+    const msg=_safeText(_specCalLoadError[spec]||'Google Sheet 데이터를 불러오지 못했습니다.');
+    grid.innerHTML='<div class="empty-state"><div style="font-weight:600;color:var(--text2);margin-bottom:6px">캘린더 로딩에 실패했습니다.</div><div style="font-size:11px;line-height:1.55">'+msg+'</div><button type="button" class="link-btn" style="margin-top:10px;border:none;cursor:pointer" onclick="loadSpecCalendarFromSheet(\''+spec+'\',true)">다시 불러오기</button></div>';
+    return;
+  }
+
+  grid.innerHTML=filtered.length?filtered.map(e=>'<div class="insight-card" style="margin-bottom:8px;cursor:pointer" onclick=\'openConfModal('+JSON.stringify(e).replace(/'/g,"&#39;")+')\'><div style="font-size:12px;color:var(--primary);font-family:var(--mono);font-weight:700">'+_safeText(e.start||'')+(e.end&&e.end!==e.start?' ~ '+_safeText(e.end):'')+'</div><div style="font-size:14px;font-weight:650;margin-top:4px">'+_safeText(e.name||'Event')+'</div><div style="font-size:11px;color:var(--text3);margin-top:4px">'+_safeText(e.loc||'')+'</div></div>').join(''):'<div class="empty-state">등록된 일정이 없습니다.</div>';
 }
 function renderCardiacCal(){ renderSpecCal('cardiac'); }
 function setSpecCalView(spec,view){ _specCalView[spec]=view; const card=document.getElementById(spec+'CalGrid'), month=document.getElementById(spec+'CalMonthView'); document.getElementById(spec+'CalViewCard')?.classList.toggle('active',view==='card'); document.getElementById(spec+'CalViewMonth')?.classList.toggle('active',view==='month'); if(card)card.style.display=view==='card'?'block':'none'; if(month)month.style.display=view==='month'?'block':'none'; if(view==='month')renderSpecMonth(spec); }
@@ -7561,8 +7586,86 @@ async function loadCardiacResources(){
   if(cr.length>1){ const h=cr[0].map(x=>String(x||'').trim()); CARDIAC_CALS=cr.slice(1).map(r=>normalizeCalendarRow(r,h)).filter(x=>x.name&&x.start); }
   renderCardiacVideos(); renderCardiacArticles(); renderCardiacPapers(); renderCardiacCal();
 }
+function _calendarCsvCandidates(gid){
+  const q='gid='+encodeURIComponent(gid)+'&single=true&output=csv';
+  return [
+    BASE_PUB+'?'+q,
+    'https://docs.google.com/spreadsheets/d/'+SOURCE_SHEET_ID+'/export?format=csv&gid='+encodeURIComponent(gid),
+    'https://docs.google.com/spreadsheets/d/'+SOURCE_SHEET_ID+'/gviz/tq?tqx=out:csv&gid='+encodeURIComponent(gid)
+  ];
+}
+function _parseSpecCalendarRows(rows,spec){
+  if(!rows || rows.length<2) return [];
+  // URO~Hernia calendar tabs have a completely blank first row and the real header on row 2.
+  // Detect the header row instead of assuming rows[0] is the header.
+  let headerRowIndex=-1;
+  for(let i=0;i<Math.min(rows.length,12);i++){
+    const vals=(rows[i]||[]).map(v=>String(v||'').replace(/^\uFEFF/,'').trim().toLowerCase());
+    if(vals.includes('name') && vals.includes('start')) { headerRowIndex=i; break; }
+  }
+  if(headerRowIndex<0){
+    headerRowIndex=rows.findIndex(r=>(r||[]).some(v=>/^(name|학회명)$/i.test(String(v||'').trim())));
+  }
+  if(headerRowIndex<0) return [];
+
+  const rawH=(rows[headerRowIndex]||[]).map(h=>String(h||'').replace(/^\uFEFF/,'').trim());
+  const headerPattern=/^(month|name|start|end|location|loc|tag|type|주최|organizer|system|url|duty|note|학회명|시작일|종료일|장소|날짜)$/i;
+  let offset=rawH.findIndex(h=>headerPattern.test(h));
+  if(offset<0) offset=rawH.findIndex(h=>/[a-zA-Z가-힣]/.test(h));
+  if(offset<0) offset=0;
+  const headers=rawH.slice(offset);
+
+  return rows.slice(headerRowIndex+1)
+    .filter(r=>(r||[]).some(v=>String(v||'').trim()))
+    .map(r=>normalizeCalendarRow(offset? r.slice(offset):r, headers))
+    .filter(x=>x.name&&x.start)
+    .map(x=>({...x,_spec:spec}))
+    .sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+}
+async function loadSpecCalendarFromSheet(spec,forceRender=false){
+  const gids=SPEC_SHEET_GIDS?.[spec];
+  if(!gids?.calendar || ['gyn','cardiac'].includes(spec)) return [];
+  _specCalLoadState[spec]='loading';
+  _specCalLoadError[spec]='';
+  if(forceRender || currentSpec===spec) renderSpecCal(spec);
+
+  let lastError='';
+  for(const url of _calendarCsvCandidates(gids.calendar)){
+    try{
+      const rows=await _loadCsvUrl(url);
+      const arr=_parseSpecCalendarRows(rows,spec);
+      if(arr.length){
+        window['_CAL_'+spec.toUpperCase()]=arr;
+        _specCalLoadState[spec]='loaded';
+        _specCalLoadError[spec]='';
+        if(currentSpec===spec){
+          renderSpecCal(spec);
+          if(_specCalView[spec]==='month') renderSpecMonth(spec);
+        }
+        buildAllConferences();
+        return arr;
+      }
+      lastError='CSV는 열렸지만 인식 가능한 일정 행이 없습니다.';
+    }catch(e){
+      lastError=e?.message||String(e);
+    }
+  }
+  _specCalLoadState[spec]='error';
+  _specCalLoadError[spec]=lastError || '게시된 Google Sheet에 접근하지 못했습니다.';
+  if(currentSpec===spec) renderSpecCal(spec);
+  return [];
+}
 async function loadSpecCalendars(){
-  await Promise.allSettled(Object.entries(SPEC_SHEET_GIDS||{}).map(async([spec,gids])=>{ if(['gyn','cardiac'].includes(spec)||!gids.calendar)return; const rows=await _loadCsvUrl(BASE_PUB+'?gid='+gids.calendar+'&single=true&output=csv'); if(rows.length<2)return; const h=rows[0].map(x=>String(x||'').trim()); const arr=rows.slice(1).map(r=>normalizeCalendarRow(r,h)).filter(x=>x.name&&x.start).map(x=>({...x,_spec:spec})); window['_CAL_'+spec.toUpperCase()]=arr; }));
+  const specs=['uro','cr','thoracic','stomach','breast','hn','hbp','hernia'];
+  specs.forEach(spec=>{ _specCalLoadState[spec]='loading'; });
+  await Promise.allSettled(specs.map(spec=>loadSpecCalendarFromSheet(spec,false)));
+  // Important: if the user switched specialty while async requests were in flight, refresh that calendar now.
+  if(currentSpec && specs.includes(currentSpec)){
+    renderSpecCal(currentSpec);
+    if(_specCalView[currentSpec]==='month') renderSpecMonth(currentSpec);
+  }
+  buildAllConferences();
+  if(currentSpec==='all') renderAllCal();
 }
 async function loadAllSpecCalendars(){ return loadSpecCalendars(); }
 
@@ -7577,7 +7680,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   // Render embedded data immediately so the UI is clickable even when external CSV loading is blocked.
   try{ renderVideos(); }catch(e){ console.error('Initial video render failed',e); }
   Promise.allSettled([loadVideosFromSheet(),loadArticlesFromSheet(),loadPapersFromSheet(),loadConferencesFromSheet(),loadCardiacResources(),loadAllSpecVideos(),loadAllSpecCalendars()])
-    .then(()=>{ if(currentSpec && !['gyn','cardiac','all'].includes(currentSpec)) renderSpecVideo(currentSpec); });
+    .then(()=>{ if(currentSpec && !['gyn','cardiac','all'].includes(currentSpec)){ renderSpecVideo(currentSpec); renderSpecCal(currentSpec); if(_specCalView[currentSpec]==='month') renderSpecMonth(currentSpec); } else if(currentSpec==='all'){ renderAllCal(); } });
 });
 
 
