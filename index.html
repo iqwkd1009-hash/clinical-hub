@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="2026-09-04-fix3">
+<meta name="build" content="2026-09-04-fix4">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -2132,10 +2132,10 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="specialty-tabs">
-      <button class="spec-btn" id="spec-all" onclick="switchSpecAll(this)">
+      <button class="spec-btn active" id="spec-all" onclick="switchSpecAll(this)">
         <span class="spec-dot" style="background:linear-gradient(135deg,#0071E3,#C0143C)"></span> All
       </button>
-      <button class="spec-btn active" id="spec-gyn" onclick="switchSpec('gyn',this)">
+      <button class="spec-btn" id="spec-gyn" onclick="switchSpec('gyn',this)">
         <span class="spec-dot" style="background:#0071E3"></span> GYN
       </button>
       <button class="spec-btn" id="spec-cardiac" onclick="switchSpec('cardiac',this)">
@@ -2177,7 +2177,7 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
 <!-- NAV SUB: Section tabs (per specialty) -->
 <div class="nav-sub" id="navSub">
   <button class="sub-btn" id="sub-cal" onclick="switchTab('cal',this)">📅 캘린더</button>
-  <button class="sub-btn active" id="sub-video" onclick="switchTab('video',this)">🎬 수술영상</button>
+  <button class="sub-btn" id="sub-video" onclick="switchTab('video',this)">🎬 수술영상</button>
   <button class="sub-btn" id="sub-kol" onclick="switchTab('kol',this)">📰 기사</button>
   <button class="sub-btn" id="sub-paper" onclick="switchTab('paper',this)">📄 논문</button>
 </div>
@@ -2195,7 +2195,7 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
 <!-- ══════════════════════════════════ -->
 <!--  PAGE 1 — VIDEO LIBRARY           -->
 <!-- ══════════════════════════════════ -->
-<div class="page active" id="page-video">
+<div class="page" id="page-video">
   <!-- 유튜브 스타일: 상단 필터 바 + 풀와이드 그리드 -->
   <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
 
@@ -8083,6 +8083,15 @@ async function loadAllSpecCalendars() {
   }
 }
 ;
+const _TYPE_META_CF = {
+  conference:{ icon:'🏛', label:'Conference' },
+  symposium: { icon:'🎤', label:'Symposium' },
+  itp:       { icon:'●',  label:'ITP' },
+  workshop:  { icon:'◇',  label:'Workshop' },
+  webinar:   { icon:'▣',  label:'Webinar' },
+  roadshow:  { icon:'↗',  label:'Roadshow' },
+  other:     { icon:'•',  label:'Other' },
+};
 function calendarTypeKey(ev){
   const raw=[ev?.tag,ev?.type,ev?.duty,ev?.name].filter(Boolean).join(' ').toLowerCase();
   if(/\bitp\b|live\s*surgery|observation/.test(raw)) return 'itp';
@@ -8392,17 +8401,19 @@ calendarFirstInit = function(){
 };
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-04-fix3';
+window.CLINICAL_HUB_BUILD='2026-09-04-fix4';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
   _safe('applyLang',()=>applyLang());
   _safe('calendarFirstInit',()=>calendarFirstInit());
-  _safe('phoneUI',()=>{ buildPhoneSpecSheet(); updatePhoneSpecPill(currentSpec||'gyn'); updateMobileTabs(document.querySelector('.sub-btn.active')?.id?.replace('sub-','')||'video'); });
+  _safe('phoneUI',()=>{ buildPhoneSpecSheet(); });
+  // 시작 화면: ALL 과 + 캘린더 탭으로 통일
+  _safe('startOnAllCalendar',()=>switchSpecAll(document.getElementById('spec-all')));
   // Render embedded data immediately so the UI is clickable even when external CSV loading is blocked.
   try{ renderVideos(); }catch(e){ console.error('Initial video render failed',e); }
   Promise.allSettled([loadVideosFromSheet(),loadArticlesFromSheet(),loadPapersFromSheet(),loadConferencesFromSheet(),loadCardiacResources(),loadAllSpecVideos(),loadAllSpecCalendars()])
-    .then(()=>{ _safe('calendarFirstInit(2)',()=>calendarFirstInit()); if(currentSpec && !['gyn','all'].includes(currentSpec)){ renderSpecCal(currentSpec); if((_specCalView[currentSpec]||'month')==='month') renderSpecMonth(currentSpec); } else if(currentSpec==='all'){ renderAllCal(); } else if(currentSpec==='gyn'&&_calView==='month'){ renderMonthView(); } });
+    .then(()=>{ _safe('calendarFirstInit(2)',()=>calendarFirstInit()); if(currentSpec && !['gyn','all'].includes(currentSpec)){ renderSpecCal(currentSpec); if((_specCalView[currentSpec]||'month')==='month') renderSpecMonth(currentSpec); } else if(currentSpec==='all'){ renderAllCal(); const hc=document.getElementById('headerCount'); if(hc) hc.textContent='ALL'; } else if(currentSpec==='gyn'&&_calView==='month'){ renderMonthView(); } });
 });
 
 
