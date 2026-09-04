@@ -6950,129 +6950,36 @@ function moveMonth(dir) {
 }
 
 function renderMonthView() {
-  const grid    = document.getElementById('monthGrid');
-  const titleEl = document.getElementById('monthNavTitle');
+  const header=document.getElementById('monthHeader');
+  const grid=document.getElementById('monthGrid');
+  const titleEl=document.getElementById('monthNavTitle');
   if(!grid) return;
+  const yr=_calYear, mo=_calMonth;
 
-  const today  = new Date();
-  const yr     = _calYear;
-  const mo     = _calMonth;
-
-  // 제목
-  const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  if(titleEl) {
-    titleEl.innerHTML = '';
-    const yBtn = document.createElement('button');
-    yBtn.style.cssText = 'border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);padding:0 2px';
-    yBtn.textContent = yr + '년';
-    yBtn.onclick = () => showYearPicker('_calYear','_calMonth', renderMonthView);
-    const mBtn = document.createElement('button');
-    mBtn.style.cssText = 'border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:0 2px';
-    mBtn.textContent = ' ' + MONTHS_KO[mo];
-    mBtn.onclick = () => showMonthPicker('_calYear','_calMonth', renderMonthView);
-    titleEl.appendChild(yBtn); titleEl.appendChild(mBtn);
-  }
-
-  // 이번 달 일수, 시작 요일
-  const firstDay = new Date(yr, mo, 1).getDay(); // 0=Sun
-  const daysInMonth = new Date(yr, mo+1, 0).getDate();
-  const daysInPrev  = new Date(yr, mo, 0).getDate();
-
-  grid.innerHTML = '';
-
-  // 요일 헤더
-  const weekdays = ['일','월','화','수','목','금','토'];
-  weekdays.forEach((d, i) => {
-    const el = document.createElement('div');
-    el.className = 'month-weekday' + (i===0?' sun':i===6?' sat':'');
-    el.textContent = d;
-    grid.appendChild(el);
+  // GYN 필터 적용
+  const today=new Date(); today.setHours(0,0,0,0);
+  let items=CONFERENCES.filter(ev=>{
+    if(calTagFilter!=='all'&&calTagFilter!=='upcoming'&&ev.tag!==calTagFilter) return false;
+    const s=new Date(ev.start), e=ev.end?new Date(ev.end):new Date(ev.start);
+    return s<=new Date(yr,mo+1,0)&&e>=new Date(yr,mo,1);
   });
 
-  // 이번 달 일정 필터링
-  const items = CONFERENCES.filter(e => {
-    if(calTagFilter !== 'all' && calTagFilter !== 'upcoming' && calendarTypeKey(e) !== calTagFilter) return false;
-    const eStart = new Date(e.start);
-    const eEnd   = e.end ? new Date(e.end) : eStart;
-    // 이번 달과 겹치는지
-    const moStart = new Date(yr, mo, 1);
-    const moEnd   = new Date(yr, mo+1, 0);
-    return eStart <= moEnd && eEnd >= moStart;
-  });
-
-  // 날짜별 이벤트 맵
-  function getEventsForDay(day) {
-    const d = new Date(yr, mo, day);
-    d.setHours(0,0,0,0);
-    return items.filter(e => {
-      const s = new Date(e.start); s.setHours(0,0,0,0);
-      const en = e.end ? new Date(e.end) : new Date(e.start); en.setHours(0,0,0,0);
-      return s <= d && en >= d;
-    });
-  }
-
-  // 날짜 셀 렌더
-  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-  for(let i = 0; i < totalCells; i++) {
-    const cell = document.createElement('div');
-    let dayNum, isCurrentMonth = true;
-
-    if(i < firstDay) {
-      dayNum = daysInPrev - firstDay + i + 1;
-      isCurrentMonth = false;
-    } else if(i >= firstDay + daysInMonth) {
-      dayNum = i - firstDay - daysInMonth + 1;
-      isCurrentMonth = false;
-    } else {
-      dayNum = i - firstDay + 1;
+  _buildMonthGrid(grid, header, titleEl, items, yr, mo,
+    ev => (calEventColor ? calEventColor(ev.tag).border : '#0071E3'),
+    ev => openConfModal({...ev, _spec:'gyn'}),
+    (el, y, m, MONTHS_KO) => {
+      el.innerHTML='';
+      const yB=document.createElement('button');
+      yB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);padding:0 2px';
+      yB.textContent=y+'년'; yB.onclick=()=>showYearPicker('_calYear','_calMonth',renderMonthView);
+      const mB=document.createElement('button');
+      mB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:0 2px';
+      mB.textContent=' '+MONTHS_KO[m]; mB.onclick=()=>showMonthPicker('_calYear','_calMonth',renderMonthView);
+      el.appendChild(yB); el.appendChild(mB);
     }
-
-    const dayOfWeek = i % 7;
-    cell.className = 'month-day' +
-      (!isCurrentMonth ? ' other-month' : '') +
-      (isCurrentMonth && dayNum === today.getDate() && mo === today.getMonth() && yr === today.getFullYear() ? ' today' : '') +
-      (dayOfWeek === 0 ? ' sunday' : '') +
-      (dayOfWeek === 6 ? ' saturday' : '');
-
-    // 날짜 숫자
-    const numEl = document.createElement('div');
-    numEl.className = 'month-day-num';
-    numEl.textContent = dayNum;
-    cell.appendChild(numEl);
-
-    // 이벤트 표시 (현재 달만)
-    if(isCurrentMonth) {
-      const dayEvents = getEventsForDay(dayNum);
-      const MAX_SHOW = 3;
-      const wrap = document.createElement('div');
-      wrap.className = 'month-events-wrap';
-      dayEvents.slice(0, MAX_SHOW).forEach(ev => {
-        const gynClr=_allSpecColor('gyn');
-        const clr={bg:gynClr+'20',text:gynClr,border:gynClr};
-        const evEl = document.createElement('div');
-        evEl.className = 'month-event';
-        evEl.style.cssText = `background:${clr.bg};color:${clr.text};border-left:2px solid ${clr.border}`;
-        evEl.innerHTML = '<span class="cal-type-icon">'+calendarTypeMeta(ev).icon+'</span><span class="cal-event-label">'+_safeText(ev.name||'Event')+'</span>';
-        evEl.title = ev.name;
-        bindCalendarPreview(evEl, {...ev,_spec:'gyn'});
-        wrap.appendChild(evEl);
-      });
-      if(dayEvents.length > MAX_SHOW) {
-        const moreEl = document.createElement('div');
-        moreEl.className = 'month-more';
-        moreEl.textContent = '+' + (dayEvents.length - MAX_SHOW) + '개 더';
-        moreEl.onclick = (e) => { e.stopPropagation(); showCalTooltip(e, dayEvents[MAX_SHOW]); };
-        wrap.appendChild(moreEl);
-      }
-      cell.appendChild(wrap);
-    }
-    grid.appendChild(cell);
-  }
+  );
 }
 
-/* ── 이벤트 툴팁 ── */
-let _tooltipTimer;
 function showCalTooltip(e, ev) {
   let tip = document.getElementById('calEventTooltip');
   if(!tip) {
@@ -7479,31 +7386,104 @@ function moveAllCalMonth(dir) {
   renderAllCal();
 }
 
-function renderAllCalMonth(items, today) {
-  const header = document.getElementById('allCalMonthHeader');
-  const grid   = document.getElementById('allCalMonthGrid');
-  const title  = document.getElementById('allCalMonthTitle');
-  if(!grid) return;
 
-  const MONTHS_KO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const yr=_allCalYear, mo=_allCalMonth;
-  const BAR_H = 24;
-  const MAX_SHOW = 3;
+/* ══ Multi-day Calendar 공통 렌더 헬퍼 ══ */
 
-  if(title) {
-    title.innerHTML='';
-    const yB=document.createElement('button');
-    yB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);padding:0 2px';
-    yB.textContent=yr+'년';
-    yB.onclick=()=>showYearPicker('_allCalYear','_allCalMonth',()=>renderAllCal());
-    const mB=document.createElement('button');
-    mB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:0 2px';
-    mB.textContent=' '+MONTHS_KO[mo];
-    mB.onclick=()=>showMonthPicker('_allCalYear','_allCalMonth',()=>renderAllCal());
-    title.appendChild(yB); title.appendChild(mB);
+/* ══ Spec Cal 상태 관리 ══ */
+const _specCalViewState = {};
+function _getSpecState(spec) {
+  if(!_specCalViewState[spec]) {
+    const now = new Date();
+    _specCalViewState[spec] = { view:'card', year:now.getFullYear(), month:now.getMonth() };
   }
+  return _specCalViewState[spec];
+}
 
-  if(header){
+function showSpecYearPicker(spec) {
+  const st = _getSpecState(spec);
+  const overlay = _createPicker();
+  for(let y = st.year-5; y <= st.year+5; y++) {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:'+(y===st.year?'700':'400')+';background:'+(y===st.year?'var(--primary)':'var(--surface2)')+';color:'+(y===st.year?'white':'var(--text)')+';font-family:var(--font)';
+    btn.textContent = y + '년';
+    btn.onclick = () => { st.year = y; document.body.removeChild(overlay); renderSpecMonth(spec); };
+    overlay.querySelector('.picker-grid').appendChild(btn);
+  }
+  document.body.appendChild(overlay);
+}
+
+function showSpecMonthPicker(spec) {
+  const st = _getSpecState(spec);
+  const overlay = _createPicker();
+  ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'].forEach((m, i) => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:'+(i===st.month?'700':'400')+';background:'+(i===st.month?'var(--primary)':'var(--surface2)')+';color:'+(i===st.month?'white':'var(--text)')+';font-family:var(--font)';
+    btn.textContent = m;
+    btn.onclick = () => { st.month = i; document.body.removeChild(overlay); renderSpecMonth(spec); };
+    overlay.querySelector('.picker-grid').appendChild(btn);
+  });
+  document.body.appendChild(overlay);
+}
+
+function _createPicker() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+  overlay.onclick = e => { if(e.target===overlay) document.body.removeChild(overlay); };
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:16px;padding:20px;min-width:280px;box-shadow:0 20px 60px rgba(0,0,0,0.25)';
+  const grid = document.createElement('div');
+  grid.className = 'picker-grid';
+  grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center';
+  box.appendChild(grid);
+  overlay.appendChild(box);
+  return overlay;
+}
+
+/* ══ Spec Cal 뷰 전환 ══ */
+function setSpecCalView(spec, view) {
+  const st = _getSpecState(spec);
+  st.view = view;
+  document.getElementById(spec+'CalViewCard')?.classList.toggle('active', view==='card');
+  document.getElementById(spec+'CalViewMonth')?.classList.toggle('active', view==='month');
+  const gridEl  = document.getElementById(spec+'CalGrid');
+  const monthEl = document.getElementById(spec+'CalMonthView');
+  const upEl    = document.getElementById(spec+'UpcomingSection');
+  if(view === 'month') {
+    if(gridEl)  gridEl.style.display  = 'none';
+    if(upEl)    upEl.style.display    = 'none';
+    if(monthEl) monthEl.style.display = 'block';
+    renderSpecMonth(spec);
+  } else {
+    if(gridEl)  gridEl.style.display  = '';
+    if(upEl)    upEl.style.display    = '';
+    if(monthEl) monthEl.style.display = 'none';
+    renderSpecCal(spec);
+  }
+}
+
+function moveSpecMonth(spec, dir) {
+  const st = _getSpecState(spec);
+  st.month += dir;
+  if(st.month > 11) { st.month = 0;  st.year++; }
+  if(st.month < 0)  { st.month = 11; st.year--; }
+  renderSpecMonth(spec);
+}
+
+function goSpecToday(spec) {
+  const now = new Date();
+  const st = _getSpecState(spec);
+  st.year  = now.getFullYear();
+  st.month = now.getMonth();
+  setSpecCalView(spec, 'month');
+}
+
+function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClickFn, titleClickFn) {
+  const MONTHS_KO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const today=new Date(); today.setHours(0,0,0,0);
+
+  if(titleEl && titleClickFn) titleClickFn(titleEl, yr, mo, MONTHS_KO);
+
+  if(header) {
     header.innerHTML='';
     ['일','월','화','수','목','금','토'].forEach((d,i)=>{
       const el=document.createElement('div');
@@ -7517,6 +7497,10 @@ function renderAllCalMonth(items, today) {
   const daysInPrev=new Date(yr,mo,0).getDate();
   const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
 
+  function dateOf(y,m,d){const dt=new Date(y,m,d);dt.setHours(0,0,0,0);return dt;}
+  const moStart=dateOf(yr,mo,1), moEnd=dateOf(yr,mo,daysInMonth);
+
+  // 셀 정보
   const cells=[];
   for(let i=0;i<totalCells;i++){
     let dayNum,isCurrent=true;
@@ -7526,115 +7510,121 @@ function renderAllCalMonth(items, today) {
     cells.push({dayNum,isCurrent,dow:i%7,cellIdx:i});
   }
 
-  function dateOf(y,m,d){const dt=new Date(y,m,d);dt.setHours(0,0,0,0);return dt;}
-  const moStart=dateOf(yr,mo,1), moEnd=dateOf(yr,mo,daysInMonth);
-
-  const layouts=items.map(ev=>{
-    const evS=new Date(ev.start);
-    const evE=ev.end?new Date(ev.end):new Date(ev.start);
-    if(Number.isNaN(evS.getTime()) || Number.isNaN(evE.getTime())) return null;
-    evS.setHours(0,0,0,0); evE.setHours(0,0,0,0);
-    if(evE < evS) return null;
-    if(evE < moStart || evS > moEnd) return null;
+  // 이벤트 → 셀 범위
+  const evLayouts=items.map(ev=>{
+    const evS=new Date(ev.start);evS.setHours(0,0,0,0);
+    const evE=ev.end?new Date(ev.end):new Date(ev.start);evE.setHours(0,0,0,0);
     const cs=evS<moStart?moStart:evS;
     const ce=evE>moEnd?moEnd:evE;
     const startCell=cells.findIndex(c=>c.isCurrent&&c.dayNum===cs.getDate());
     const endCell=cells.findIndex(c=>c.isCurrent&&c.dayNum===ce.getDate());
-    if(startCell<0 || endCell<0 || endCell<startCell) return null;
-    const segments=[];
-    let from=startCell;
-    while(from<=endCell){
-      const weekEnd=Math.floor(from/7)*7+6;
-      const to=Math.min(endCell,weekEnd);
-      segments.push({from,to});
-      from=weekEnd+1;
-    }
-    return {ev,startCell,endCell,segments};
-  }).filter(Boolean);
+    return{ev,startCell,endCell,evS,evE};
+  }).filter(l=>l.startCell>=0);
 
-  const occupancy=Array.from({length:totalCells},()=>[]);
-  const drawSegments=[];
-  layouts.forEach(({ev,startCell,endCell,segments})=>{
+  // 슬롯 배정 (주 단위)
+  const rowSlots=Array.from({length:totalCells},()=>[]);
+  evLayouts.forEach(({ev,startCell,endCell})=>{
     let slot=0;
-    while(segments.some(seg=>{ for(let ci=seg.from; ci<=seg.to; ci++){ if(occupancy[ci][slot]) return true; } return false; })) slot++;
-    segments.forEach(seg=>{
-      for(let ci=seg.from; ci<=seg.to; ci++) occupancy[ci][slot]=ev;
-      drawSegments.push({ev,slot,from:seg.from,to:seg.to,eventStartCell:startCell,eventEndCell:endCell});
-    });
+    const weeks=[];
+    let ws=startCell;
+    while(ws<=endCell){
+      const rowEnd=Math.min(endCell,Math.floor(ws/7)*7+6);
+      weeks.push({from:ws,to:rowEnd});ws=Math.floor(ws/7)*7+7;
+    }
+    while(weeks.some(w=>{for(let ci=w.from;ci<=w.to;ci++)if(rowSlots[ci][slot])return true;return false;}))slot++;
+    weeks.forEach(w=>{for(let ci=w.from;ci<=w.to;ci++)rowSlots[ci][slot]=ev;});
   });
 
+  const MAX_SLOTS=3;
   grid.innerHTML='';
-  const cellEls=[];
+
   cells.forEach(({dayNum,isCurrent,dow,cellIdx})=>{
     const isToday=isCurrent&&dayNum===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
     const cell=document.createElement('div');
     cell.className='month-day'+(!isCurrent?' other-month':'')+(isToday?' today':'')+(dow===0?' sunday':dow===6?' saturday':'');
-    cell.style.position='relative';
-
     const num=document.createElement('div');
-    num.className='month-day-num';
-    num.textContent=dayNum;
-    cell.appendChild(num);
+    num.className='month-day-num';num.textContent=dayNum;cell.appendChild(num);
 
     if(isCurrent){
-      const wrap=document.createElement('div');
-      wrap.className='month-events-wrap';
-      wrap.style.position='relative';
-      wrap.style.height=(BAR_H*MAX_SHOW)+'px';
-      wrap.style.minHeight=(BAR_H*MAX_SHOW)+'px';
-      wrap.style.overflow='visible';
-      cell.appendChild(wrap);
+      const slots=rowSlots[cellIdx]||[];
+      let hiddenCount=0;
+      for(let slot=0;slot<MAX_SLOTS;slot++){
+        const ev=slots[slot];
+        if(!ev){
+          // 빈 슬롯 유지 (위 이벤트의 연속 라인 정렬용)
+          const sp=document.createElement('div');
+          sp.style.cssText='height:19px;margin-bottom:2px';
+          cell.appendChild(sp);
+          continue;
+        }
+        const evS=new Date(ev.start);evS.setHours(0,0,0,0);
+        const evE=ev.end?new Date(ev.end):new Date(ev.start);evE.setHours(0,0,0,0);
+        const thisDay=dateOf(yr,mo,dayNum);
+        const isMulti=evS.getTime()!==evE.getTime();
+        // 주 경계에서도 연속으로: dow===0이면 강제 span-start처럼 텍스트 표시
+        const isStart=evS.getTime()===thisDay.getTime()||dow===0;
+        const isEnd=evE.getTime()===thisDay.getTime()||dow===6;
 
-      const totalEvs=(occupancy[cellIdx]||[]).filter(Boolean).length;
-      if(totalEvs>MAX_SHOW){
+        let spanClass='span-single';
+        if(isMulti){
+          if(isStart&&isEnd)spanClass='span-single';
+          else if(isStart)spanClass='span-start';
+          else if(isEnd)spanClass='span-end';
+          else spanClass='span-mid';
+        }
+
+        const clr=typeof specColor==='function'?specColor(ev):specColor;
+        const el=document.createElement('div');
+        el.className='month-event '+spanClass;
+
+        if(spanClass==='span-mid'||spanClass==='span-end'){
+          el.style.cssText='background:'+clr+'22;color:'+clr+';border-left:none;margin-bottom:2px;border-radius:'+(spanClass==='span-end'?'0 4px 4px 0':'0');
+        } else {
+          el.style.cssText='background:'+clr+'22;color:'+clr+';border-left:2px solid '+clr+';margin-bottom:2px;border-radius:'+(spanClass==='span-start'?'4px 0 0 4px':'4px');
+        }
+
+        // 텍스트: 시작일 또는 주 첫날에만
+        el.textContent=(isStart)?ev.name:' ';
+        el.title=ev.name;
+        el.onclick=e2=>{e2.stopPropagation();if(typeof onClickFn==='function')onClickFn(ev);};
+        cell.appendChild(el);
+      }
+
+      const totalEvs=(rowSlots[cellIdx]||[]).filter(Boolean).length;
+      if(totalEvs>MAX_SLOTS){
         const more=document.createElement('div');
         more.className='month-more';
-        more.textContent='+'+(totalEvs-MAX_SHOW)+'개 더';
-        more.onclick=(evt)=>{ evt.stopPropagation(); const extra=(occupancy[cellIdx]||[]).filter(Boolean).slice(MAX_SHOW); if(extra[0]) openConfModal(extra[0]); };
+        more.textContent='+'+(totalEvs-MAX_SLOTS)+'개 더';
         cell.appendChild(more);
       }
     }
-
     grid.appendChild(cell);
-    cellEls[cellIdx]=cell;
-  });
-
-  drawSegments.filter(seg=>seg.slot<MAX_SHOW).forEach(seg=>{
-    const startCellEl=cellEls[seg.from];
-    const wrap=startCellEl?.querySelector('.month-events-wrap');
-    if(!wrap) return;
-    const ev=seg.ev;
-    const specClr=_allSpecColor(ev._spec);
-    const spanDays=(seg.to-seg.from+1);
-    const el=document.createElement('div');
-    el.className='month-event span-bar';
-    el.style.position='absolute';
-    el.style.left='0';
-    el.style.top=(seg.slot*BAR_H)+'px';
-    el.style.width='calc('+spanDays+' * 100% + '+((spanDays-1)*1)+'px)';
-    el.style.maxWidth='none';
-    el.style.zIndex='6';
-    el.style.background=specClr+'22';
-    el.style.color=specClr;
-    el.style.borderLeft='2px solid '+specClr;
-    el.style.borderRadius='6px';
-    el.style.whiteSpace='nowrap';
-    el.style.overflow='hidden';
-    el.style.textOverflow='ellipsis';
-    el.style.pointerEvents='auto';
-
-    const segmentStartsAtWeek=(seg.from%7===0);
-    const showLabel=(seg.from===seg.eventStartCell)||segmentStartsAtWeek;
-    el.innerHTML=showLabel
-      ? ('<span class="cal-type-icon">'+calendarTypeMeta(ev).icon+'</span><span class="cal-event-label">'+_safeText(ev.name||'Event')+'</span>')
-      : ('<span class="cal-type-icon" style="opacity:.8">'+calendarTypeMeta(ev).icon+'</span>');
-    el.title=ev.name||'';
-    bindCalendarPreview(el, ev);
-    wrap.appendChild(el);
   });
 }
 
-/* ══════════════════════ FIXED COMPATIBILITY LAYER ══════════════════════ */
+function renderAllCalMonth(items, today) {
+  const header=document.getElementById('allCalMonthHeader');
+  const grid=document.getElementById('allCalMonthGrid');
+  const titleEl=document.getElementById('allCalMonthTitle');
+  if(!grid) return;
+  const yr=_allCalYear, mo=_allCalMonth;
+
+  _buildMonthGrid(grid, header, titleEl, items, yr, mo,
+    ev => _allSpecColor(ev._spec),
+    ev => openConfModal(ev),
+    (el, y, m, MONTHS_KO) => {
+      el.innerHTML='';
+      const yB=document.createElement('button');
+      yB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);padding:0 2px';
+      yB.textContent=y+'년'; yB.onclick=()=>showYearPicker('_allCalYear','_allCalMonth',()=>renderAllCal());
+      const mB=document.createElement('button');
+      mB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:0 2px';
+      mB.textContent=' '+MONTHS_KO[m]; mB.onclick=()=>showMonthPicker('_allCalYear','_allCalMonth',()=>renderAllCal());
+      el.appendChild(yB); el.appendChild(mB);
+    }
+  );
+}
+
 function applyLang(){
   document.documentElement.lang = currentLang === 'en' ? 'en' : 'ko';
   document.querySelectorAll('[data-ko]').forEach(el=>{
@@ -7942,160 +7932,40 @@ function renderSpecCal(spec){
 function renderCardiacCal(){ renderSpecCal('cardiac'); }
 function setSpecCalView(spec,view){ _specCalView[spec]=view; const card=document.getElementById(spec+'CalGrid'), month=document.getElementById(spec+'CalMonthView'); document.getElementById(spec+'CalViewCard')?.classList.toggle('active',view==='card'); document.getElementById(spec+'CalViewMonth')?.classList.toggle('active',view==='month'); if(card)card.style.display=view==='card'?'':'none'; if(month)month.style.display=view==='month'?'block':'none'; if(view==='month')renderSpecMonth(spec); }
 function moveSpecMonth(spec,dir){ const d=_specCalDate[spec]||new Date(); d.setMonth(d.getMonth()+dir); _specCalDate[spec]=d; renderSpecMonth(spec); }
-function renderSpecMonth(spec){
-  const grid = document.getElementById(spec+'MonthGrid');
-  const header = document.getElementById(spec+'MonthHeader');
-  const title = document.getElementById(spec+'MonthNavTitle');
+function renderSpecMonth(spec) {
+  const st=_getSpecState(spec);
+  const yr=st.year, mo=st.month;
+  const header=document.getElementById(spec+'MonthHeader');
+  const grid=document.getElementById(spec+'MonthGrid');
+  const titleEl=document.getElementById(spec+'MonthNavTitle');
   if(!grid) return;
 
-  const d = _specCalDate[spec] || new Date();
-  _specCalDate[spec] = d;
-  const yr = d.getFullYear(), mo = d.getMonth();
-  const monthsKo = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  if(title) title.textContent = yr+'년 '+monthsKo[mo];
-  if(header){
-    header.innerHTML='';
-    ['일','월','화','수','목','금','토'].forEach((wd,i)=>{
-      const el=document.createElement('div');
-      el.className='month-weekday'+(i===0?' sun':i===6?' sat':'');
-      el.textContent=wd;
-      header.appendChild(el);
-    });
-  }
-
-  const q = (document.getElementById(spec+'CalSearch')?.value || '').toLowerCase();
-  const typeFilter = (_specCalTypeFilter[spec] || 'all');
-  const sourceItems = _specCalArray(spec);
-  const items = sourceItems.filter(e => (!q || JSON.stringify(e).toLowerCase().includes(q)) && (typeFilter==='all' || calendarTypeKey(e)===typeFilter));
-  buildSpecTypeChips(spec, sourceItems);
-
-  const firstDay = new Date(yr,mo,1).getDay();
-  const daysInMonth = new Date(yr,mo+1,0).getDate();
-  const daysInPrev = new Date(yr,mo,0).getDate();
-  const totalCells = Math.ceil((firstDay+daysInMonth)/7)*7;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const BAR_H = 24;
-  const MAX_SHOW = 3;
-
-  function dateOf(y,m,day){ const dt=new Date(y,m,day); dt.setHours(0,0,0,0); return dt; }
-  const moStart = dateOf(yr,mo,1), moEnd = dateOf(yr,mo,daysInMonth);
-
-  const cells = [];
-  for(let i=0;i<totalCells;i++){
-    let dayNum, isCurrent = true;
-    if(i<firstDay){ dayNum = daysInPrev-firstDay+i+1; isCurrent=false; }
-    else if(i>=firstDay+daysInMonth){ dayNum = i-firstDay-daysInMonth+1; isCurrent=false; }
-    else { dayNum = i-firstDay+1; }
-    cells.push({ dayNum, isCurrent, dow:i%7, cellIdx:i });
-  }
-
-  const layouts = items.map(ev => {
-    const evS = new Date(ev.start);
-    const evE = ev.end ? new Date(ev.end) : new Date(ev.start);
-    if(Number.isNaN(evS.getTime()) || Number.isNaN(evE.getTime())) return null;
-    evS.setHours(0,0,0,0); evE.setHours(0,0,0,0);
-    if(evE < evS) return null;
-    if(evE < moStart || evS > moEnd) return null;
-    const cs = evS < moStart ? moStart : evS;
-    const ce = evE > moEnd ? moEnd : evE;
-    const startCell = cells.findIndex(c=>c.isCurrent && c.dayNum===cs.getDate());
-    const endCell = cells.findIndex(c=>c.isCurrent && c.dayNum===ce.getDate());
-    if(startCell < 0 || endCell < 0 || endCell < startCell) return null;
-    const segments = [];
-    let from = startCell;
-    while(from <= endCell){
-      const weekEnd = Math.floor(from/7)*7 + 6;
-      const to = Math.min(endCell, weekEnd);
-      segments.push({ from, to });
-      from = weekEnd + 1;
-    }
-    return { ev, startCell, endCell, segments };
-  }).filter(Boolean);
-
-  const occupancy = Array.from({length:totalCells}, ()=>[]);
-  const drawSegments = [];
-  layouts.forEach(({ev,startCell,endCell,segments}) => {
-    let slot = 0;
-    while(segments.some(seg => { for(let ci=seg.from; ci<=seg.to; ci++){ if(occupancy[ci][slot]) return true; } return false; })) slot++;
-    segments.forEach(seg => {
-      for(let ci=seg.from; ci<=seg.to; ci++) occupancy[ci][slot] = ev;
-      drawSegments.push({ ev, slot, from:seg.from, to:seg.to, eventStartCell:startCell, eventEndCell:endCell });
-    });
+  const data=window['_CAL_'+spec.toUpperCase()]||[];
+  const today=new Date(); today.setHours(0,0,0,0);
+  const items=data.filter(ev=>{
+    const s=new Date(ev.start), e=ev.end?new Date(ev.end):new Date(ev.start);
+    return s<=new Date(yr,mo+1,0)&&e>=new Date(yr,mo,1);
   });
 
-  grid.innerHTML='';
-  const cellEls = [];
-  cells.forEach(({dayNum,isCurrent,dow,cellIdx}) => {
-    const isToday = isCurrent && dayNum===today.getDate() && mo===today.getMonth() && yr===today.getFullYear();
-    const cell = document.createElement('div');
-    cell.className='month-day'+(!isCurrent?' other-month':'')+(isToday?' today':'')+(dow===0?' sunday':dow===6?' saturday':'');
-    cell.style.position='relative';
+  const SPEC_COLORS={uro:'#7C3AED',cr:'#059669',thoracic:'#0891B2',stomach:'#EA580C',breast:'#DB2777',hn:'#D97706',hbp:'#65A30D',hernia:'#9333EA'};
+  const specClr=SPEC_COLORS[spec]||'#888';
 
-    const num = document.createElement('div');
-    num.className='month-day-num';
-    num.textContent=dayNum;
-    cell.appendChild(num);
-
-    if(isCurrent){
-      const wrap = document.createElement('div');
-      wrap.className='month-events-wrap';
-      wrap.style.position='relative';
-      wrap.style.height=(BAR_H*MAX_SHOW)+'px';
-      wrap.style.minHeight=(BAR_H*MAX_SHOW)+'px';
-      wrap.style.overflow='visible';
-      cell.appendChild(wrap);
-
-      const totalEvs=(occupancy[cellIdx]||[]).filter(Boolean).length;
-      if(totalEvs>MAX_SHOW){
-        const more=document.createElement('div');
-        more.className='month-more';
-        more.textContent='+'+(totalEvs-MAX_SHOW)+'개 더';
-        more.onclick=(evt)=>{ evt.stopPropagation(); const extra=(occupancy[cellIdx]||[]).filter(Boolean).slice(MAX_SHOW); if(extra[0]) openConfModal(extra[0]); };
-        cell.appendChild(more);
-      }
+  _buildMonthGrid(grid, header, titleEl, items, yr, mo,
+    ev => specClr,
+    ev => openConfModal({...ev, _spec:spec}),
+    (el, y, m, MONTHS_KO) => {
+      el.innerHTML='';
+      const yB=document.createElement('button');
+      yB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);padding:0 2px';
+      yB.textContent=y+'년'; yB.onclick=()=>showSpecYearPicker(spec);
+      const mB=document.createElement('button');
+      mB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:0 2px';
+      mB.textContent=' '+MONTHS_KO[m]; mB.onclick=()=>showSpecMonthPicker(spec);
+      el.appendChild(yB); el.appendChild(mB);
     }
-
-    grid.appendChild(cell);
-    cellEls[cellIdx]=cell;
-  });
-
-  drawSegments
-    .filter(seg => seg.slot < MAX_SHOW)
-    .forEach(seg => {
-      const startCellEl = cellEls[seg.from];
-      const wrap = startCellEl?.querySelector('.month-events-wrap');
-      if(!wrap) return;
-      const ev = seg.ev;
-      const specClr = _allSpecColor(spec);
-      const spanDays = (seg.to - seg.from + 1);
-      const el = document.createElement('div');
-      el.className = 'month-event span-bar';
-      el.style.position='absolute';
-      el.style.left='0';
-      el.style.top=(seg.slot*BAR_H)+'px';
-      el.style.width='calc('+spanDays+' * 100% + '+((spanDays-1)*1)+'px)';
-      el.style.maxWidth='none';
-      el.style.zIndex='6';
-      el.style.background=specClr+'22';
-      el.style.color=specClr;
-      el.style.borderLeft='2px solid '+specClr;
-      el.style.borderRadius='6px';
-      el.style.boxShadow='0 1px 0 rgba(0,0,0,.02)';
-      el.style.whiteSpace='nowrap';
-      el.style.overflow='hidden';
-      el.style.textOverflow='ellipsis';
-      el.style.pointerEvents='auto';
-
-      const segmentStartsAtWeek = (seg.from % 7 === 0);
-      const showLabel = (seg.from === seg.eventStartCell) || segmentStartsAtWeek;
-      el.innerHTML = showLabel
-        ? '<span class="cal-type-icon">'+calendarTypeMeta(ev).icon+'</span><span class="cal-event-label">'+_safeText(ev.name||'Event')+'</span>'
-        : '<span class="cal-type-icon" style="opacity:.8">'+calendarTypeMeta(ev).icon+'</span>';
-      el.title = ev.name || '';
-      bindCalendarPreview(el, {...ev, _spec:spec});
-      wrap.appendChild(el);
-    });
+  );
 }
+
 function goToday(){ _calMonth=new Date().getMonth(); _calYear=new Date().getFullYear(); renderMonthCalendar(); }
 
 function closeArticleModal(e){ const x=document.getElementById('articleModalOverlay'); if(x && (!e||e.target===x))x.classList.remove('open'); }
