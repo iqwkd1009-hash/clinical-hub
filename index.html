@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>GYN Clinical Hub</title>
+<title>Clinical Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1771,6 +1771,25 @@ body.dark #paperGrid > div {
   .tab-disclaimer { font-size:10px !important; padding:8px 10px !important; }
 }
 
+
+/* ══ Final responsive QA fixes ══ */
+@media (max-width: 900px) {
+  .specialty-tabs { display:none !important; }
+  #phoneSpecPill { display:inline-flex !important; align-items:center; gap:5px; padding:4px 10px; background:var(--primary-soft); border:1px solid var(--primary-mid); border-radius:20px; font-size:12px; font-weight:600; color:var(--primary); cursor:pointer; font-family:var(--font); white-space:nowrap; }
+  #phoneSpecSheet { display:none; position:fixed; inset:0; z-index:500; }
+  #phoneSpecSheet.open { display:block; }
+  #phoneSpecSheetOverlay { position:absolute; inset:0; background:rgba(0,0,0,.4); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  #phoneSpecSheetPanel { position:absolute; bottom:0; left:0; right:0; background:var(--surface); border-radius:20px 20px 0 0; padding:12px 0 calc(12px + env(safe-area-inset-bottom)); box-shadow:0 -4px 40px rgba(0,0,0,.15); max-height:82dvh; overflow-y:auto; animation:slideUp .25s cubic-bezier(.25,.46,.45,.94); }
+  .spec-sheet-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
+  .spec-sheet-title { font-size:11px; font-weight:600; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; font-family:var(--mono); padding:0 20px 12px; }
+  .spec-sheet-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; padding:0 16px 8px; }
+  .spec-sheet-btn { display:flex; align-items:center; gap:8px; min-width:0; padding:12px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); font-family:var(--font); font-size:13px; font-weight:500; color:var(--text); cursor:pointer; text-align:left; }
+  .spec-sheet-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
+  .spec-sheet-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .mobile-tab-item:disabled, .sub-btn:disabled { opacity:.35 !important; cursor:default !important; pointer-events:none; }
+}
+@media (max-width: 520px) { .spec-sheet-grid { grid-template-columns:1fr 1fr; } }
+
 </style>
 </head>
 <body>
@@ -2246,7 +2265,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-cardiac-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1700395267')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2442,7 +2461,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-uro-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1103866127')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2588,7 +2607,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-cr-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1214647289')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2734,7 +2753,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-thoracic-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1333544214')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2880,7 +2899,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-stomach-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1351379084')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -3026,7 +3045,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-breast-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1715897257')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -3172,7 +3191,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-hn-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=1504255784')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -3318,7 +3337,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-hbp-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=614572531')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -3464,7 +3483,7 @@ body.dark #paperGrid > div {
   <aside class="sidebar" id="sidebar-hernia-cal">
     <div style="display:none;align-items:center;justify-content:space-between;margin-bottom:16px" class="drawer-close">
       <span style="font-size:13px;font-weight:600;color:var(--text)">분류</span>
-      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" onclick="window.open('https://docs.google.com/spreadsheets/d/1c7j7-Uz0nGpOSE-mzzAuAwwXKhCNnZgKMC9cgEZfkBw/edit?gid=971357331')" >✕</button>
+      <button onclick="closeDrawer()" style="border:none;background:var(--surface2);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)" >✕</button>
     </div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -3610,7 +3629,7 @@ body.dark #paperGrid > div {
   </div>
 </div>
 
-<div id="paperModalOverlay-dup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
+<div id="paperModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(4px)" onclick="closePaperModal(event)">
   <div style="background:var(--surface);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:16px;font-weight:700;color:var(--text)">논문 추가하기</div>
@@ -4060,6 +4079,7 @@ let currentSpec = 'gyn';
 function switchSpecAll(el) {
   closeDrawer();
   currentSpec = 'all';
+  updatePhoneSpecPill('all');
   document.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -4134,6 +4154,18 @@ function switchSpec(spec, el) {
 
 function switchTab(tab, el) {
   closeDrawer();  // 모바일 drawer 항상 닫기
+  if(currentSpec === 'all') {
+    tab = 'cal';
+    el = document.getElementById('sub-cal') || el;
+    document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pg = document.getElementById('page-all-cal');
+    if(pg) pg.classList.add('active');
+    updateMobileTabs('cal');
+    renderAllCal();
+    return;
+  }
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -5732,14 +5764,34 @@ function renderPapers() {
   items.forEach(p => grid.appendChild(buildPaperCard(p)));
 }
 
+// localStorage can be blocked for local files, sandboxed previews, or strict privacy settings.
+// Keep the entire app functional even when persistent storage is unavailable.
+const _safeStorage = (() => {
+  try {
+    const store = window.localStorage;
+    const testKey = '__clinicalHubStorageTest__';
+    store.setItem(testKey, '1');
+    store.removeItem(testKey);
+    return store;
+  } catch (e) {
+    return null;
+  }
+})();
+function storageGet(key){
+  try { return _safeStorage ? _safeStorage.getItem(key) : null; } catch(e) { return null; }
+}
+function storageSet(key, value){
+  try { if(_safeStorage) _safeStorage.setItem(key, value); } catch(e) {}
+}
+
 function toggleTheme(){
   const isCardiac = document.body.classList.contains('cardiac-mode');
   document.body.classList.toggle('dark');
   if(isCardiac) document.body.classList.add('cardiac-mode');
-  localStorage.setItem('gynHubTheme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  storageSet('gynHubTheme', document.body.classList.contains('dark') ? 'dark' : 'light');
 }
 // OS 다크모드 자동 감지 (저장값 없으면 시스템 따라감)
-const savedTheme = localStorage.getItem('gynHubTheme');
+const savedTheme = storageGet('gynHubTheme');
 if(savedTheme === 'dark') {
   document.body.classList.add('dark');
 } else if(!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -5747,7 +5799,7 @@ if(savedTheme === 'dark') {
 }
 // OS 다크모드 변경 감지
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-  if(!localStorage.getItem('gynHubTheme')) {
+  if(!storageGet('gynHubTheme')) {
     document.body.classList.toggle('dark', e.matches);
     const isCardiac = document.body.classList.contains('cardiac-mode');
     if(isCardiac) document.body.classList.add('cardiac-mode');
@@ -6404,15 +6456,36 @@ function renderCardiacSurgeons() {
 let _surgeonCatFilter = 'all';
 
 /* ── Article Lightbox Functions ── */
+function ensureArtLightbox(){
+  let lb = document.getElementById('artLightbox');
+  if(lb) return lb;
+  lb = document.createElement('div');
+  lb.id = 'artLightbox';
+  lb.onclick = closeArtLightbox;
+  lb.innerHTML = `
+    <div id="artLightboxCard" onclick="event.stopPropagation()">
+      <button id="artLightboxClose" type="button" aria-label="Close" onclick="closeArtLightbox()">✕</button>
+      <img id="artLightboxImg" alt="" style="display:none">
+      <div id="artLightboxBody">
+        <div id="artLightboxTag" style="display:flex;align-items:center;gap:8px"></div>
+        <div id="artLightboxTitle" style="font-size:20px;font-weight:700;line-height:1.35;color:var(--text)"></div>
+        <div id="artLightboxMeta" style="font-size:12px;color:var(--text2)"></div>
+        <div id="artLightboxDesc" style="font-size:13px;line-height:1.65;color:var(--text2)"></div>
+        <a id="artLightboxLink" class="link-btn" target="_blank" rel="noopener" style="display:none;width:fit-content">기사 원문 보기</a>
+      </div>
+    </div>`;
+  document.body.appendChild(lb);
+  return lb;
+}
 function openArtLightbox(a) {
-  const lb   = document.getElementById('artLightbox');
+  const lb   = ensureArtLightbox();
   const img  = document.getElementById('artLightboxImg');
   const tag  = document.getElementById('artLightboxTag');
   const ttl  = document.getElementById('artLightboxTitle');
   const meta = document.getElementById('artLightboxMeta');
   const desc = document.getElementById('artLightboxDesc');
   const link = document.getElementById('artLightboxLink');
-  if(!lb) return;
+  if(!lb || !img || !tag || !ttl || !meta || !desc || !link) return;
 
   // 이미지
   if(a.image && a.image !== '이미지 확인 필요') {
@@ -6641,8 +6714,12 @@ function renderMonthView() {
 /* ── 이벤트 툴팁 ── */
 let _tooltipTimer;
 function showCalTooltip(e, ev) {
-  const tip = document.getElementById('calEventTooltip');
-  if(!tip) return;
+  let tip = document.getElementById('calEventTooltip');
+  if(!tip) {
+    tip = document.createElement('div');
+    tip.id = 'calEventTooltip';
+    document.body.appendChild(tip);
+  }
   const clr = calEventColor(ev.tag);
   const dateStr = ev.end && ev.end !== ev.start
     ? ev.start + ' ~ ' + ev.end.slice(5)
@@ -7208,10 +7285,10 @@ async function fetchCSV(url){
 function addRecent(type,item){
   try{
     const key='clinicalHubRecent';
-    const arr=JSON.parse(localStorage.getItem(key)||'[]');
+    const arr=JSON.parse(storageGet(key)||'[]');
     const record={type,title:item?.title||item?.name||'',url:item?.url||'',ts:Date.now()};
     const next=[record,...arr.filter(x=>!(x.type===record.type&&x.url===record.url&&x.title===record.title))].slice(0,20);
-    localStorage.setItem(key,JSON.stringify(next));
+    storageSet(key,JSON.stringify(next));
   }catch(e){}
 }
 
@@ -7352,8 +7429,26 @@ function buildPhoneSpecSheet(){
 }
 function openPhoneSpecSheet(){ buildPhoneSpecSheet(); const s=document.getElementById('phoneSpecSheet'); if(s){s.classList.add('open');s.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';} }
 function closePhoneSpecSheet(){ const s=document.getElementById('phoneSpecSheet'); if(s){s.classList.remove('open');s.setAttribute('aria-hidden','true');} document.body.style.overflow=''; }
-function updateMobileTabs(tab){ document.querySelectorAll('.mobile-tab-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); }
-function mobileSwitchTab(tab){ const b=document.getElementById('sub-'+tab); if(b) switchTab(tab,b); }
+function setSectionTabAvailability(){
+  const allOnly = currentSpec === 'all';
+  document.querySelectorAll('.sub-btn').forEach(b=>{
+    const disabled = allOnly && b.id !== 'sub-cal';
+    b.disabled = disabled;
+    b.style.opacity = disabled ? '0.35' : '';
+    b.style.cursor = disabled ? 'default' : '';
+  });
+  document.querySelectorAll('.mobile-tab-item').forEach(b=>{
+    b.disabled = allOnly && b.dataset.tab !== 'cal';
+  });
+}
+function updateMobileTabs(tab){
+  document.querySelectorAll('.mobile-tab-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  setSectionTabAvailability();
+}
+function mobileSwitchTab(tab){
+  if(currentSpec === 'all' && tab !== 'cal') return;
+  const b=document.getElementById('sub-'+tab); if(b) switchTab(tab,b);
+}
 
 function _specVideoArray(spec){ const map={cardiac:CARDIAC_VIDEOS,uro:URO_VIDEOS,cr:CR_VIDEOS,thoracic:THORACIC_VIDEOS,stomach:STOMACH_VIDEOS,breast:BREAST_VIDEOS,hn:HN_VIDEOS,hbp:HBP_VIDEOS,hernia:HERNIA_VIDEOS}; return map[spec]||[]; }
 function _safeText(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -7395,7 +7490,60 @@ function renderSpecCal(spec){
 function renderCardiacCal(){ renderSpecCal('cardiac'); }
 function setSpecCalView(spec,view){ _specCalView[spec]=view; const card=document.getElementById(spec+'CalGrid'), month=document.getElementById(spec+'CalMonthView'); document.getElementById(spec+'CalViewCard')?.classList.toggle('active',view==='card'); document.getElementById(spec+'CalViewMonth')?.classList.toggle('active',view==='month'); if(card)card.style.display=view==='card'?'block':'none'; if(month)month.style.display=view==='month'?'block':'none'; if(view==='month')renderSpecMonth(spec); }
 function moveSpecMonth(spec,dir){ const d=_specCalDate[spec]||new Date(); d.setMonth(d.getMonth()+dir); _specCalDate[spec]=d; renderSpecMonth(spec); }
-function renderSpecMonth(spec){ const box=document.getElementById(spec+'CalMonthGrid'); if(!box)return; const d=_specCalDate[spec]||new Date(); _specCalDate[spec]=d; const title=document.getElementById(spec+'CalMonthTitle'); if(title)title.textContent=d.getFullYear()+'. '+String(d.getMonth()+1).padStart(2,'0'); box.innerHTML='<div class="empty-state" style="grid-column:1/-1">월간 보기에서는 카드 보기를 이용해 상세 일정을 확인해 주세요.</div>'; }
+function renderSpecMonth(spec){
+  const grid = document.getElementById(spec+'MonthGrid');
+  const header = document.getElementById(spec+'MonthHeader');
+  const title = document.getElementById(spec+'MonthNavTitle');
+  if(!grid) return;
+  const d = _specCalDate[spec] || new Date();
+  _specCalDate[spec] = d;
+  const yr=d.getFullYear(), mo=d.getMonth();
+  const monthsKo=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  if(title) title.textContent = yr+'년 '+monthsKo[mo];
+  if(header){
+    header.innerHTML='';
+    ['일','월','화','수','목','금','토'].forEach((wd,i)=>{
+      const el=document.createElement('div'); el.className='month-weekday'+(i===0?' sun':i===6?' sat':''); el.textContent=wd; header.appendChild(el);
+    });
+  }
+  const q=(document.getElementById(spec+'CalSearch')?.value||'').toLowerCase();
+  const items=_specCalArray(spec).filter(e=>!q||JSON.stringify(e).toLowerCase().includes(q));
+  const firstDay=new Date(yr,mo,1).getDay(), daysInMonth=new Date(yr,mo+1,0).getDate(), daysInPrev=new Date(yr,mo,0).getDate();
+  const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
+  const today=new Date(); today.setHours(0,0,0,0);
+  function eventsForDay(day){
+    const target=new Date(yr,mo,day); target.setHours(0,0,0,0);
+    return items.filter(ev=>{
+      const st=new Date(ev.start); if(Number.isNaN(st.getTime())) return false; st.setHours(0,0,0,0);
+      const en=ev.end?new Date(ev.end):new Date(ev.start); en.setHours(0,0,0,0);
+      return st<=target && en>=target;
+    });
+  }
+  grid.innerHTML='';
+  for(let i=0;i<totalCells;i++){
+    const cell=document.createElement('div'); let dayNum,isCurrent=true;
+    if(i<firstDay){dayNum=daysInPrev-firstDay+i+1;isCurrent=false;}
+    else if(i>=firstDay+daysInMonth){dayNum=i-firstDay-daysInMonth+1;isCurrent=false;}
+    else dayNum=i-firstDay+1;
+    const dow=i%7, isToday=isCurrent&&dayNum===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
+    cell.className='month-day'+(!isCurrent?' other-month':'')+(isToday?' today':'')+(dow===0?' sunday':dow===6?' saturday':'');
+    const num=document.createElement('div'); num.className='month-day-num'; num.textContent=dayNum; cell.appendChild(num);
+    if(isCurrent){
+      const wrap=document.createElement('div'); wrap.className='month-events-wrap'; const dayEvents=eventsForDay(dayNum); const MAX_SHOW=3;
+      dayEvents.slice(0,MAX_SHOW).forEach(ev=>{
+        const clr=calEventColor(ev.tag), evEl=document.createElement('div'); evEl.className='month-event';
+        evEl.style.cssText=`background:${clr.bg};color:${clr.text};border-left:2px solid ${clr.border}`; evEl.textContent=ev.name||'Event'; evEl.title=ev.name||'';
+        evEl.onclick=(evt)=>{evt.stopPropagation();openConfModal(ev);}; wrap.appendChild(evEl);
+      });
+      if(dayEvents.length>MAX_SHOW){
+        const more=document.createElement('div'); more.className='month-more'; more.textContent='+'+(dayEvents.length-MAX_SHOW)+'개 더';
+        more.onclick=(evt)=>{evt.stopPropagation();openConfModal(dayEvents[MAX_SHOW]);}; wrap.appendChild(more);
+      }
+      cell.appendChild(wrap);
+    }
+    grid.appendChild(cell);
+  }
+}
 function goToday(){ _calMonth=new Date().getMonth(); _calYear=new Date().getFullYear(); renderMonthCalendar(); }
 
 function closeArticleModal(e){ const x=document.getElementById('articleModalOverlay'); if(x && (!e||e.target===x))x.classList.remove('open'); }
@@ -7414,8 +7562,9 @@ async function loadCardiacResources(){
   renderCardiacVideos(); renderCardiacArticles(); renderCardiacPapers(); renderCardiacCal();
 }
 async function loadSpecCalendars(){
-  await Promise.allSettled(Object.entries(SPECIALTY_SHEETS||{}).map(async([spec,gids])=>{ if(['gyn','cardiac'].includes(spec)||!gids.calendar)return; const rows=await _loadCsvUrl(BASE_PUB+'?gid='+gids.calendar+'&single=true&output=csv'); if(rows.length<2)return; const h=rows[0].map(x=>String(x||'').trim()); const arr=rows.slice(1).map(r=>normalizeCalendarRow(r,h)).filter(x=>x.name&&x.start).map(x=>({...x,_spec:spec})); window['_CAL_'+spec.toUpperCase()]=arr; }));
+  await Promise.allSettled(Object.entries(SPEC_SHEET_GIDS||{}).map(async([spec,gids])=>{ if(['gyn','cardiac'].includes(spec)||!gids.calendar)return; const rows=await _loadCsvUrl(BASE_PUB+'?gid='+gids.calendar+'&single=true&output=csv'); if(rows.length<2)return; const h=rows[0].map(x=>String(x||'').trim()); const arr=rows.slice(1).map(r=>normalizeCalendarRow(r,h)).filter(x=>x.name&&x.start).map(x=>({...x,_spec:spec})); window['_CAL_'+spec.toUpperCase()]=arr; }));
 }
+async function loadAllSpecCalendars(){ return loadSpecCalendars(); }
 
 // Fix tabs that are not backed by specialty data: show stable empty states instead of throwing.
 const _origSwitchTab=switchTab;
@@ -7427,7 +7576,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildPhoneSpecSheet(); updatePhoneSpecPill(currentSpec||'gyn'); updateMobileTabs(document.querySelector('.sub-btn.active')?.id?.replace('sub-','')||'video');
   // Render embedded data immediately so the UI is clickable even when external CSV loading is blocked.
   try{ renderVideos(); }catch(e){ console.error('Initial video render failed',e); }
-  Promise.allSettled([loadVideosFromSheet(),loadArticlesFromSheet(),loadPapersFromSheet(),loadConferencesFromSheet(),loadCardiacResources(),loadAllSpecVideos(),loadSpecCalendars()])
+  Promise.allSettled([loadVideosFromSheet(),loadArticlesFromSheet(),loadPapersFromSheet(),loadConferencesFromSheet(),loadCardiacResources(),loadAllSpecVideos(),loadAllSpecCalendars()])
     .then(()=>{ if(currentSpec && !['gyn','cardiac','all'].includes(currentSpec)) renderSpecVideo(currentSpec); });
 });
 
