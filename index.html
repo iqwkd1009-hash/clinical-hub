@@ -4121,6 +4121,40 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
 </div>
 
 <script>
+/* ══ 기타 과 캘린더 GID ══ */
+const SPEC_CAL_SHEET_GIDS = {
+  uro:     '1103866127',
+  cr:      '1214647289',
+  thoracic:'1333544214',
+  stomach: '1351379084',
+  breast:  '1715897257',
+  hn:      '1504255784',
+  hbp:     '614572531',
+  hernia:  '971357331',
+};
+
+async function loadSpecCalFromSheet(spec) {
+  const gid = SPEC_CAL_SHEET_GIDS[spec];
+  if(!gid) return;
+  try {
+    const rows = await fetchCSV(`https://docs.google.com/spreadsheets/d/e/2PACX-1vS4Tafgz8RMOM7INjjMt6WCNL-TCn1eCw9ghIiQflL19mVPcVCPxLGR7fIlOiD2zhMRz0B5_W0o8OdC/pub?gid=${gid}&single=true&output=csv`);
+    if(rows.length < 2) return;
+    const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
+    const items = rows.slice(1)
+      .filter(r => r.some(v => v && String(v).trim()))
+      .map(r => normalizeCalendarRow(r, headers))
+      .filter(i => i.name && i.start)
+      .map(i => ({...i, _spec: spec}))
+      .sort((a,b) => new Date(a.start) - new Date(b.start));
+    if(items.length > 0) {
+      window['_CAL_' + spec.toUpperCase()] = items;
+      console.log(spec + ' calendar loaded:', items.length);
+    }
+  } catch(e) {
+    console.warn(spec + ' calendar failed:', e.message);
+  }
+}
+
 if(!Promise.allSettled){Promise.allSettled=promises=>Promise.all(promises.map(p=>Promise.resolve(p).then(v=>({status:'fulfilled',value:v}),e=>({status:'rejected',reason:e}))));}
 
 /* ══════════════════════ DATA ══════════════════════ */
@@ -8160,21 +8194,18 @@ async function loadSpecCalendars(){
   buildAllConferences();
   if(currentSpec==='all') renderAllCal();
 }
-async function loadAllSpecCalendars(){ return loadSpecCalendars(); }
-
-// Fix tabs that are not backed by specialty data: show stable empty states instead of throwing.
-const _origSwitchTab=switchTab;
-switchTab=function(tab,el){ _origSwitchTab(tab,el); if(currentSpec!=='gyn'&&currentSpec!=='cardiac'){ if(tab==='kol')renderSpecArticles(currentSpec); else if(tab==='paper')renderSpecPapers(currentSpec); } };
-
-
-/* ══════════════════════ CALENDAR FIRST UX v5 ══════════════════════ */
-const _specCalTypeFilter = {};
-const _SPEC_LABELS_CF = {gyn:'GYN',cardiac:'Cardiac',uro:'URO',cr:'CR',thoracic:'Thoracic',stomach:'Stomach',breast:'Breast',hn:'H&N',hbp:'HBP',hernia:'Hernia'};
-const _TYPE_META_CF = {
-  conference:{label:'Conference',icon:'🏛'}, symposium:{label:'Symposium',icon:'🎤'},
-  itp:{label:'ITP',icon:'●'}, workshop:{label:'Workshop',icon:'◇'},
-  webinar:{label:'Webinar',icon:'▣'}, roadshow:{label:'Roadshow',icon:'↗'}, other:{label:'Other',icon:'•'}
-};
+async function loadAllSpecCalendars() {
+  const specs = ['uro','cr','thoracic','stomach','breast','hn','hbp','hernia'];
+  await Promise.allSettled(specs.map(spec => loadSpecCalFromSheet(spec)));
+  if(typeof buildAllConferences === 'function') buildAllConferences();
+  // 현재 열린 spec 캘린더 재렌더
+  const activeCal = document.querySelector('.page.active[id$="-cal"]');
+  if(activeCal) {
+    const spec = activeCal.id.replace('page-','').replace('-cal','');
+    if(spec && !['gyn','cardiac','all'].includes(spec)) renderSpecCal(spec);
+  }
+}
+;
 function calendarTypeKey(ev){
   const raw=[ev?.tag,ev?.type,ev?.duty,ev?.name].filter(Boolean).join(' ').toLowerCase();
   if(/\bitp\b|live\s*surgery|observation/.test(raw)) return 'itp';
@@ -8497,5 +8528,23 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeConfModal(); closePhoneSpecSheet(); closeDrawer(); } });
 </script>
+
+<div id="confModal" onclick="if(event.target===this)closeConfModal()">
+  <div id="confModalCard">
+    <div id="confModalBanner">
+      <div style="position:absolute;inset:0;opacity:0.08;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:18px 18px"></div>
+      <button onclick="closeConfModal()" style="position:absolute;top:10px;right:12px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,0.4);color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+      <div style="position:relative;z-index:1;width:100%">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span id="confModalTag" style="font-size:9px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.2);color:white;font-family:var(--mono)"></span>
+          <span id="confModalDday" style="font-size:13px;font-weight:800;font-family:var(--mono);color:rgba(255,255,255,0.9)"></span>
+        </div>
+        <div id="confModalTitle" style="font-size:17px;font-weight:700;color:white;line-height:1.35;letter-spacing:-0.02em;max-width:430px"></div>
+      </div>
+    </div>
+    <div id="confModalBody"></div>
+    <div id="confModalFooter"></div>
+  </div>
+</div>
 </body>
 </html>
