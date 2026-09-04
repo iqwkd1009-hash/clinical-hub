@@ -7900,7 +7900,7 @@ function renderCardiacPapers(){
 }
 function renderSpecPapers(spec){ const g=document.getElementById(spec+'PaperGrid'); if(!g)return; const c=document.getElementById(spec+'PaperCount'); if(c)c.textContent='0'; g.innerHTML='<div class="empty-state" style="grid-column:1/-1">이 Specialty의 논문 데이터는 아직 연결되지 않았습니다.</div>'; }
 
-const _specCalView={}; const _specCalDate={};
+const _specCalView={}; const _specCalDate={}; const _specCalTypeFilter={};
 function _specCalArray(spec){ if(spec==='cardiac') return CARDIAC_CALS; return window['_CAL_'+spec.toUpperCase()]||[]; }
 const _specCalLoadState = { uro:'idle', cr:'idle', thoracic:'idle', stomach:'idle', breast:'idle', hn:'idle', hbp:'idle', hernia:'idle' };
 const _specCalLoadError = {};
