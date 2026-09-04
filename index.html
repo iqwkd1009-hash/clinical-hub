@@ -8135,6 +8135,145 @@ function calendarFirstInit(){
   ensureCalendarPreviewUI();upgradeAllCalendarPage();upgradeGynCalendarPage();['cardiac','uro','cr','thoracic','stomach','breast','hn','hbp','hernia'].forEach(upgradeSpecCalendarPage);
 }
 
+
+
+/* ══════════════════════ UNIFIED SPECIALTY CALENDAR v6 ══════════════════════
+   GYN / Cardiac / URO~Hernia now share one renderer and one UI architecture.
+   All Calendar intentionally remains an aggregate view with Specialty filter.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const _V6_SPECIALTIES = ['gyn','cardiac','uro','cr','thoracic','stomach','breast','hn','hbp','hernia'];
+
+function _v6CalendarPageId(spec){ return spec==='gyn' ? 'page-cal' : 'page-'+spec+'-cal'; }
+function _v6CalendarSidebarId(spec){ return spec==='gyn' ? 'sidebar-cal' : 'sidebar-'+spec+'-cal'; }
+
+function normalizeGynCalendarDOMV6(){
+  const page=document.getElementById('page-cal');
+  if(!page || page.dataset.v6Normalized==='1') return;
+  page.dataset.v6Normalized='1';
+
+  const rename=(from,to)=>{ const el=document.getElementById(from); if(el) el.id=to; return el; };
+  rename('calSearch','gynCalSearch');
+  rename('calCount','gynCalCount');
+  rename('calGrid','gynCalGrid');
+  rename('calViewCard','gynCalViewCard');
+  rename('calViewMonth','gynCalViewMonth');
+  rename('calMonthView','gynCalMonthView');
+  rename('calFilters','gynCalTagFilter');
+
+  const search=document.getElementById('gynCalSearch');
+  if(search) search.setAttribute('oninput',"renderSpecCal('gyn'); if((_specCalView.gyn||'month')==='month') renderSpecMonth('gyn')");
+
+  const cardBtn=document.getElementById('gynCalViewCard');
+  if(cardBtn) cardBtn.setAttribute('onclick',"setSpecCalView('gyn','card')");
+  const monthBtn=document.getElementById('gynCalViewMonth');
+  if(monthBtn) monthBtn.setAttribute('onclick',"setSpecCalView('gyn','month')");
+
+  const count=document.getElementById('gynCalCount');
+  if(count){
+    const p=count.parentElement;
+    if(p && !/개\s*일정/.test(p.textContent||'')) p.appendChild(document.createTextNode('개 일정'));
+  }
+
+  const monthView=document.getElementById('gynCalMonthView');
+  if(monthView){
+    monthView.innerHTML =
+      '<div class="month-nav">'+
+        '<button class="month-nav-btn" onclick="moveSpecMonth(\'gyn\',-1)">‹</button>'+
+        '<div class="month-nav-title" id="gynMonthNavTitle"></div>'+
+        '<button class="month-nav-btn" onclick="moveSpecMonth(\'gyn\',1)">›</button>'+
+      '</div>'+
+      '<div class="month-grid-header" id="gynMonthHeader"></div>'+
+      '<div class="month-grid" id="gynMonthGrid"></div>';
+  }
+
+  // Legacy GYN-only widgets are not part of the unified Calendar-first UI.
+  ['calUpcomingSection','calActiveTags'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  const host=document.getElementById('gynCalTagFilter'); if(host) host.innerHTML='';
+}
+
+// One data adapter for every Specialty calendar.
+_specCalArray = function(spec){
+  if(spec==='gyn') return CONFERENCES || [];
+  if(spec==='cardiac') return CARDIAC_CALS || [];
+  return window['_CAL_'+String(spec).toUpperCase()] || [];
+};
+
+// GYN legacy entry points now delegate to the same shared renderer as all other specialties.
+renderCal = function(){ return renderSpecCal('gyn'); };
+setCalView = function(view){ _calView=view; return setSpecCalView('gyn',view); };
+moveMonth = function(dir){ return moveSpecMonth('gyn',dir); };
+renderMonthView = function(){ return renderSpecMonth('gyn'); };
+goToday = function(){ return goSpecToday('gyn'); };
+
+function upgradeSpecCalendarPageV6(spec){
+  const page=document.getElementById(_v6CalendarPageId(spec));
+  if(!page || page.dataset.cf==='1') return;
+  page.dataset.cf='1';
+
+  const sidebar=document.getElementById(_v6CalendarSidebarId(spec)) || page.querySelector(':scope > aside');
+  const main=cfMainOf(page); if(!main) return;
+  main.classList.add('calendar-first-main');
+  if(spec==='cardiac') ensureCardiacMonthMarkup(main);
+
+  let oldHeader=[...main.children].find(x=>x.querySelector?.('#'+spec+'CalCount'));
+  if(oldHeader) oldHeader.classList.add('calendar-first-old-header');
+
+  const toolbar=document.createElement('div'); toolbar.className='calendar-first-toolbar';
+  const top=document.createElement('div'); top.className='calendar-first-topline';
+  const left=document.createElement('div'); left.className='calendar-first-left';
+  const right=document.createElement('div'); right.className='calendar-first-right';
+
+  const search=cfSearchBoxFromSidebar(sidebar,spec+'CalSearch');
+  if(search) left.appendChild(search);
+  const add=cfAddLinkFromSidebar(sidebar);
+  if(add) left.appendChild(add);
+
+  let toggle=oldHeader?.querySelector('.cal-view-toggle');
+  if(!toggle){
+    toggle=document.createElement('div'); toggle.className='cal-view-toggle';
+    toggle.innerHTML=
+      '<button id="'+spec+'CalViewCard" class="cal-view-btn" onclick="setSpecCalView(\''+spec+'\',\'card\')">'+
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> 카드'+
+      '</button>'+
+      '<button id="'+spec+'CalViewMonth" class="cal-view-btn active" onclick="setSpecCalView(\''+spec+'\',\'month\')">'+
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 달력'+
+      '</button>';
+  } else {
+    document.getElementById(spec+'CalViewCard')?.classList.remove('active');
+    document.getElementById(spec+'CalViewMonth')?.classList.add('active');
+  }
+  right.appendChild(toggle);
+  right.appendChild(cfCreateToday(()=>goSpecToday(spec)));
+
+  const cnt=document.getElementById(spec+'CalCount');
+  if(cnt){
+    const wrap=cnt.closest('div');
+    if(wrap && wrap!==oldHeader){ wrap.classList.add('calendar-first-count'); right.appendChild(wrap); }
+    else { cnt.classList.add('calendar-first-count'); right.appendChild(cnt); }
+  }
+  top.append(left,right); toolbar.appendChild(top);
+
+  const strip=document.createElement('div'); strip.className='calendar-filter-strip';
+  let host=document.getElementById(spec+'CalTagFilter');
+  if(!host){ host=document.createElement('div'); host.id='cf-type-'+spec; }
+  const typeRow=cfCreateFilterLine('Type',host); if(typeRow) strip.appendChild(typeRow);
+  toolbar.appendChild(strip);
+  main.insertBefore(toolbar,main.firstChild);
+
+  _specCalView[spec]='month';
+  if(!_specCalDate[spec]){ const d=new Date(); _specCalDate[spec]=new Date(d.getFullYear(),d.getMonth(),1); }
+  setSpecCalView(spec,'month');
+  buildSpecTypeChips(spec,_specCalArray(spec));
+}
+
+// Replace the mixed GYN/Cardiac/specialty setup with one common initialization path.
+calendarFirstInit = function(){
+  ensureCalendarPreviewUI();
+  normalizeGynCalendarDOMV6();
+  upgradeAllCalendarPage();
+  _V6_SPECIALTIES.forEach(upgradeSpecCalendarPageV6);
+};
+
 // Initialization safeguards
 window.addEventListener('DOMContentLoaded',()=>{
   applyLang();
