@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="2026-09-04-fix7">
+<meta name="build" content="2026-09-05-v7">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -4124,7 +4124,108 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
   </div>
 </div>
 
-<script>
+<script>'use strict';
+/* ══════════════════════════════════════════════════════════════
+   Clinical Hub — 진단/에러 가시화 (가장 먼저 실행되어야 함)
+   ══════════════════════════════════════════════════════════════ */
+var __DIAG = {
+  build: null,
+  started: Date.now(),
+  errors: [],      // {msg, at, count}
+  fetches: [],     // {label, url, ok, rows, ms, error}
+  dateWarnings: [] // {name, field, value}
+};
+window.__DIAG = __DIAG;
+
+function __diagRecordError(msg, where) {
+  msg = String(msg || '알 수 없는 오류');
+  var key = (where ? '[' + where + '] ' : '') + msg;
+  var hit = __DIAG.errors.find(function (e) { return e.msg === key; });
+  if (hit) { hit.count++; return; }
+  __DIAG.errors.push({ msg: key, at: new Date().toLocaleTimeString('ko-KR'), count: 1 });
+  __diagShowBanner();
+}
+
+/* ── 화면 상단 에러 배너 ───────────────────────────────────── */
+function __diagEnsureBannerStyles() {
+  if (document.getElementById('diagBannerStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'diagBannerStyles';
+  st.textContent = [
+    '#diagBanner{position:fixed;top:0;left:0;right:0;z-index:99999;background:#B3261E;color:#fff;',
+    'font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3);}',
+    '#diagBanner .diag-hd{display:flex;align-items:center;gap:10px;font-weight:700;font-size:12px;}',
+    '#diagBanner .diag-hd span{flex:1;}',
+    '#diagBanner button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:5px;',
+    'padding:3px 9px;font-size:11px;cursor:pointer;font-family:inherit;}',
+    '#diagBanner button:hover{background:rgba(255,255,255,.32);}',
+    '#diagBanner ul{margin:6px 0 0;padding-left:18px;max-height:120px;overflow:auto;}',
+    '#diagBanner li{margin:2px 0;word-break:break-all;}'
+  ].join('');
+  (document.head || document.documentElement).appendChild(st);
+}
+
+function __diagShowBanner() {
+  if (!document.body) { document.addEventListener('DOMContentLoaded', __diagShowBanner, { once: true }); return; }
+  __diagEnsureBannerStyles();
+  var el = document.getElementById('diagBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'diagBanner';
+    el.innerHTML =
+      '<div class="diag-hd">⚠ <span>오류가 발생했습니다</span>' +
+      '<button type="button" data-diag-copy>복사</button>' +
+      '<button type="button" data-diag-close>닫기</button></div><ul></ul>';
+    document.body.appendChild(el);
+    el.querySelector('[data-diag-close]').onclick = function () { el.remove(); };
+    el.querySelector('[data-diag-copy]').onclick = function () {
+      var txt = __diagReportText();
+      if (navigator.clipboard) navigator.clipboard.writeText(txt);
+      this.textContent = '복사됨';
+    };
+  }
+  el.querySelector('.diag-hd span').textContent =
+    '오류 ' + __DIAG.errors.length + '건 — 이 내용을 그대로 캡처해서 공유하세요';
+  el.querySelector('ul').innerHTML = __DIAG.errors.slice(0, 6).map(function (e) {
+    return '<li>' + e.msg.replace(/[<>&]/g, '') + (e.count > 1 ? ' ×' + e.count : '') + '</li>';
+  }).join('');
+}
+
+function __diagReportText() {
+  var L = [];
+  L.push('Clinical Hub 진단 리포트');
+  L.push('build: ' + (__DIAG.build || '(미상)'));
+  L.push('시각: ' + new Date().toLocaleString('ko-KR'));
+  L.push('UA: ' + navigator.userAgent);
+  L.push('');
+  L.push('■ 오류 (' + __DIAG.errors.length + ')');
+  __DIAG.errors.forEach(function (e) { L.push('  - ' + e.msg + (e.count > 1 ? ' ×' + e.count : '') + ' @' + e.at); });
+  L.push('');
+  L.push('■ 시트 로딩 (' + __DIAG.fetches.length + ')');
+  __DIAG.fetches.forEach(function (f) {
+    L.push('  - ' + f.label + ': ' + (f.ok ? (f.rows + '행 / ' + f.ms + 'ms' + (f.cached ? ' [캐시]' : '')) : '실패 — ' + f.error));
+  });
+  L.push('');
+  L.push('■ 날짜 파싱 경고 (' + __DIAG.dateWarnings.length + ')');
+  __DIAG.dateWarnings.slice(0, 40).forEach(function (w) { L.push('  - ' + w.name + ' / ' + w.field + ' = "' + w.value + '"'); });
+  return L.join('\n');
+}
+
+window.addEventListener('error', function (e) {
+  __diagRecordError(e.message + (e.lineno ? ' (line ' + e.lineno + ')' : ''), 'runtime');
+});
+window.addEventListener('unhandledrejection', function (e) {
+  var r = e.reason;
+  __diagRecordError((r && r.message) || String(r), 'promise');
+});
+(function () {
+  var orig = console.error.bind(console);
+  console.error = function () {
+    try { __diagRecordError(Array.prototype.join.call(arguments, ' '), null); } catch (_) {}
+    orig.apply(null, arguments);
+  };
+})();
+
 /* ══ 기타 과 캘린더 GID ══ */
 const SPEC_CAL_SHEET_GIDS = {
   uro:     '1103866127',
@@ -6358,10 +6459,7 @@ async function loadConferencesFromSheet() {
     { name:'다톡(Datalk) 심포지엄 w/개원의', start:'2026-07-29', end:'2026-07-29', loc:'조선 팰리스 강남', tag:'symposium', note:'개원의 대상 GYN 프로그램' },
   ];
   try {
-    const res = await fetch(SHEET_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    const rows = parseCSV(text);
+    const rows = await fetchCSV(SHEET_URL);
     if (rows.length < 2) throw new Error('no data');
     const rawH = rows[0].map(h => String(h||'').trim());
     const offset = rawH.findIndex(h => /[a-zA-Z가-힣]/.test(h));
@@ -6500,163 +6598,7 @@ function sortCalendarByDday(a, b) {
   return bEnd - aEnd || bStart - aStart;
 }
 
-function renderCal() {
-  renderUpcomingConferences();
-  buildCalFilters();
-  const q=document.getElementById('calSearch').value.toLowerCase();
-  const today=new Date(); today.setHours(0,0,0,0);
-
-  let items=CONFERENCES
-    .filter(c=>{
-      const haystack=[c.name,c.loc,c.note,c.organizer,c.system,c.duty,c.url].join(' ').toLowerCase();
-      return (calTagFilter==='all'||(calTagFilter==='upcoming'?new Date(c.start)>=today:calendarTypeKey(c)===calTagFilter))&&(!q||haystack.includes(q));
-    })
-    .sort(sortCalendarByDday);
-
-  document.getElementById('calCount').textContent=items.length;
-  document.getElementById('headerCount').textContent=items.length+(currentLang==='en'?' events':' 일정');
-
-  const grid=document.getElementById('calGrid'); grid.innerHTML='';
-  if(!items.length){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px">검색 결과가 없습니다</div>';return;}
-
-  const years=[...new Set(items.map(c=>c.start.slice(0,4)))];
-  const collapsedYears=new Set();
-
-  const CAL_BANNER_BG = {
-    conference:{ from:'#185FA5', to:'#378ADD' },
-    symposium: { from:'#3C3489', to:'#7F77DD' },
-    workshop:  { from:'#0F6E56', to:'#1D9E75' },
-    webinar:   { from:'#854F0B', to:'#BA7517' },
-    roadshow:  { from:'#993556', to:'#D4537E' },
-  };
-  const CAL_ICON = { conference:'🏛️', symposium:'🎤', workshop:'🔬', webinar:'💻', roadshow:'🚗' };
-
-  function makeYearSection(yr) {
-    const grp=items.filter(c=>c.start.startsWith(yr));
-    const isCurrentYear=yr===String(new Date().getFullYear());
-    const sid=`yr_${yr}`;
-
-    const hdr=document.createElement('div');
-    hdr.style.cssText='display:flex;align-items:center;gap:10px;margin:14px 0 10px;cursor:pointer;user-select:none';
-    hdr.onclick=()=>toggleYear(yr);
-    hdr.innerHTML=`
-      <div style="display:flex;align-items:center;gap:8px;flex:1">
-        <span style="font-size:13px;font-weight:700;color:var(--primary);font-family:var(--mono)">${yr}</span>
-        ${isCurrentYear?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--primary);color:white;font-family:var(--mono)">이번 연도</span>':''}
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:11px;color:var(--text3)">${grp.length}건</span>
-      </div>
-      <span id="yarr_${yr}" style="font-size:16px;color:var(--text3);transition:transform 0.2s;font-weight:300">⌄</span>`;
-    grid.appendChild(hdr);
-
-    const section=document.createElement('div');
-    section.id=sid;
-    section.style.cssText='overflow:hidden;transition:max-height 0.3s ease';
-
-    // 카드 그리드
-    const secGrid=document.createElement('div');
-    secGrid.className='cal-grid-view';
-
-    grp.forEach((c,i)=>{
-      const isPast=effectiveEndTime(c)<today.getTime();
-      const du=daysUntil(c.start);
-      const duLabel=isPast?(currentLang==='en'?'Ended':'종료'):du===0?(currentLang==='en'?'Today!':'오늘!'):du>0?`D-${du}`:`D+${Math.abs(du)}`;
-      const duColor=isPast?'rgba(255,255,255,0.5)':du<=7?'#FFD700':du<=30?'#FFA07A':'rgba(255,255,255,0.92)';
-      const tc=CAL_TAG_COLOR[c.tag]||'background:#F1EFE8;color:#444441';
-      const tl=calTagLabel(c.tag);
-      const dateRange=c.end&&c.end!==c.start?`${c.start} ~ ${c.end.slice(5)}`:c.start;
-      const bgInfo=CAL_BANNER_BG[c.tag]||{from:'#444441',to:'#888780'};
-      const icon=CAL_ICON[c.tag]||'📅';
-
-      const card=document.createElement('div');
-      card.className='cal-thumb-card'+(isPast?' past':'');
-
-      // 배너
-      const bannerEl=document.createElement('div');
-      bannerEl.className='cal-banner';
-      bannerEl.style.background=`linear-gradient(135deg,${bgInfo.from},${bgInfo.to})`;
-      bannerEl.style.cssText+=';position:relative;height:80px;display:flex;align-items:flex-end;padding:8px 12px;overflow:hidden';
-
-      const pat=document.createElement('div');
-      pat.style.cssText='position:absolute;inset:0;opacity:0.07;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:16px 16px';
-      bannerEl.appendChild(pat);
-
-      const iconEl=document.createElement('div');
-      iconEl.style.cssText='position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:36px;opacity:0.2;line-height:1;z-index:1';
-      iconEl.textContent=icon;
-      bannerEl.appendChild(iconEl);
-
-      const ddayEl=document.createElement('div');
-      ddayEl.style.cssText=`font-size:15px;font-weight:800;font-family:var(--mono);color:${duColor};position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.3)`;
-      ddayEl.textContent=duLabel;
-      bannerEl.appendChild(ddayEl);
-
-      const tagBadge=document.createElement('div');
-      tagBadge.style.cssText='position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);font-family:var(--mono);z-index:2';
-      tagBadge.textContent=tl;
-      bannerEl.appendChild(tagBadge);
-      card.appendChild(bannerEl);
-
-      // URL 있으면 비동기로 og:image 가져와서 배너에 삽입
-      if(c.url) {
-        injectCalCardImage(bannerEl, c.url, `linear-gradient(135deg,${bgInfo.from},${bgInfo.to})`);
-      }
-
-      // 바디
-      const body=document.createElement('div');
-      body.style.cssText='padding:10px 13px 8px;display:flex;flex-direction:column;gap:5px;flex:1';
-
-      const nameEl=document.createElement('div');
-      nameEl.style.cssText='font-size:12px;font-weight:600;color:var(--text);line-height:1.4;letter-spacing:-0.01em';
-      nameEl.textContent=c.name||'';
-      body.appendChild(nameEl);
-
-      const dateEl=document.createElement('div');
-      dateEl.style.cssText='font-size:10px;color:var(--text3);font-family:var(--mono);display:flex;align-items:center;gap:4px';
-      dateEl.innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${dateRange}`;
-      body.appendChild(dateEl);
-
-      if(c.loc){
-        const locEl=document.createElement('div');
-        locEl.style.cssText='font-size:10px;color:var(--text3);display:flex;align-items:center;gap:3px';
-        locEl.innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${c.loc}`;
-        body.appendChild(locEl);
-      }
-
-      if(c.system){
-        const sysEl=document.createElement('div');
-        sysEl.style.cssText='font-size:10px;color:var(--primary);font-family:var(--mono);font-weight:600';
-        sysEl.textContent=c.system;
-        body.appendChild(sysEl);
-      }
-      card.appendChild(body);
-
-      // 푸터
-      const foot=document.createElement('div');
-      foot.style.cssText='padding:6px 13px 10px;display:flex;align-items:center;justify-content:space-between;border-top:0.5px solid var(--border)';
-
-      const dutyEl=document.createElement('div');
-      dutyEl.style.cssText='font-size:10px;color:var(--text3)';
-      dutyEl.textContent=c.duty?'👥 '+c.duty:'';
-      foot.appendChild(dutyEl);
-
-      if(c.url){
-        const linkBtn=document.createElement('a');
-        linkBtn.href=c.url; linkBtn.target='_blank'; linkBtn.rel='noopener';
-        linkBtn.style.cssText='display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:3px 9px;border-radius:6px;background:var(--primary-soft);color:var(--primary);text-decoration:none;font-weight:600;font-family:var(--mono)';
-        linkBtn.innerHTML='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>사이트';
-        foot.appendChild(linkBtn);
-      }
-      card.appendChild(foot);
-      secGrid.appendChild(card);
-    });
-
-    section.appendChild(secGrid);
-    grid.appendChild(section);
-  }
-
-  years.forEach(yr=>makeYearSection(yr));
-}
+/* removed dead definition: renderCal (아래에서 재대입되어 무효) */
 
 
 
@@ -6926,63 +6868,11 @@ function calEventColor(tag) {
   return CAL_EVENT_COLORS[tag] || { bg:'#88878020', text:'#888780', border:'#888780' };
 }
 
-function setCalView(view) {
-  _calView = view;
-  document.getElementById('calViewCard')?.classList.toggle('active', view==='card');
-  document.getElementById('calViewMonth')?.classList.toggle('active', view==='month');
-  const cardEl  = document.getElementById('calGrid');
-  const upEl    = document.getElementById('calUpcomingSection');
-  const monthEl = document.getElementById('calMonthView');
-  if(view === 'month') {
-    if(cardEl)  cardEl.style.display  = 'none';
-    if(upEl)    upEl.style.display    = 'none';
-    if(monthEl) monthEl.style.display = 'block';
-    renderMonthView();
-  } else {
-    if(cardEl)  cardEl.style.display  = '';
-    if(upEl)    upEl.style.display    = '';
-    if(monthEl) monthEl.style.display = 'none';
-    renderCal();
-  }
-}
+/* removed dead definition: setCalView (아래에서 재대입되어 무효) */
 
-function moveMonth(dir) {
-  _calMonth += dir;
-  if(_calMonth > 11) { _calMonth = 0;  _calYear++; }
-  if(_calMonth < 0)  { _calMonth = 11; _calYear--; }
-  renderMonthView();
-}
+/* removed dead definition: moveMonth (아래에서 재대입되어 무효) */
 
-function renderMonthView() {
-  const header=document.getElementById('monthHeader');
-  const grid=document.getElementById('monthGrid');
-  const titleEl=document.getElementById('monthNavTitle');
-  if(!grid) return;
-  const yr=_calYear, mo=_calMonth;
-
-  // GYN 필터 적용
-  const today=new Date(); today.setHours(0,0,0,0);
-  let items=CONFERENCES.filter(ev=>{
-    if(calTagFilter!=='all'&&calTagFilter!=='upcoming'&&ev.tag!==calTagFilter) return false;
-    const s=new Date(ev.start), e=ev.end?new Date(ev.end):new Date(ev.start);
-    return s<=new Date(yr,mo+1,0)&&e>=new Date(yr,mo,1);
-  });
-
-  _buildMonthGrid(grid, header, titleEl, items, yr, mo,
-    ev => (calEventColor ? calEventColor(ev.tag).border : '#0071E3'),
-    ev => openConfModal({...ev, _spec:'gyn'}),
-    (el, y, m, MONTHS_KO) => {
-      el.innerHTML='';
-      const yB=document.createElement('button');
-      yB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);padding:0 2px';
-      yB.textContent=y+'년'; yB.onclick=()=>showYearPicker('_calYear','_calMonth',renderMonthView);
-      const mB=document.createElement('button');
-      mB.style.cssText='border:none;background:none;font-size:17px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:0 2px';
-      mB.textContent=' '+MONTHS_KO[m]; mB.onclick=()=>showMonthPicker('_calYear','_calMonth',renderMonthView);
-      el.appendChild(yB); el.appendChild(mB);
-    }
-  );
-}
+/* removed dead definition: renderMonthView (아래에서 재대입되어 무효) */
 
 let _tooltipTimer = null;
 function showCalTooltip(e, ev) {
@@ -7446,42 +7336,11 @@ function _createPicker() {
 }
 
 /* ══ Spec Cal 뷰 전환 ══ */
-function setSpecCalView(spec, view) {
-  const st = _getSpecState(spec);
-  st.view = view;
-  document.getElementById(spec+'CalViewCard')?.classList.toggle('active', view==='card');
-  document.getElementById(spec+'CalViewMonth')?.classList.toggle('active', view==='month');
-  const gridEl  = document.getElementById(spec+'CalGrid');
-  const monthEl = document.getElementById(spec+'CalMonthView');
-  const upEl    = document.getElementById(spec+'UpcomingSection');
-  if(view === 'month') {
-    if(gridEl)  gridEl.style.display  = 'none';
-    if(upEl)    upEl.style.display    = 'none';
-    if(monthEl) monthEl.style.display = 'block';
-    renderSpecMonth(spec);
-  } else {
-    if(gridEl)  gridEl.style.display  = '';
-    if(upEl)    upEl.style.display    = '';
-    if(monthEl) monthEl.style.display = 'none';
-    renderSpecCal(spec);
-  }
-}
+/* removed dead definition: setSpecCalView (중복 선언, 뒤 정의가 유효) */
 
-function moveSpecMonth(spec, dir) {
-  const st = _getSpecState(spec);
-  st.month += dir;
-  if(st.month > 11) { st.month = 0;  st.year++; }
-  if(st.month < 0)  { st.month = 11; st.year--; }
-  renderSpecMonth(spec);
-}
+/* removed dead definition: moveSpecMonth (중복 선언, 뒤 정의가 유효) */
 
-function goSpecToday(spec) {
-  const now = new Date();
-  const st = _getSpecState(spec);
-  st.year  = now.getFullYear();
-  st.month = now.getMonth();
-  setSpecCalView(spec, 'month');
-}
+/* removed dead definition: goSpecToday (중복 선언, 뒤 정의가 유효) */
 
 function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClickFn, titleClickFn) {
   const MONTHS_KO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -7910,7 +7769,7 @@ function renderCardiacPapers(){
 function renderSpecPapers(spec){ const g=document.getElementById(spec+'PaperGrid'); if(!g)return; const c=document.getElementById(spec+'PaperCount'); if(c)c.textContent='0'; g.innerHTML='<div class="empty-state" style="grid-column:1/-1">이 Specialty의 논문 데이터는 아직 연결되지 않았습니다.</div>'; }
 
 const _specCalView={}; const _specCalDate={}; const _specCalTypeFilter={};
-function _specCalArray(spec){ if(spec==='cardiac') return CARDIAC_CALS; return window['_CAL_'+spec.toUpperCase()]||[]; }
+/* removed dead definition: _specCalArray (아래에서 재대입되어 무효) */
 const _specCalLoadState = { uro:'idle', cr:'idle', thoracic:'idle', stomach:'idle', breast:'idle', hn:'idle', hbp:'idle', hernia:'idle' };
 const _specCalLoadError = {};
 function renderSpecCal(spec){
@@ -7975,7 +7834,7 @@ function renderSpecMonth(spec) {
   );
 }
 
-function goToday(){ _calMonth=new Date().getMonth(); _calYear=new Date().getFullYear(); renderMonthCalendar(); }
+/* removed dead definition: goToday (아래에서 재대입되어 무효) */
 
 function closeArticleModal(e){ const x=document.getElementById('articleModalOverlay'); if(x && (!e||e.target===x))x.classList.remove('open'); }
 function closePaperModal(e){ const x=document.getElementById('paperModalOverlay'); if(x && (!e||e.target===x))x.classList.remove('open'); }
@@ -8263,9 +8122,7 @@ function upgradeSpecCalendarPage(spec){
   const strip=document.createElement('div');strip.className='calendar-filter-strip';let host=document.getElementById(spec+'CalTagFilter');if(!host){host=document.createElement('div');host.id='cf-type-'+spec;}const row=cfCreateFilterLine('Type',host);if(row)strip.appendChild(row);toolbar.appendChild(strip);main.insertBefore(toolbar,main.firstChild);
   _specCalView[spec]='month';if(!_specCalDate[spec]){const d=new Date();_specCalDate[spec]=new Date(d.getFullYear(),d.getMonth(),1);}setSpecCalView(spec,'month');buildSpecTypeChips(spec,_specCalArray(spec));
 }
-function calendarFirstInit(){
-  ensureCalendarPreviewUI();upgradeAllCalendarPage();upgradeGynCalendarPage();['cardiac','uro','cr','thoracic','stomach','breast','hn','hbp','hernia'].forEach(upgradeSpecCalendarPage);
-}
+/* removed dead definition: calendarFirstInit (아래에서 재대입되어 무효) */
 
 
 
@@ -8324,18 +8181,18 @@ function normalizeGynCalendarDOMV6(){
 }
 
 // One data adapter for every Specialty calendar.
-_specCalArray = function(spec){
+function _specCalArray(spec){
   if(spec==='gyn') return CONFERENCES || [];
   if(spec==='cardiac') return CARDIAC_CALS || [];
   return window['_CAL_'+String(spec).toUpperCase()] || [];
-};
+}
 
 // GYN legacy entry points now delegate to the same shared renderer as all other specialties.
-renderCal = function(){ return renderSpecCal('gyn'); };
-setCalView = function(view){ _calView=view; return setSpecCalView('gyn',view); };
-moveMonth = function(dir){ return moveSpecMonth('gyn',dir); };
-renderMonthView = function(){ return renderSpecMonth('gyn'); };
-goToday = function(){ return goSpecToday('gyn'); };
+function renderCal(){ return renderSpecCal('gyn'); }
+function setCalView(view){ _calView=view; return setSpecCalView('gyn',view); }
+function moveMonth(dir){ return moveSpecMonth('gyn',dir); }
+function renderMonthView(){ return renderSpecMonth('gyn'); }
+function goToday(){ return goSpecToday('gyn'); }
 
 function upgradeSpecCalendarPageV6(spec){
   const page=document.getElementById(_v6CalendarPageId(spec));
@@ -8399,15 +8256,15 @@ function upgradeSpecCalendarPageV6(spec){
 }
 
 // Replace the mixed GYN/Cardiac/specialty setup with one common initialization path.
-calendarFirstInit = function(){
+function calendarFirstInit(){
   ensureCalendarPreviewUI();
   normalizeGynCalendarDOMV6();
   upgradeAllCalendarPage();
   _V6_SPECIALTIES.forEach(upgradeSpecCalendarPageV6);
-};
+}
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-04-fix7';
+window.CLINICAL_HUB_BUILD='2026-09-05-v7.1';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -8424,6 +8281,348 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 
 window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeConfModal(); closePhoneSpecSheet(); closeDrawer(); } });
+
+/* ══════════════════════════════════════════════════════════════
+   Clinical Hub — v7 확장
+   1) 시트 로딩 캐시 (오프라인/느린 회선 대비)
+   2) ?debug=1 자가진단 패널
+   3) .ics / Google 캘린더 내보내기
+   4) 필터 상태 딥링크
+   5) 상단 D-day 요약
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1. fetchCSV: 타임아웃 + localStorage 캐시 ───────────────── */
+var _CSV_CACHE_PREFIX = 'chubCsv:';
+var _CSV_TIMEOUT_MS = 8000;
+
+function _csvCacheKey(url) {
+  var h = 0, s = String(url);
+  for (var i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; }
+  return _CSV_CACHE_PREFIX + (h >>> 0).toString(36);
+}
+function _csvLabel(url) { if(String(url)===String(typeof SHEET_URL!=='undefined'?SHEET_URL:'')) return 'GYN 통합시트';
+  var m = /[?&]gid=(\d+)/.exec(url);
+  return m ? 'gid ' + m[1] : String(url).slice(-28);
+}
+
+var _origFetchCSV = fetchCSV;
+fetchCSV = async function (url) {
+  var label = _csvLabel(url), t0 = Date.now(), key = _csvCacheKey(url);
+  var timer, timeout = new Promise(function (_, rej) {
+    timer = setTimeout(function () { rej(new Error('시간 초과 ' + (_CSV_TIMEOUT_MS / 1000) + 's')); }, _CSV_TIMEOUT_MS);
+  });
+  try {
+    var rows = await Promise.race([_origFetchCSV(url), timeout]);
+    clearTimeout(timer);
+    __DIAG.fetches.push({ label: label, url: url, ok: true, rows: rows.length, ms: Date.now() - t0 });
+    try { storageSet(key, JSON.stringify({ t: Date.now(), rows: rows })); } catch (e) {}
+    return rows;
+  } catch (err) {
+    clearTimeout(timer);
+    var raw = storageGet(key);
+    if (raw) {
+      try {
+        var c = JSON.parse(raw);
+        var age = Math.round((Date.now() - c.t) / 60000);
+        __DIAG.fetches.push({ label: label, url: url, ok: true, rows: c.rows.length, ms: Date.now() - t0, cached: true, error: err.message });
+        console.warn('[cache] ' + label + ' 네트워크 실패 → ' + age + '분 전 캐시 사용');
+        return c.rows;
+      } catch (e) {}
+    }
+    __DIAG.fetches.push({ label: label, url: url, ok: false, rows: 0, ms: Date.now() - t0, error: err.message });
+    throw err;
+  }
+};
+
+/* ── 2. ?debug=1 자가진단 패널 ──────────────────────────────── */
+function _diagValidateDates() {
+  __DIAG.dateWarnings = [];
+  (ALL_CONFERENCES || []).forEach(function (e) {
+    ['start', 'end'].forEach(function (f) {
+      if (!e[f]) return;
+      var d = new Date(e[f]);
+      if (isNaN(d.getTime())) __DIAG.dateWarnings.push({ name: e.name || '(무제)', field: f, value: e[f] });
+    });
+    if (e.start && e.end) {
+      var s = new Date(e.start), en = new Date(e.end);
+      if (!isNaN(s) && !isNaN(en) && en < s) __DIAG.dateWarnings.push({ name: e.name || '(무제)', field: 'end<start', value: e.start + ' → ' + e.end });
+    }
+  });
+}
+
+function _diagSpecCounts() {
+  var specs = ['gyn','cardiac','uro','cr','thoracic','stomach','breast','hn','hbp','hernia'];
+  var all = ALL_CONFERENCES || [];
+  var rows = specs.map(function (sp) {
+    var n = all.filter(function (e) { return e._spec === sp; }).length;
+    return '<tr><td>' + sp.toUpperCase() + '</td><td class="' + (n ? 'ok' : 'bad') + '">' + n + '건</td><td>' +
+      (sp === 'gyn' ? 'CONFERENCES=' + (typeof CONFERENCES !== 'undefined' ? CONFERENCES.length : '?')
+       : sp === 'cardiac' ? 'CARDIAC_CALS=' + (typeof CARDIAC_CALS !== 'undefined' ? CARDIAC_CALS.length : '?')
+       : '_CAL_' + sp.toUpperCase() + '=' + ((window['_CAL_' + sp.toUpperCase()] || []).length)) + '</td></tr>';
+  }).join('');
+  var unknown = all.filter(function (e) { return specs.indexOf(e._spec) < 0; });
+  if (unknown.length) rows += '<tr><td class="warn">(미분류)</td><td class="warn">' + unknown.length +
+    '건</td><td class="warn">_spec=' + unknown.slice(0, 4).map(function (e) { return JSON.stringify(e._spec); }).join(',') + '</td></tr>';
+  return '전체 ' + all.length + '건<table>' + rows + '</table>';
+}
+
+function _diagPanelOpen() {
+  _diagValidateDates();
+  var el = document.getElementById('diagPanel');
+  if (!el) {
+    var st = document.createElement('style');
+    st.textContent =
+      '#diagPanel{position:fixed;right:12px;bottom:12px;width:min(460px,92vw);max-height:70vh;overflow:auto;z-index:99998;' +
+      'background:#111;color:#e6e6e6;font:11px/1.55 ui-monospace,Menlo,monospace;border-radius:10px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.45);}' +
+      '#diagPanel h4{margin:10px 0 4px;font-size:11px;color:#7DD3C0;letter-spacing:.04em;}' +
+      '#diagPanel h4:first-of-type{margin-top:0;}' +
+      '#diagPanel table{width:100%;border-collapse:collapse;}' +
+      '#diagPanel td{padding:1px 4px;vertical-align:top;border-bottom:1px solid #222;}' +
+      '#diagPanel .ok{color:#5BD98A;}#diagPanel .bad{color:#FF7B72;}#diagPanel .warn{color:#E3B341;}' +
+      '#diagPanel .bar{display:flex;gap:6px;margin-bottom:8px;}' +
+      '#diagPanel button{background:#2b2b2b;color:#ddd;border:0;border-radius:5px;padding:3px 9px;cursor:pointer;font:inherit;}';
+    document.head.appendChild(st);
+    el = document.createElement('div');
+    el.id = 'diagPanel';
+    document.body.appendChild(el);
+  }
+  var f = __DIAG.fetches, ok = f.filter(function (x) { return x.ok; }).length;
+  el.innerHTML =
+    '<div class="bar"><b style="flex:1">🔧 Clinical Hub 진단</b>' +
+    '<button type="button" data-d-refresh>새로고침</button>' +
+    '<button type="button" data-d-copy>복사</button>' +
+    '<button type="button" data-d-close>닫기</button></div>' +
+    '<h4>BUILD</h4>' + (__DIAG.build || '(미상)') + ' · 로드 ' + Math.round((Date.now() - __DIAG.started) / 100) / 10 + 's' +
+    '<h4>데이터</h4>' + _diagSpecCounts() +
+    '<h4>시트 로딩 (' + ok + '/' + f.length + ' 성공)</h4><table>' +
+    (f.length ? f.map(function (x) {
+      return '<tr><td>' + x.label + '</td><td class="' + (x.ok ? (x.cached ? 'warn' : 'ok') : 'bad') + '">' +
+        (x.ok ? (x.cached ? '캐시 ' : '') + x.rows + '행' : '실패') + '</td><td>' + x.ms + 'ms</td><td>' + (x.error || '') + '</td></tr>';
+    }).join('') : '<tr><td>(없음)</td></tr>') + '</table>' +
+    '<h4 class="' + (__DIAG.errors.length ? 'bad' : 'ok') + '">오류 (' + __DIAG.errors.length + ')</h4>' +
+    (__DIAG.errors.length ? __DIAG.errors.map(function (e) { return '· ' + e.msg + (e.count > 1 ? ' ×' + e.count : ''); }).join('<br>') : '없음') +
+    '<h4 class="' + (__DIAG.dateWarnings.length ? 'warn' : 'ok') + '">날짜 파싱 경고 (' + __DIAG.dateWarnings.length + ')</h4>' +
+    (__DIAG.dateWarnings.length ? __DIAG.dateWarnings.slice(0, 30).map(function (w) { return '· ' + w.name + ' [' + w.field + '] "' + w.value + '"'; }).join('<br>') : '없음');
+  el.querySelector('[data-d-close]').onclick = function () { el.remove(); };
+  el.querySelector('[data-d-refresh]').onclick = _diagPanelOpen;
+  el.querySelector('[data-d-copy]').onclick = function () {
+    if (navigator.clipboard) navigator.clipboard.writeText(__diagReportText());
+    this.textContent = '복사됨';
+  };
+}
+window.diag = _diagPanelOpen;
+
+/* ── 3. .ics / Google 캘린더 내보내기 ───────────────────────── */
+function _icsEsc(s) {
+  return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+function _ymd(d) {
+  return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+}
+function _evDates(ev) {
+  var s = new Date(ev.start);
+  if (isNaN(s.getTime())) return null;
+  var e = ev.end ? new Date(ev.end) : new Date(ev.start);
+  if (isNaN(e.getTime())) e = new Date(s);
+  var eEx = new Date(e.getFullYear(), e.getMonth(), e.getDate() + 1); // DTEND 는 exclusive
+  return { s: s, e: e, eEx: eEx };
+}
+function buildICS(events) {
+  var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Intuitive Korea//Clinical Hub//KO', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  var stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  (events || []).forEach(function (ev, i) {
+    var d = _evDates(ev);
+    if (!d) return;
+    var spec = (ev._spec || '').toUpperCase();
+    L.push('BEGIN:VEVENT');
+    L.push('UID:chub-' + _ymd(d.s) + '-' + i + '@clinicalhub');
+    L.push('DTSTAMP:' + stamp);
+    L.push('DTSTART;VALUE=DATE:' + _ymd(d.s));
+    L.push('DTEND;VALUE=DATE:' + _ymd(d.eEx));
+    L.push('SUMMARY:' + _icsEsc((spec ? '[' + spec + '] ' : '') + (ev.name || 'Event')));
+    if (ev.loc) L.push('LOCATION:' + _icsEsc(ev.loc));
+    var desc = [ev.note, ev.host || ev.organizer, ev.system, ev.url].filter(Boolean).join(' / ');
+    if (desc) L.push('DESCRIPTION:' + _icsEsc(desc));
+    if (ev.url) L.push('URL:' + _icsEsc(ev.url));
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.join('\r\n');
+}
+function downloadICS(events, filename) {
+  var ics = buildICS(events);
+  var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename || 'clinical-hub.ics';
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+}
+function gcalURL(ev) {
+  var d = _evDates(ev);
+  if (!d) return '#';
+  var spec = (ev._spec || '').toUpperCase();
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+    '&text=' + encodeURIComponent((spec ? '[' + spec + '] ' : '') + (ev.name || 'Event')) +
+    '&dates=' + _ymd(d.s) + '/' + _ymd(d.eEx) +
+    (ev.loc ? '&location=' + encodeURIComponent(ev.loc) : '') +
+    '&details=' + encodeURIComponent([ev.note, ev.host || ev.organizer, ev.url].filter(Boolean).join('\n'));
+}
+
+/* 현재 필터가 적용된 ALL 일정 목록 */
+function currentAllCalItems() {
+  var q = (document.getElementById('allCalSearch') && document.getElementById('allCalSearch').value || '').toLowerCase();
+  return (ALL_CONFERENCES || []).filter(function (e) {
+    if (_allCalSpecFilter !== 'all' && e._spec !== _allCalSpecFilter) return false;
+    if (_allCalTagFilter !== 'all' && calendarTypeKey(e) !== _allCalTagFilter) return false;
+    if (q && ![e.name, e.loc, e.note, e.host, e.organizer].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+/* 상세 카드의 .ics / Google 버튼 — 위임 처리 */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('[data-cal-export]');
+  if (!b) return;
+  var ev;
+  try { ev = JSON.parse(decodeURIComponent(b.getAttribute('data-ev') || '')); } catch (err) { return; }
+  e.preventDefault(); e.stopPropagation();
+  if (b.getAttribute('data-cal-export') === 'gcal') window.open(gcalURL(ev), '_blank', 'noopener');
+  else downloadICS([ev], (ev.name || 'event').replace(/[^\w가-힣-]+/g, '_').slice(0, 40) + '.ics');
+});
+
+/* calendarDetailHTML 에 내보내기 버튼 추가 */
+var _origDetailHTML = calendarDetailHTML;
+calendarDetailHTML = function (ev, actions) {
+  if (actions === undefined) actions = true;
+  var html = _origDetailHTML(ev, actions);
+  if (!actions || html.indexOf('cal-preview-actions') < 0) return html;
+  var payload = encodeURIComponent(JSON.stringify({
+    name: ev.name, start: ev.start, end: ev.end, loc: ev.loc, note: ev.note,
+    host: ev.host || ev.organizer, url: ev.url, _spec: ev._spec
+  }));
+  var extra = '<button type="button" class="cal-preview-btn secondary" data-cal-export="ics" data-ev="' + payload + '">.ics</button>' +
+              '<button type="button" class="cal-preview-btn secondary" data-cal-export="gcal" data-ev="' + payload + '">Google</button>';
+  return html.replace(/(<div class="cal-preview-actions">[\s\S]*?)(<\/div>)/, '$1' + extra + '$2');
+};
+
+/* ── 4. 필터 상태 딥링크 ───────────────────────────────────── */
+/* switchSpecAll 이 필터를 초기화하므로, 그 "직후"에 딥링크를 얹어야 한다. */
+var _deepLinkReady = false;
+var _pendingDeepLink = (function () {
+  var p = new URLSearchParams(location.search);
+  var o = { spec: p.get('spec'), type: p.get('type'), month: p.get('month'), q: p.get('q'), view: p.get('view') };
+  return (o.spec || o.type || o.month || o.q || o.view) ? o : null;
+})();
+
+function _applyDeepLinkObj(o) {
+  if (o.spec) _allCalSpecFilter = o.spec;
+  if (o.type) _allCalTagFilter = o.type;
+  if (o.q) { var el = document.getElementById('allCalSearch'); if (el) el.value = o.q; }
+  if (o.month && /^\d{4}-\d{2}$/.test(o.month)) {
+    _allCalYear = +o.month.slice(0, 4);
+    _allCalMonth = +o.month.slice(5, 7) - 1;
+  }
+  if (o.view === 'card' || o.view === 'month') { _allCalView = o.view; setAllCalView(o.view); }
+}
+
+var _origSwitchSpecAll = switchSpecAll;
+switchSpecAll = function (el) {
+  var r = _origSwitchSpecAll(el);
+  if (_pendingDeepLink) {
+    try { _applyDeepLinkObj(_pendingDeepLink); } catch (e) { console.error('[deeplink] ' + e.message); }
+    _pendingDeepLink = null;
+    _deepLinkReady = true;
+    renderAllCal();
+  } else {
+    _deepLinkReady = true;
+  }
+  return r;
+};
+
+function syncDeepLink() {
+  if (!_deepLinkReady || currentSpec !== 'all') return;
+  var p = new URLSearchParams();
+  if (_allCalSpecFilter !== 'all') p.set('spec', _allCalSpecFilter);
+  if (_allCalTagFilter !== 'all') p.set('type', _allCalTagFilter);
+  var el = document.getElementById('allCalSearch');
+  if (el && el.value) p.set('q', el.value);
+  p.set('month', _allCalYear + '-' + String(_allCalMonth + 1).padStart(2, '0'));
+  if (_allCalView !== 'month') p.set('view', _allCalView);
+  var url = location.pathname + '?' + p.toString();
+  if (url !== location.pathname + location.search) history.replaceState(null, '', url);
+}
+
+/* ── 5. D-day 요약 배너 ────────────────────────────────────── */
+function _dday(d, today) { return Math.round((d - today) / 86400000); }
+function renderDdaySummary() {
+  var host = document.getElementById('calDdaySummary');
+  if (!host) return;
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var items = currentAllCalItems()
+    .map(function (e) { var d = new Date(e.start); d.setHours(0, 0, 0, 0); return { e: e, d: d }; })
+    .filter(function (x) { return !isNaN(x.d.getTime()); });
+  var upcoming = items.filter(function (x) { return x.d >= today; }).sort(function (a, b) { return a.d - b.d; });
+  var in7 = upcoming.filter(function (x) { return _dday(x.d, today) <= 7; }).length;
+  var in30 = upcoming.filter(function (x) { return _dday(x.d, today) <= 30; }).length;
+  var next = upcoming[0];
+  var parts = ['향후 30일 <b>' + in30 + '건</b>', '7일 내 <b>' + in7 + '건</b>'];
+  if (next) {
+    var n = _dday(next.d, today);
+    parts.push('다음: <b>' + (next.e.name || '').slice(0, 34) + '</b> ' +
+      (n === 0 ? '<em>오늘</em>' : '<em>D-' + n + '</em>'));
+  }
+  host.innerHTML = '<div class="dday-inner">' + parts.join('<span class="dday-sep">·</span>') + '</div>' +
+    '<button type="button" class="dday-export" data-export-all>📅 .ics 내보내기</button>';
+}
+
+document.addEventListener('click', function (e) {
+  if (!(e.target.closest && e.target.closest('[data-export-all]'))) return;
+  var items = currentAllCalItems();
+  if (!items.length) { alert('내보낼 일정이 없습니다.'); return; }
+  downloadICS(items, 'clinical-hub_' + _allCalSpecFilter + '_' + new Date().toISOString().slice(0, 10) + '.ics');
+});
+
+/* ALL 캘린더 툴바에 요약 배너 삽입 */
+var _origUpgradeAll = upgradeAllCalendarPage;
+upgradeAllCalendarPage = function () {
+  _origUpgradeAll();
+  var main = document.querySelector('#page-all-cal .calendar-first-main');
+  var toolbar = main && main.querySelector('.calendar-first-toolbar');
+  if (!toolbar || document.getElementById('calDdaySummary')) return;
+  if (!document.getElementById('ddayStyles')) {
+    var st = document.createElement('style');
+    st.id = 'ddayStyles';
+    st.textContent =
+      '#calDdaySummary{display:flex;align-items:center;gap:10px;margin:2px 0 10px;padding:8px 12px;border-radius:9px;' +
+      'background:var(--primary-soft,#E6F4F3);color:var(--primary-dark,#005F58);font-size:13px;flex-wrap:wrap;}' +
+      '#calDdaySummary .dday-inner{flex:1;min-width:200px;}' +
+      '#calDdaySummary b{font-weight:700;}' +
+      '#calDdaySummary em{font-style:normal;font-weight:700;background:var(--primary,#00837A);color:#fff;border-radius:5px;padding:1px 6px;margin-left:4px;}' +
+      '#calDdaySummary .dday-sep{margin:0 9px;opacity:.45;}' +
+      '#calDdaySummary .dday-export{background:transparent;border:1px solid var(--primary-mid,#A8D8D5);color:var(--primary-dark,#005F58);' +
+      'border-radius:7px;padding:4px 11px;font-size:12px;cursor:pointer;white-space:nowrap;}' +
+      '#calDdaySummary .dday-export:hover{background:rgba(0,131,122,.12);}';
+    document.head.appendChild(st);
+  }
+  var host = document.createElement('div');
+  host.id = 'calDdaySummary';
+  toolbar.appendChild(host);
+};
+
+/* renderAllCal 이후 요약/딥링크 갱신 */
+var _origRenderAllCal = renderAllCal;
+renderAllCal = function () {
+  _origRenderAllCal();
+  try { renderDdaySummary(); } catch (e) { console.error('[dday] ' + e.message); }
+  try { syncDeepLink(); } catch (e) {}
+};
+
+/* ── 초기화 훅 ─────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', function () {
+  __DIAG.build = window.CLINICAL_HUB_BUILD || null;
+  if (new URLSearchParams(location.search).get('debug') === '1') setTimeout(_diagPanelOpen, 500);
+});
 </script>
 
 <div id="confModal" onclick="if(event.target===this)closeConfModal()">
