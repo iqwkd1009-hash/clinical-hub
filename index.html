@@ -4584,6 +4584,7 @@ function switchSpec(spec, el) {
   if(spec === 'gyn') {
     document.getElementById('page-cal').classList.add('active');
     renderCal();
+    document.getElementById('headerCount').textContent = 'GYN';
     if(_calView==='month') setCalView('month');
   } else if(spec === 'cardiac') {
     document.body.classList.add('cardiac-mode');
@@ -7808,15 +7809,18 @@ function renderSpecMonth(spec) {
   const titleEl=document.getElementById(spec+'MonthNavTitle');
   if(!grid) return;
 
-  const data=window['_CAL_'+spec.toUpperCase()]||[];
+  // gyn -> CONFERENCES, cardiac -> CARDIAC_CALS, 그 외 -> window._CAL_*
+  const data=_specCalArray(spec)||[];
+  const typeFilter=(_specCalTypeFilter[spec]||'all');
   const today=new Date(); today.setHours(0,0,0,0);
   const items=data.filter(ev=>{
+    if(typeFilter!=='all' && calendarTypeKey(ev)!==typeFilter) return false;
     const s=new Date(ev.start), e=ev.end?new Date(ev.end):new Date(ev.start);
+    if(Number.isNaN(s.getTime())||Number.isNaN(e.getTime())) return false;
     return s<=new Date(yr,mo+1,0)&&e>=new Date(yr,mo,1);
   });
 
-  const SPEC_COLORS={uro:'#7C3AED',cr:'#059669',thoracic:'#0891B2',stomach:'#EA580C',breast:'#DB2777',hn:'#D97706',hbp:'#65A30D',hernia:'#9333EA'};
-  const specClr=SPEC_COLORS[spec]||'#888';
+  const specClr=_allSpecColor(spec);
 
   _buildMonthGrid(grid, header, titleEl, items, yr, mo,
     ev => specClr,
@@ -8066,12 +8070,24 @@ function cfSearchBoxFromSidebar(sidebar,inputId){
   old.classList.add('calendar-first-search'); old.style.margin='0'; old.style.background='var(--surface)';
   return old;
 }
-function cfAddLinkFromSidebar(sidebar){
+/* 각 과 캘린더 탭의 GID — '+ 일정 추가' 링크가 해당 시트 탭으로 바로 열리도록 */
+const CAL_EDIT_GIDS = {
+  all:'0', gyn:'0', cardiac:'1700395267',
+  uro:'1103866127', cr:'1214647289', thoracic:'1333544214', stomach:'1351379084',
+  breast:'1715897257', hn:'1504255784', hbp:'614572531', hernia:'971357331',
+};
+function calSheetEditURL(spec){
+  const gid = CAL_EDIT_GIDS[spec] || '0';
+  // ?gid= 없이 #gid= 만 쓰면 구글 시트가 첫 탭으로 여는 경우가 있음
+  return 'https://docs.google.com/spreadsheets/d/'+SOURCE_SHEET_ID+'/edit?gid='+gid+'#gid='+gid;
+}
+function cfAddLinkFromSidebar(sidebar, spec){
   if(!sidebar) return null;
   const links=[...sidebar.querySelectorAll('a[target="_blank"]')];
   const a=links.find(x=>(x.textContent||'').includes('일정 추가'));
   if(!a) return null;
   a.className='calendar-first-add'; a.removeAttribute('style');
+  if(spec){ a.href=calSheetEditURL(spec); a.target='_blank'; a.rel='noopener'; a.title=spec.toUpperCase()+' 캘린더 시트 열기'; }
   a.innerHTML='+ 일정 추가'; return a;
 }
 function cfCreateToday(handler){ const b=document.createElement('button');b.type='button';b.className='calendar-today-btn';b.textContent='오늘';b.onclick=handler;return b; }
@@ -8089,7 +8105,7 @@ function upgradeAllCalendarPage(){
   const toolbar=document.createElement('div');toolbar.className='calendar-first-toolbar';
   const top=document.createElement('div');top.className='calendar-first-topline';const left=document.createElement('div');left.className='calendar-first-left';const right=document.createElement('div');right.className='calendar-first-right';
   const search=cfSearchBoxFromSidebar(sidebar,'allCalSearch'); if(search)left.appendChild(search);
-  const add=document.createElement('a');add.href='https://docs.google.com/spreadsheets/d/'+SOURCE_SHEET_ID+'/edit';add.target='_blank';add.rel='noopener';add.className='calendar-first-add';add.textContent='+ 일정 추가';left.appendChild(add);
+  const add=document.createElement('a');add.href=calSheetEditURL('all');add.target='_blank';add.rel='noopener';add.className='calendar-first-add';add.textContent='+ 일정 추가';left.appendChild(add);
   const toggle=oldHeader?.querySelector('.cal-view-toggle'); if(toggle){right.appendChild(toggle); document.getElementById('allCalViewCard')?.classList.remove('active');document.getElementById('allCalViewMonth')?.classList.add('active');}
   right.appendChild(cfCreateToday(goAllToday)); const count=document.getElementById('allCalCount'); if(count){count.classList.add('calendar-first-count');right.appendChild(count);} top.append(left,right);toolbar.appendChild(top);
   const strip=document.createElement('div');strip.className='calendar-filter-strip'; const sp=document.getElementById('allCalSpecFilter'),tg=document.getElementById('allCalTagFilter'); const r1=cfCreateFilterLine('Specialty',sp),r2=cfCreateFilterLine('Type',tg); if(r1)strip.appendChild(r1);if(r2)strip.appendChild(r2);toolbar.appendChild(strip);
@@ -8101,7 +8117,7 @@ function upgradeGynCalendarPage(){
   const sidebar=page.querySelector(':scope > aside');const main=cfMainOf(page);if(!main)return;main.classList.add('calendar-first-main');
   const oldHeader=[...main.children].find(x=>x.querySelector?.('#calViewCard'));if(oldHeader)oldHeader.classList.add('calendar-first-old-header');
   const toolbar=document.createElement('div');toolbar.className='calendar-first-toolbar';const top=document.createElement('div');top.className='calendar-first-topline';const left=document.createElement('div');left.className='calendar-first-left';const right=document.createElement('div');right.className='calendar-first-right';
-  const search=cfSearchBoxFromSidebar(sidebar,'calSearch');if(search)left.appendChild(search);const add=cfAddLinkFromSidebar(sidebar);if(add)left.appendChild(add);
+  const search=cfSearchBoxFromSidebar(sidebar,'calSearch');if(search)left.appendChild(search);const add=cfAddLinkFromSidebar(sidebar,'gyn');if(add)left.appendChild(add);
   const toggle=oldHeader?.querySelector('.cal-view-toggle');if(toggle){right.appendChild(toggle);document.getElementById('calViewCard')?.classList.remove('active');document.getElementById('calViewMonth')?.classList.add('active');} right.appendChild(cfCreateToday(()=>{goToday();setCalView('month');}));const cnt=document.getElementById('calCount');if(cnt){cnt.classList.add('calendar-first-count');right.appendChild(cnt);}top.append(left,right);toolbar.appendChild(top);
   const strip=document.createElement('div');strip.className='calendar-filter-strip';const filters=document.getElementById('calFilters');const row=cfCreateFilterLine('Type',filters);if(row)strip.appendChild(row);toolbar.appendChild(strip);main.insertBefore(toolbar,main.firstChild);
   _calView='month';setCalView('month');
@@ -8116,7 +8132,7 @@ function upgradeSpecCalendarPage(spec){
   const sidebar=page.querySelector(':scope > aside');const main=cfMainOf(page);if(!main)return;main.classList.add('calendar-first-main');if(spec==='cardiac')ensureCardiacMonthMarkup(main);
   let oldHeader=[...main.children].find(x=>x.querySelector?.('#'+spec+'CalCount'));if(oldHeader)oldHeader.classList.add('calendar-first-old-header');
   const toolbar=document.createElement('div');toolbar.className='calendar-first-toolbar';const top=document.createElement('div');top.className='calendar-first-topline';const left=document.createElement('div');left.className='calendar-first-left';const right=document.createElement('div');right.className='calendar-first-right';
-  const search=cfSearchBoxFromSidebar(sidebar,spec+'CalSearch');if(search)left.appendChild(search);const add=cfAddLinkFromSidebar(sidebar);if(add)left.appendChild(add);
+  const search=cfSearchBoxFromSidebar(sidebar,spec+'CalSearch');if(search)left.appendChild(search);const add=cfAddLinkFromSidebar(sidebar,spec);if(add)left.appendChild(add);
   let toggle=oldHeader?.querySelector('.cal-view-toggle');if(!toggle){toggle=document.createElement('div');toggle.className='cal-view-toggle';toggle.innerHTML='<button id="'+spec+'CalViewCard" class="cal-view-btn" onclick="setSpecCalView(\''+spec+'\',\'card\')">▦ 카드</button><button id="'+spec+'CalViewMonth" class="cal-view-btn active" onclick="setSpecCalView(\''+spec+'\',\'month\')">▣ 달력</button>';}else{document.getElementById(spec+'CalViewCard')?.classList.remove('active');document.getElementById(spec+'CalViewMonth')?.classList.add('active');}right.appendChild(toggle);right.appendChild(cfCreateToday(()=>goSpecToday(spec)));const cnt=document.getElementById(spec+'CalCount');if(cnt){const wrap=cnt.closest('div');if(wrap&&wrap!==oldHeader){wrap.classList.add('calendar-first-count');right.appendChild(wrap);}else{cnt.classList.add('calendar-first-count');right.appendChild(cnt);}}
   top.append(left,right);toolbar.appendChild(top);
   const strip=document.createElement('div');strip.className='calendar-filter-strip';let host=document.getElementById(spec+'CalTagFilter');if(!host){host=document.createElement('div');host.id='cf-type-'+spec;}const row=cfCreateFilterLine('Type',host);if(row)strip.appendChild(row);toolbar.appendChild(strip);main.insertBefore(toolbar,main.firstChild);
@@ -8214,7 +8230,7 @@ function upgradeSpecCalendarPageV6(spec){
 
   const search=cfSearchBoxFromSidebar(sidebar,spec+'CalSearch');
   if(search) left.appendChild(search);
-  const add=cfAddLinkFromSidebar(sidebar);
+  const add=cfAddLinkFromSidebar(sidebar, spec);
   if(add) left.appendChild(add);
 
   let toggle=oldHeader?.querySelector('.cal-view-toggle');
@@ -8264,7 +8280,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-05-v7.1';
+window.CLINICAL_HUB_BUILD='2026-09-05-v7.3';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
