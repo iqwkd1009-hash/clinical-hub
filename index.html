@@ -7396,11 +7396,6 @@ function openDayEventsModal(yr, mo, dayNum, evs, specColor, onClickFn){
     box.appendChild(row);
   });
 
-  const act=document.createElement('div'); act.className='dm-actions';
-  const ics=document.createElement('button'); ics.type='button'; ics.className='dm-btn'; ics.textContent='📅 이 날 일정 .ics';
-  ics.onclick=()=>{ if(typeof downloadICS==='function') downloadICS(evs, yr+'-'+String(mo+1).padStart(2,'0')+'-'+String(dayNum).padStart(2,'0')+'.ics'); };
-  act.appendChild(ics); box.appendChild(act);
-
   back.appendChild(box);
   back.onclick=e=>{ if(e.target===back) closeDayModal(); };
   document.addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ closeDayModal(); document.removeEventListener('keydown',esc); } });
@@ -7467,6 +7462,25 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
     while(weeks.some(w=>{for(let ci=w.from;ci<=w.to;ci++)if(rowSlots[ci][slot])return true;return false;}))slot++;
     weeks.forEach(w=>{for(let ci=w.from;ci<=w.to;ci++)rowSlots[ci][slot]=ev;});
   });
+
+  // 주 단위 빈 레인 압축 — 여러 주에 걸친 일정 때문에 생긴 빈 슬롯을 없애
+  // 각 주에서 실제로 쓰인 레인만 0부터 다시 채운다 (칸당 표시 가능 개수 증가)
+  for(let wStart=0; wStart<totalCells; wStart+=7){
+    const wEnd=Math.min(wStart+6, totalCells-1);
+    let maxLen=0;
+    for(let ci=wStart; ci<=wEnd; ci++) maxLen=Math.max(maxLen, (rowSlots[ci]||[]).length);
+    const used=[];
+    for(let sl=0; sl<maxLen; sl++){
+      for(let ci=wStart; ci<=wEnd; ci++){ if(rowSlots[ci] && rowSlots[ci][sl]){ used.push(sl); break; } }
+    }
+    if(used.length && used[used.length-1]!==used.length-1){
+      for(let ci=wStart; ci<=wEnd; ci++){
+        const oldSlots=rowSlots[ci]||[], next=[];
+        used.forEach((sl,i)=>{ if(oldSlots[sl]) next[i]=oldSlots[sl]; });
+        rowSlots[ci]=next;
+      }
+    }
+  }
 
   const MAX_SLOTS=(typeof _monthMaxSlots==='function')?_monthMaxSlots():3;
   grid.innerHTML='';
@@ -8355,7 +8369,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-17-v8.1';
+window.CLINICAL_HUB_BUILD='2026-09-17-v8.2';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -8592,8 +8606,7 @@ calendarDetailHTML = function (ev, actions) {
     name: ev.name, start: ev.start, end: ev.end, loc: ev.loc, note: ev.note,
     host: ev.host || ev.organizer, url: ev.url, _spec: ev._spec
   }));
-  var extra = '<button type="button" class="cal-preview-btn secondary" data-cal-export="ics" data-ev="' + payload + '">.ics</button>' +
-              '<button type="button" class="cal-preview-btn secondary" data-cal-export="gcal" data-ev="' + payload + '">Google</button>';
+  var extra = '<button type="button" class="cal-preview-btn secondary" data-cal-export="gcal" data-ev="' + payload + '">Google 캘린더</button>';
   return html.replace(/(<div class="cal-preview-actions">[\s\S]*?)(<\/div>)/, '$1' + extra + '$2');
 };
 
@@ -8663,16 +8676,8 @@ function renderDdaySummary() {
     parts.push('다음: <b>' + (next.e.name || '').slice(0, 34) + '</b> ' +
       (n === 0 ? '<em>오늘</em>' : '<em>D-' + n + '</em>'));
   }
-  host.innerHTML = '<div class="dday-inner">' + parts.join('<span class="dday-sep">·</span>') + '</div>' +
-    '<button type="button" class="dday-export" data-export-all>📅 .ics 내보내기</button>';
+  host.innerHTML = '<div class="dday-inner">' + parts.join('<span class="dday-sep">·</span>') + '</div>';
 }
-
-document.addEventListener('click', function (e) {
-  if (!(e.target.closest && e.target.closest('[data-export-all]'))) return;
-  var items = currentAllCalItems();
-  if (!items.length) { alert('내보낼 일정이 없습니다.'); return; }
-  downloadICS(items, 'clinical-hub_' + _allCalSpecFilter + '_' + new Date().toISOString().slice(0, 10) + '.ics');
-});
 
 /* ALL 캘린더 툴바에 요약 배너 삽입 */
 var _origUpgradeAll = upgradeAllCalendarPage;
