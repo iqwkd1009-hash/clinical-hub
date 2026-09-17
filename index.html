@@ -7468,7 +7468,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
     weeks.forEach(w=>{for(let ci=w.from;ci<=w.to;ci++)rowSlots[ci][slot]=ev;});
   });
 
-  const MAX_SLOTS=3;
+  const MAX_SLOTS=(typeof _monthMaxSlots==='function')?_monthMaxSlots():3;
   grid.innerHTML='';
 
   cells.forEach(({dayNum,isCurrent,dow,cellIdx})=>{
@@ -7486,7 +7486,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
         if(!ev){
           // 빈 슬롯 유지 (위 이벤트의 연속 라인 정렬용)
           const sp=document.createElement('div');
-          sp.style.cssText='height:19px;margin-bottom:2px';
+          sp.className='month-spacer';
           cell.appendChild(sp);
           continue;
         }
@@ -8355,7 +8355,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-17-v7.4';
+window.CLINICAL_HUB_BUILD='2026-09-17-v8.1';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -8714,6 +8714,436 @@ window.addEventListener('DOMContentLoaded', function () {
   __DIAG.build = window.CLINICAL_HUB_BUILD || null;
   if (new URLSearchParams(location.search).get('debug') === '1') setTimeout(_diagPanelOpen, 500);
 });
+
+/* ══════════════════════════════════════════════════════════════
+   v8 — 보기 방식 추가: 타임라인(분기 간트) / 연간 히트맵
+   ══════════════════════════════════════════════════════════════ */
+var _TL_MONTHS = 3;           // 타임라인에 한 번에 보여줄 개월 수
+var _SPEC_ORDER = ['gyn', 'cardiac', 'uro', 'cr', 'thoracic', 'stomach', 'breast', 'hn', 'hbp', 'hernia'];
+
+function _altViewStyles() {
+  if (document.getElementById('altViewStyles')) return;
+  var st = document.createElement('style'); st.id = 'altViewStyles';
+  st.textContent = [
+    /* 공통 */
+    '.av-head{display:flex;align-items:center;gap:10px;margin:0 0 12px;}',
+    '.av-nav{border:1px solid var(--border,#e2e2e2);background:transparent;color:inherit;border-radius:8px;',
+    'width:30px;height:30px;cursor:pointer;font-size:15px;line-height:1;opacity:.7;}',
+    '.av-nav:hover{opacity:1;background:rgba(127,127,127,.09);}',
+    '.av-head b{font-size:17px;font-weight:700;}',
+    '.av-head .av-sub{font-size:12px;opacity:.6;}',
+    '.av-empty{padding:40px 0;text-align:center;opacity:.5;font-size:13px;}',
+    /* 타임라인 */
+    '#allCalTimeline{overflow-x:auto;}',
+    '.tl-wrap{min-width:760px;}',
+    '.tl-row{display:flex;align-items:stretch;border-bottom:1px solid var(--border,#e8e8e8);}',
+    '.tl-row:last-child{border-bottom:0;}',
+    '.tl-label{flex:0 0 108px;padding:8px 10px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px;}',
+    '.tl-label .tl-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}',
+    '.tl-label .tl-n{font-weight:400;opacity:.5;font-size:11px;margin-left:auto;}',
+    '.tl-track{position:relative;flex:1;padding:6px 0;min-height:34px;}',
+    '.tl-lane{position:relative;height:22px;margin-bottom:3px;}',
+    '.tl-bar{position:absolute;top:0;height:22px;border-radius:4px;font-size:11px;line-height:22px;',
+    'padding:0 7px;white-space:nowrap;overflow:hidden;cursor:pointer;box-sizing:border-box;}',
+    '.tl-bar:hover{filter:brightness(.94);}',
+    '.tl-axis{display:flex;border-bottom:2px solid var(--border,#e8e8e8);}',
+    '.tl-axis .tl-label{font-size:11px;opacity:.55;font-weight:500;}',
+    '.tl-axis-months{position:relative;flex:1;height:26px;}',
+    '.tl-mo{position:absolute;top:0;height:26px;font-size:11.5px;font-weight:600;padding-left:6px;',
+    'border-left:1px solid var(--border,#e8e8e8);box-sizing:border-box;line-height:26px;opacity:.75;}',
+    '.tl-grid{position:absolute;inset:0;pointer-events:none;}',
+    '.tl-gl{position:absolute;top:0;bottom:0;width:1px;background:var(--border,#ededed);}',
+    '.tl-today{position:absolute;top:0;bottom:0;width:2px;background:#E5484D;opacity:.75;}',
+    '.tl-today-cap{position:absolute;top:2px;transform:translateX(-50%);background:#E5484D;color:#fff;',
+    'font-size:9.5px;border-radius:3px;padding:0 4px;line-height:15px;}',
+    /* 연간 히트맵 */
+    '#allCalYearView{overflow-x:auto;}',
+    '.yh{border-collapse:separate;border-spacing:3px;min-width:700px;}',
+    '.yh th{font-size:11px;font-weight:600;opacity:.6;padding:2px 0;text-align:center;}',
+    '.yh th.yh-rowhead{text-align:left;padding-right:8px;min-width:96px;}',
+    '.yh td{width:46px;height:34px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;',
+    'cursor:pointer;color:var(--text,#222);transition:transform .08s;}',
+    '.yh td:hover{transform:scale(1.08);}',
+    '.yh td.zero{cursor:default;opacity:.28;font-weight:400;}',
+    '.yh td.zero:hover{transform:none;}',
+    '.yh td.cur{outline:2px solid var(--primary,#00837A);outline-offset:-2px;}',
+    '.yh .yh-rowhead span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;}',
+    '.yh .yh-dot{width:9px;height:9px;border-radius:50%;}',
+    '.yh tr.total td{background:var(--primary-soft,#E6F4F3)!important;font-weight:700;}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+function _avHead(titleHTML, subHTML) {
+  var head = document.createElement('div'); head.className = 'av-head';
+  var prev = document.createElement('button'); prev.className = 'av-nav'; prev.type = 'button'; prev.textContent = '‹';
+  prev.onclick = function () { moveAllCalMonth(-1); };
+  var next = document.createElement('button'); next.className = 'av-nav'; next.type = 'button'; next.textContent = '›';
+  next.onclick = function () { moveAllCalMonth(1); };
+  var mid = document.createElement('div');
+  mid.innerHTML = titleHTML + ' <span class="av-sub">' + subHTML + '</span>';
+  mid.style.flex = '1';
+  head.append(prev, mid, next);
+  return head;
+}
+
+function _dayFloor(v) { var d = new Date(v); d.setHours(0, 0, 0, 0); return d; }
+function _evRange(ev) {
+  var s = _dayFloor(ev.start);
+  if (isNaN(s.getTime())) return null;
+  var e = ev.end ? _dayFloor(ev.end) : new Date(s);
+  if (isNaN(e.getTime()) || e < s) e = new Date(s);
+  return { s: s, e: e };
+}
+
+/* ── 타임라인(분기 간트) ───────────────────────────────────── */
+function renderAllCalTimeline(items) {
+  _altViewStyles();
+  var host = document.getElementById('allCalTimeline');
+  if (!host) return;
+  var start = new Date(_allCalYear, _allCalMonth, 1);
+  var end = new Date(_allCalYear, _allCalMonth + _TL_MONTHS, 0);
+  var totalDays = Math.round((end - start) / 86400000) + 1;
+  var pct = function (d) { return (Math.round((d - start) / 86400000) / totalDays) * 100; };
+
+  var inRange = items.map(function (ev) {
+    var r = _evRange(ev); if (!r) return null;
+    if (r.e < start || r.s > end) return null;
+    return { ev: ev, s: r.s, e: r.e };
+  }).filter(Boolean).sort(function (a, b) { return a.s - b.s; });
+
+  host.innerHTML = '';
+  host.appendChild(_avHead(
+    '<b>' + _allCalYear + '년 ' + (_allCalMonth + 1) + '월 ~ ' + end.getFullYear() + '년 ' + (end.getMonth() + 1) + '월</b>',
+    inRange.length + '건 · 막대를 클릭하면 상세'));
+
+  if (!inRange.length) {
+    var em = document.createElement('div'); em.className = 'av-empty';
+    em.textContent = '이 기간에 표시할 일정이 없습니다.';
+    host.appendChild(em); return;
+  }
+
+  var wrap = document.createElement('div'); wrap.className = 'tl-wrap';
+
+  /* 월 눈금 */
+  var axis = document.createElement('div'); axis.className = 'tl-axis';
+  var al = document.createElement('div'); al.className = 'tl-label'; al.textContent = 'SPECIALTY';
+  var am = document.createElement('div'); am.className = 'tl-axis-months';
+  for (var i = 0; i < _TL_MONTHS; i++) {
+    var ms = new Date(_allCalYear, _allCalMonth + i, 1);
+    var me = new Date(_allCalYear, _allCalMonth + i + 1, 0);
+    var mo = document.createElement('div'); mo.className = 'tl-mo';
+    mo.style.left = pct(ms) + '%';
+    mo.style.width = ((Math.round((me - ms) / 86400000) + 1) / totalDays * 100) + '%';
+    mo.textContent = (ms.getMonth() + 1) + '월';
+    am.appendChild(mo);
+  }
+  axis.append(al, am); wrap.appendChild(axis);
+
+  /* 과별 행 */
+  var today = _dayFloor(new Date());
+  var specs = _SPEC_ORDER.filter(function (sp) { return inRange.some(function (x) { return x.ev._spec === sp; }); });
+  specs.forEach(function (sp) {
+    var rows = inRange.filter(function (x) { return x.ev._spec === sp; });
+    var row = document.createElement('div'); row.className = 'tl-row';
+    var lab = document.createElement('div'); lab.className = 'tl-label';
+    lab.innerHTML = '<span class="tl-dot" style="background:' + _allSpecColor(sp) + '"></span>' +
+      '<span>' + ((typeof _SPEC_LABELS_CF !== 'undefined' && _SPEC_LABELS_CF[sp]) || sp.toUpperCase()) + '</span>' +
+      '<span class="tl-n">' + rows.length + '</span>';
+    var track = document.createElement('div'); track.className = 'tl-track';
+
+    /* 월 경계선 + 오늘선 */
+    var grid = document.createElement('div'); grid.className = 'tl-grid';
+    for (var j = 1; j < _TL_MONTHS; j++) {
+      var gl = document.createElement('div'); gl.className = 'tl-gl';
+      gl.style.left = pct(new Date(_allCalYear, _allCalMonth + j, 1)) + '%';
+      grid.appendChild(gl);
+    }
+    if (today >= start && today <= end) {
+      var tn = document.createElement('div'); tn.className = 'tl-today';
+      tn.style.left = pct(today) + '%'; grid.appendChild(tn);
+    }
+    track.appendChild(grid);
+
+    /* 겹치는 일정은 레인으로 분리 */
+    var lanes = [];
+    rows.forEach(function (x) {
+      var li = 0;
+      while (lanes[li] && lanes[li].some(function (y) { return !(x.s > y.e || x.e < y.s); })) li++;
+      (lanes[li] = lanes[li] || []).push(x);
+      x._lane = li;
+    });
+    lanes.forEach(function (lane) {
+      var laneEl = document.createElement('div'); laneEl.className = 'tl-lane';
+      lane.forEach(function (x) {
+        var clr = _allSpecColor(x.ev._spec);
+        var left = Math.max(0, pct(x.s));
+        var right = Math.min(100, pct(x.e) + (1 / totalDays * 100));
+        var bar = document.createElement('div'); bar.className = 'tl-bar';
+        bar.style.left = left + '%';
+        bar.style.width = Math.max(right - left, 1.1) + '%';
+        bar.style.background = clr + '26';
+        bar.style.color = clr;
+        bar.style.borderLeft = '3px solid ' + clr;
+        bar.textContent = x.ev.name || '';
+        bar.title = (x.ev.name || '') + '\n' + x.ev.start + (x.ev.end && x.ev.end !== x.ev.start ? ' ~ ' + x.ev.end : '') + (x.ev.loc ? '\n' + x.ev.loc : '');
+        bar.onclick = function () { openConfModal(x.ev); };
+        laneEl.appendChild(bar);
+      });
+      track.appendChild(laneEl);
+    });
+
+    row.append(lab, track); wrap.appendChild(row);
+  });
+
+  host.appendChild(wrap);
+}
+
+/* ── 연간 히트맵 ───────────────────────────────────────────── */
+function renderAllCalYear(items) {
+  _altViewStyles();
+  var host = document.getElementById('allCalYearView');
+  if (!host) return;
+  var Y = _allCalYear;
+  var counts = {}, totals = new Array(12).fill(0), max = 0, grand = 0;
+  _SPEC_ORDER.forEach(function (sp) { counts[sp] = new Array(12).fill(0); });
+  items.forEach(function (ev) {
+    var r = _evRange(ev); if (!r || r.s.getFullYear() !== Y) return;
+    var sp = ev._spec; if (!counts[sp]) return;
+    counts[sp][r.s.getMonth()]++; totals[r.s.getMonth()]++; grand++;
+  });
+  _SPEC_ORDER.forEach(function (sp) { counts[sp].forEach(function (n) { if (n > max) max = n; }); });
+
+  host.innerHTML = '';
+  host.appendChild(_avHead('<b>' + Y + '년 연간 분포</b>', grand + '건 · 칸을 클릭하면 해당 월 달력으로'));
+
+  var table = document.createElement('table'); table.className = 'yh';
+  var thead = document.createElement('tr');
+  thead.innerHTML = '<th class="yh-rowhead"></th>' +
+    Array.from({ length: 12 }, function (_, m) { return '<th>' + (m + 1) + '월</th>'; }).join('');
+  table.appendChild(thead);
+
+  var specs = _SPEC_ORDER.filter(function (sp) { return counts[sp].some(function (n) { return n > 0; }); });
+  if (!specs.length) {
+    var em = document.createElement('div'); em.className = 'av-empty';
+    em.textContent = Y + '년에 표시할 일정이 없습니다.';
+    host.appendChild(em); return;
+  }
+
+  specs.forEach(function (sp) {
+    var tr = document.createElement('tr');
+    var th = document.createElement('th'); th.className = 'yh-rowhead';
+    th.innerHTML = '<span><i class="yh-dot" style="background:' + _allSpecColor(sp) + '"></i>' +
+      ((typeof _SPEC_LABELS_CF !== 'undefined' && _SPEC_LABELS_CF[sp]) || sp.toUpperCase()) + '</span>';
+    tr.appendChild(th);
+    for (var m = 0; m < 12; m++) {
+      (function (m) {
+        var n = counts[sp][m];
+        var td = document.createElement('td');
+        td.textContent = n || '';
+        if (!n) { td.className = 'zero'; td.style.background = 'rgba(127,127,127,.07)'; }
+        else {
+          var a = 0.16 + 0.68 * (n / (max || 1));
+          td.style.background = _allSpecColor(sp) + Math.round(a * 255).toString(16).padStart(2, '0');
+          td.title = ((typeof _SPEC_LABELS_CF !== 'undefined' && _SPEC_LABELS_CF[sp]) || sp) + ' / ' + Y + '년 ' + (m + 1) + '월 · ' + n + '건';
+          if (m === _allCalMonth) td.className = 'cur';
+          td.onclick = function () {
+            _allCalSpecFilter = sp; _allCalMonth = m;
+            setAllCalView('month');
+          };
+        }
+        tr.appendChild(td);
+      })(m);
+    }
+    table.appendChild(tr);
+  });
+
+  var trT = document.createElement('tr'); trT.className = 'total';
+  var thT = document.createElement('th'); thT.className = 'yh-rowhead';
+  thT.innerHTML = '<span>월 합계</span>'; trT.appendChild(thT);
+  totals.forEach(function (n, m) {
+    var td = document.createElement('td');
+    td.textContent = n || '';
+    if (!n) td.className = 'zero';
+    else td.onclick = function () { _allCalSpecFilter = 'all'; _allCalMonth = m; setAllCalView('month'); };
+    trT.appendChild(td);
+  });
+  table.appendChild(trT);
+  host.appendChild(table);
+}
+
+/* ── DOM/토글 연결 ─────────────────────────────────────────── */
+function _ensureAltViewDOM() {
+  var main = document.querySelector('#page-all-cal .calendar-first-main');
+  if (!main) return;
+  if (!document.getElementById('allCalTimeline')) {
+    ['allCalTimeline', 'allCalYearView'].forEach(function (id) {
+      var d = document.createElement('div'); d.id = id; d.style.display = 'none'; d.style.padding = '4px 0 10px';
+      main.appendChild(d);
+    });
+  }
+  var toggle = main.querySelector('.cal-view-toggle');
+  if (toggle && !document.getElementById('allCalViewTimeline')) {
+    [['allCalViewTimeline', '▤ 타임라인', 'timeline'], ['allCalViewYear', '▦ 연간', 'year']].forEach(function (b) {
+      var btn = document.createElement('button');
+      btn.id = b[0]; btn.className = 'cal-view-btn'; btn.type = 'button'; btn.textContent = b[1];
+      btn.onclick = function () { setAllCalView(b[2]); };
+      toggle.appendChild(btn);
+    });
+  }
+}
+
+var _origUpgradeAll2 = upgradeAllCalendarPage;
+upgradeAllCalendarPage = function () { _origUpgradeAll2(); _ensureAltViewDOM(); };
+
+var _origSetAllCalView = setAllCalView;
+setAllCalView = function (view) {
+  _ensureAltViewDOM();
+  var tl = document.getElementById('allCalTimeline');
+  var yv = document.getElementById('allCalYearView');
+  if (view === 'timeline' || view === 'year') {
+    _allCalView = view;
+    ['allCalViewCard', 'allCalViewMonth'].forEach(function (id) {
+      var e = document.getElementById(id); if (e) e.classList.remove('active');
+    });
+    var ca = document.getElementById('allCalCardArea'), ma = document.getElementById('allCalMonthView');
+    if (ca) ca.style.display = 'none';
+    if (ma) ma.style.display = 'none';
+    if (tl) tl.style.display = view === 'timeline' ? 'block' : 'none';
+    if (yv) yv.style.display = view === 'year' ? 'block' : 'none';
+  } else {
+    if (tl) tl.style.display = 'none';
+    if (yv) yv.style.display = 'none';
+    _origSetAllCalView(view);
+  }
+  var t = document.getElementById('allCalViewTimeline'), y = document.getElementById('allCalViewYear');
+  if (t) t.classList.toggle('active', _allCalView === 'timeline');
+  if (y) y.classList.toggle('active', _allCalView === 'year');
+  if (view === 'timeline' || view === 'year') renderAllCal();
+};
+
+/* ‹ › 이동 단위: 타임라인은 분기, 연간은 1년 */
+var _origMoveAllCalMonth = moveAllCalMonth;
+moveAllCalMonth = function (dir) {
+  if (_allCalView === 'year') { _allCalYear += dir; renderAllCal(); return; }
+  if (_allCalView === 'timeline') {
+    _allCalMonth += dir * _TL_MONTHS;
+    while (_allCalMonth > 11) { _allCalMonth -= 12; _allCalYear++; }
+    while (_allCalMonth < 0) { _allCalMonth += 12; _allCalYear--; }
+    renderAllCal();
+    return;
+  }
+  return _origMoveAllCalMonth(dir);
+};
+
+var _origRenderAllCal2 = renderAllCal;
+renderAllCal = function () {
+  _origRenderAllCal2();
+  if (_allCalView !== 'timeline' && _allCalView !== 'year') return;
+  var items = currentAllCalItems();
+  try {
+    if (_allCalView === 'timeline') renderAllCalTimeline(items);
+    else renderAllCalYear(items);
+  } catch (e) { console.error('[view] ' + e.message); }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   v8.1 — 달력 밀도 토글 (여유 / 보통 / 빽빽)
+   막대 높이에 맞춰 한 칸에 들어가는 일정 수를 자동 계산한다.
+   ══════════════════════════════════════════════════════════════ */
+var _DENSITY_PRESETS = {
+  loose:  { cell: 140, bar: 22, font: 10.5, num: 22, label: '여유' },
+  normal: { cell: 140, bar: 18, font: 9.5,  num: 21, label: '보통' },
+  dense:  { cell: 140, bar: 14, font: 8.5,  num: 19, label: '빽빽' }
+};
+var _calDensity = (function () {
+  try { var v = storageGet('chubCalDensity'); return _DENSITY_PRESETS[v] ? v : 'normal'; }
+  catch (e) { return 'normal'; }
+})();
+
+function _densityCfg() { return _DENSITY_PRESETS[_calDensity] || _DENSITY_PRESETS.normal; }
+
+/* 한 칸에 표시할 최대 일정 수 = (셀 높이 - 날짜숫자 - "더보기") / (막대 높이 + 간격) */
+function _monthMaxSlots() {
+  var c = _densityCfg();
+  return Math.max(2, Math.floor((c.cell - c.num - 13) / (c.bar + 2)));
+}
+
+function _applyDensity() {
+  var c = _densityCfg();
+  var st = document.getElementById('calDensityVars');
+  if (!st) { st = document.createElement('style'); st.id = 'calDensityVars'; document.head.appendChild(st); }
+  st.textContent = [
+    ':root{--md-cell:' + c.cell + 'px;--md-bar:' + c.bar + 'px;--md-font:' + c.font + 'px;--md-num:' + c.num + 'px;}',
+    '.month-day{height:var(--md-cell);}',
+    '.month-day-num{width:var(--md-num);height:var(--md-num);font-size:calc(var(--md-font) + 1px);margin-bottom:2px;}',
+    '.month-event{height:var(--md-bar);line-height:calc(var(--md-bar) - 2px);font-size:var(--md-font);',
+    'padding:0 5px;box-sizing:border-box;}',
+    '.month-more{font-size:calc(var(--md-font) - 0.5px);}',
+    '.month-spacer{height:var(--md-bar);margin-bottom:2px;}'
+  ].join('');
+  document.documentElement.setAttribute('data-cal-density', _calDensity);
+  var wrap = document.getElementById('calDensityToggle');
+  if (wrap) [].forEach.call(wrap.querySelectorAll('button'), function (b) {
+    b.classList.toggle('active', b.dataset.den === _calDensity);
+  });
+}
+
+function _rerenderCurrentCalendar() {
+  try {
+    if (currentSpec === 'all') { renderAllCal(); return; }
+    renderSpecCal(currentSpec);
+    if ((_specCalView[currentSpec] || 'month') === 'month') renderSpecMonth(currentSpec);
+  } catch (e) { console.error('[density] ' + e.message); }
+}
+
+function setCalDensity(d) {
+  if (!_DENSITY_PRESETS[d]) return;
+  _calDensity = d;
+  try { storageSet('chubCalDensity', d); } catch (e) {}
+  _applyDensity();
+  _rerenderCurrentCalendar();
+}
+
+/* 모든 캘린더 툴바에 밀도 토글 삽입 */
+function _ensureDensityToggle() {
+  if (!document.getElementById('densityToggleStyles')) {
+    var st = document.createElement('style'); st.id = 'densityToggleStyles';
+    st.textContent =
+      '.cal-density{display:inline-flex;gap:0;border:1px solid var(--border,#e2e2e2);border-radius:8px;overflow:hidden;}' +
+      '.cal-density button{border:0;background:transparent;color:var(--text2,#666);font-size:11.5px;' +
+      'padding:4px 9px;cursor:pointer;font-family:inherit;white-space:nowrap;}' +
+      '.cal-density button+button{border-left:1px solid var(--border,#e2e2e2);}' +
+      '.cal-density button:hover{background:rgba(127,127,127,.09);}' +
+      '.cal-density button.active{background:var(--primary-soft,#E6F4F3);color:var(--primary-dark,#005F58);font-weight:700;}';
+    document.head.appendChild(st);
+  }
+  [].forEach.call(document.querySelectorAll('.calendar-first-right'), function (right) {
+    if (right.querySelector('.cal-density')) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'cal-density';
+    if (!document.getElementById('calDensityToggle')) wrap.id = 'calDensityToggle';
+    wrap.title = '달력 한 칸에 보이는 일정 수';
+    ['loose', 'normal', 'dense'].forEach(function (d) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.dataset.den = d;
+      b.textContent = _DENSITY_PRESETS[d].label;
+      b.onclick = function () { setCalDensity(d); };
+      wrap.appendChild(b);
+    });
+    var toggle = right.querySelector('.cal-view-toggle');
+    if (toggle && toggle.nextSibling) right.insertBefore(wrap, toggle.nextSibling);
+    else if (toggle) right.appendChild(wrap);
+    else right.insertBefore(wrap, right.firstChild);
+  });
+  _applyDensity();
+}
+
+var _origCalendarFirstInit = calendarFirstInit;
+calendarFirstInit = function () {
+  _origCalendarFirstInit();
+  try { _ensureDensityToggle(); } catch (e) { console.error('[density] ' + e.message); }
+};
 </script>
 
 <div id="confModal" onclick="if(event.target===this)closeConfModal()">
