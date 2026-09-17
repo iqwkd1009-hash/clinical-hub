@@ -7343,6 +7343,70 @@ function _createPicker() {
 
 /* removed dead definition: goSpecToday (중복 선언, 뒤 정의가 유효) */
 
+/* ── 하루 전체 일정 보기 (달력 "+N개 더" 클릭) ───────────────── */
+function _dayModalStyles(){
+  if(document.getElementById('dayModalStyles')) return;
+  const st=document.createElement('style'); st.id='dayModalStyles';
+  st.textContent=
+    '#dayModalBack{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.34);display:flex;align-items:center;justify-content:center;padding:20px;}'+
+    '#dayModal{background:var(--surface,#fff);color:var(--text,#111);border-radius:14px;width:min(520px,100%);max-height:80vh;overflow:auto;'+
+    'box-shadow:0 18px 50px rgba(0,0,0,.28);padding:18px 20px;}'+
+    '#dayModal .dm-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px;}'+
+    '#dayModal .dm-hd b{flex:1;font-size:16px;}'+
+    '#dayModal .dm-hd span{font-size:12px;opacity:.6;}'+
+    '#dayModal .dm-x{background:transparent;border:0;font-size:20px;line-height:1;cursor:pointer;color:inherit;opacity:.55;padding:0 4px;}'+
+    '#dayModal .dm-x:hover{opacity:1;}'+
+    '#dayModal .dm-item{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:9px;cursor:pointer;border:1px solid transparent;}'+
+    '#dayModal .dm-item:hover{background:rgba(127,127,127,.10);border-color:rgba(127,127,127,.18);}'+
+    '#dayModal .dm-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:0 0 auto;}'+
+    '#dayModal .dm-name{font-weight:600;font-size:13.5px;line-height:1.4;}'+
+    '#dayModal .dm-meta{font-size:11.5px;opacity:.66;margin-top:2px;}'+
+    '#dayModal .dm-actions{display:flex;gap:6px;margin-top:14px;justify-content:flex-end;}'+
+    '#dayModal .dm-btn{border:1px solid var(--primary-mid,#A8D8D5);background:transparent;color:var(--primary-dark,#005F58);'+
+    'border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;}'+
+    '#dayModal .dm-btn:hover{background:rgba(0,131,122,.12);}';
+  document.head.appendChild(st);
+}
+function closeDayModal(){ const b=document.getElementById('dayModalBack'); if(b) b.remove(); }
+function openDayEventsModal(yr, mo, dayNum, evs, specColor, onClickFn){
+  _dayModalStyles(); closeDayModal();
+  const WD=['일','월','화','수','목','금','토'];
+  const d=new Date(yr,mo,dayNum);
+  const back=document.createElement('div'); back.id='dayModalBack';
+  const box=document.createElement('div'); box.id='dayModal';
+  const hd=document.createElement('div'); hd.className='dm-hd';
+  hd.innerHTML='<b>'+yr+'년 '+(mo+1)+'월 '+dayNum+'일 ('+WD[d.getDay()]+')</b><span>'+evs.length+'건</span>';
+  const x=document.createElement('button'); x.className='dm-x'; x.type='button'; x.textContent='×'; x.onclick=closeDayModal;
+  hd.appendChild(x); box.appendChild(hd);
+
+  evs.forEach(ev=>{
+    const clr=(typeof specColor==='function')?specColor(ev):specColor;
+    const row=document.createElement('div'); row.className='dm-item';
+    const meta=[];
+    if(ev.start) meta.push(ev.end&&ev.end!==ev.start ? (ev.start+' ~ '+ev.end) : ev.start);
+    const tk=(typeof calendarTypeKey==='function')?calendarTypeKey(ev):null;
+    const tm=tk&&typeof _TYPE_META_CF!=='undefined'?_TYPE_META_CF[tk]:null;
+    if(tm) meta.push(tm.icon+' '+tm.label);
+    if(ev._spec&&typeof _SPEC_LABELS_CF!=='undefined') meta.push(_SPEC_LABELS_CF[ev._spec]||ev._spec.toUpperCase());
+    if(ev.loc) meta.push(ev.loc);
+    row.innerHTML='<div class="dm-dot" style="background:'+clr+'"></div><div><div class="dm-name"></div><div class="dm-meta"></div></div>';
+    row.querySelector('.dm-name').textContent=ev.name||'(무제)';
+    row.querySelector('.dm-meta').textContent=meta.join(' · ');
+    row.onclick=()=>{ closeDayModal(); if(typeof onClickFn==='function') onClickFn(ev); };
+    box.appendChild(row);
+  });
+
+  const act=document.createElement('div'); act.className='dm-actions';
+  const ics=document.createElement('button'); ics.type='button'; ics.className='dm-btn'; ics.textContent='📅 이 날 일정 .ics';
+  ics.onclick=()=>{ if(typeof downloadICS==='function') downloadICS(evs, yr+'-'+String(mo+1).padStart(2,'0')+'-'+String(dayNum).padStart(2,'0')+'.ics'); };
+  act.appendChild(ics); box.appendChild(act);
+
+  back.appendChild(box);
+  back.onclick=e=>{ if(e.target===back) closeDayModal(); };
+  document.addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ closeDayModal(); document.removeEventListener('keydown',esc); } });
+  document.body.appendChild(back);
+}
+
 function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClickFn, titleClickFn) {
   const MONTHS_KO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const today=new Date(); today.setHours(0,0,0,0);
@@ -7459,12 +7523,23 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
         cell.appendChild(el);
       }
 
-      const totalEvs=(rowSlots[cellIdx]||[]).filter(Boolean).length;
+      const dayEvs=(rowSlots[cellIdx]||[]).filter(Boolean);
+      const totalEvs=dayEvs.length;
+      const openDay=e2=>{e2.stopPropagation();openDayEventsModal(yr,mo,dayNum,dayEvs,specColor,onClickFn);};
       if(totalEvs>MAX_SLOTS){
         const more=document.createElement('div');
         more.className='month-more';
         more.textContent='+'+(totalEvs-MAX_SLOTS)+'개 더';
+        more.style.cursor='pointer';
+        more.title='이 날 일정 '+totalEvs+'건 모두 보기';
+        more.onclick=openDay;
         cell.appendChild(more);
+        num.style.cursor='pointer';
+        num.onclick=openDay;
+      } else if(totalEvs>0){
+        num.style.cursor='pointer';
+        num.title='이 날 일정 '+totalEvs+'건 보기';
+        num.onclick=openDay;
       }
     }
     grid.appendChild(cell);
@@ -8280,7 +8355,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-05-v7.3';
+window.CLINICAL_HUB_BUILD='2026-09-17-v7.4';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
