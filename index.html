@@ -7406,6 +7406,24 @@ function openDayEventsModal(yr, mo, dayNum, evs, specColor, onClickFn){
 
 /* 일정 이름이 2줄이 되면 칸마다 높이가 달라져 아래 레인이 어긋난다.
    주(7칸) 단위로 같은 레인의 높이를 최댓값으로 통일한다. */
+/* 폰트 로딩·창 크기 변경으로 줄 수가 달라지면 다시 맞춰야 한다 */
+const _laneGrids=new Set();
+let _laneResizeTimer=null;
+function _scheduleLaneEqualize(grid){
+  if(!grid) return;
+  _laneGrids.add(grid);
+  const run=()=>_equalizeMonthLanes(grid);
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(run); else run();
+  if(document.fonts && document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(run).catch(()=>{});
+}
+function _equalizeAllLaneGrids(){
+  _laneGrids.forEach(g=>{ if(g.isConnected) _equalizeMonthLanes(g); else _laneGrids.delete(g); });
+}
+window.addEventListener('resize',()=>{
+  clearTimeout(_laneResizeTimer);
+  _laneResizeTimer=setTimeout(_equalizeAllLaneGrids,150);
+});
+
 function _equalizeMonthLanes(grid){
   if(!grid) return;
   const cells=Array.prototype.slice.call(grid.children);
@@ -7416,8 +7434,12 @@ function _equalizeMonthLanes(grid){
     const depth=Math.max.apply(null,[0].concat(lanes.map(l=>l.length)));
     for(let s=0; s<depth; s++){
       let h=0;
-      lanes.forEach(l=>{ const el=l[s]; if(el){ el.style.height='auto'; h=Math.max(h, el.offsetHeight||0); } });
-      if(h>0) lanes.forEach(l=>{ const el=l[s]; if(el) el.style.height=h+'px'; });
+      // CSS 쪽 height 규칙이 !important 라서, 인라인도 important 로 지정해야 먹는다
+      lanes.forEach(l=>{ const el=l[s]; if(el){ el.style.setProperty('height','auto','important'); h=Math.max(h, el.offsetHeight||0); } });
+      if(h>0) lanes.forEach(l=>{ const el=l[s]; if(el){
+        el.style.setProperty('height',h+'px','important');
+        el.style.setProperty('min-height',h+'px','important');
+      } });
     }
   }
 }
@@ -7612,8 +7634,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
     }
     grid.appendChild(cell);
   });
-  if(typeof requestAnimationFrame==='function') requestAnimationFrame(()=>_equalizeMonthLanes(grid));
-  else _equalizeMonthLanes(grid);
+  _scheduleLaneEqualize(grid);
 }
 
 function renderAllCalMonth(items, today) {
@@ -8450,7 +8471,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-18-v9.6';
+window.CLINICAL_HUB_BUILD='2026-09-18-v9.8';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
