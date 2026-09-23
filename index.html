@@ -7592,8 +7592,17 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
               ? '--span-w:calc('+segDays+' * 100% + '+((segDays-1)*0.5)+'px - '+(EDGE*2)+'px);position:relative;z-index:6;'
               : '');
 
-        el.textContent=ev.name;
-        el.title=ev.name;
+        el.textContent='';
+        const nameEl=document.createElement('span');
+        nameEl.textContent=ev.name||'';
+        el.appendChild(nameEl);
+        if(ev.loc){
+          const locEl=document.createElement('span');
+          locEl.className='ev-loc';
+          locEl.textContent=' · '+ev.loc;
+          el.appendChild(locEl);
+        }
+        el.title=ev.name+(ev.loc?'\n\u2316 '+ev.loc:'');
         el.onclick=e2=>{e2.stopPropagation();hideCalendarPreview();if(typeof onClickFn==='function')onClickFn(ev);};
         // 마우스를 올리면 상세 내용 미리보기 (클릭은 기존대로 상세 모달)
         el.tabIndex=0;
@@ -8471,7 +8480,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-18-v9.8';
+window.CLINICAL_HUB_BUILD='2026-09-18-v9.9';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -8869,6 +8878,9 @@ function _applyDensity() {
     /* 여러 칸을 가로지르는 막대가 옆 칸 배경에 가려지지 않도록 */
     '.calendar-first-main .month-day{isolation:auto!important;}',
     '.month-event.span-wide{width:var(--span-w)!important;}',
+    /* 일정명 뒤 장소 — 빽빽 모드에서는 이름만 보이도록 숨김 */
+    '.month-event .ev-loc{opacity:.6;font-weight:400;}',
+    ':root[data-cal-density="dense"] .month-event .ev-loc{display:none;}',
     /* 모바일: 일정을 점(dot)이 아니라 이름 있는 막대로 (기존 560px 이하 규칙 무효화) */
     '@media (max-width:560px){',
     '  .calendar-first-main .month-grid{grid-auto-rows:minmax(var(--md-cell),auto)!important;}',
