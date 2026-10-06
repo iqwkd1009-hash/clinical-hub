@@ -7585,8 +7585,8 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
         el.className='month-event '+(segDays>1?'span-wide':'span-single');
 
         const EDGE=5;
-        el.style.cssText='background:'+clr+'22;color:'+clr+';'
-          +'border-left:2px solid '+clr+';'
+        el.style.cssText='background:'+clr+'24;'
+          +'border-left:3px solid '+clr+';'
           +'margin:0 '+EDGE+'px 2px '+EDGE+'px;border-radius:4px;'
           +(segDays>1
               ? '--span-w:calc('+segDays+' * 100% + '+((segDays-1)*0.5)+'px - '+(EDGE*2)+'px);position:relative;z-index:6;'
@@ -8480,7 +8480,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-09-18-v9.9';
+window.CLINICAL_HUB_BUILD='2026-10-06-v10';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -8836,9 +8836,10 @@ window.addEventListener('DOMContentLoaded', function () {
    막대 높이에 맞춰 한 칸에 들어가는 일정 수를 자동 계산한다.
    ══════════════════════════════════════════════════════════════ */
 var _DENSITY_PRESETS = {
-  loose:  { cell: 140, bar: 22, font: 10.5, num: 22, label: '여유' },
-  normal: { cell: 140, bar: 18, font: 9.5,  num: 21, label: '보통' },
-  dense:  { cell: 140, bar: 14, font: 8.5,  num: 19, label: '빽빽' }
+  // cell = 슬롯 계산 기준 높이, minCell = 빈 주가 차지하는 최소 높이
+  loose:  { cell: 140, minCell: 92, bar: 23, font: 12.5, num: 22, label: '여유' },
+  normal: { cell: 140, minCell: 88, bar: 19, font: 11.5, num: 21, label: '보통' },
+  dense:  { cell: 140, minCell: 84, bar: 15, font: 10,   num: 19, label: '빽빽' }
 };
 var _calDensity = (function () {
   try { var v = storageGet('chubCalDensity'); return _DENSITY_PRESETS[v] ? v : 'loose'; }
@@ -8858,7 +8859,7 @@ function _applyDensity() {
   var st = document.getElementById('calDensityVars');
   if (!st) { st = document.createElement('style'); st.id = 'calDensityVars'; document.head.appendChild(st); }
   st.textContent = [
-    ':root{--md-cell:' + c.cell + 'px;--md-bar:' + c.bar + 'px;--md-font:' + c.font + 'px;--md-num:' + c.num + 'px;}',
+    ':root{--md-cell:' + (c.minCell || c.cell) + 'px;--md-bar:' + c.bar + 'px;--md-font:' + c.font + 'px;--md-num:' + c.num + 'px;}',
     '.month-day{height:auto;min-height:var(--md-cell);}',
     '.month-day-num{width:var(--md-num);height:var(--md-num);font-size:calc(var(--md-font) + 1px);margin-bottom:2px;}',
     /* 이름이 길면 여러 줄로 감싸되 최대 2줄까지 (칸 높이는 자동으로 늘어남) */
@@ -8879,7 +8880,8 @@ function _applyDensity() {
     '.calendar-first-main .month-day{isolation:auto!important;}',
     '.month-event.span-wide{width:var(--span-w)!important;}',
     /* 일정명 뒤 장소 — 빽빽 모드에서는 이름만 보이도록 숨김 */
-    '.month-event .ev-loc{opacity:.6;font-weight:400;}',
+    '.month-event{color:var(--text,#1a1a1a)!important;font-weight:600!important;letter-spacing:-0.1px;}',
+    '.month-event .ev-loc{opacity:.55;font-weight:400;font-size:0.92em;}',
     ':root[data-cal-density="dense"] .month-event .ev-loc{display:none;}',
     /* 모바일: 일정을 점(dot)이 아니라 이름 있는 막대로 (기존 560px 이하 규칙 무효화) */
     '@media (max-width:560px){',
