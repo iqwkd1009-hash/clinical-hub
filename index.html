@@ -8502,7 +8502,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-08-v11';
+window.CLINICAL_HUB_BUILD='2026-10-08-v12';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -9067,7 +9067,7 @@ async function loadManualsFromSheet(){
 }
 
 /* ── 파일 유형 ─────────────────────────────────────────────── */
-const _MANUAL_TYPES = {
+var _MANUAL_TYPES = {
   pdf:   { icon:'📕', label:'PDF',   clr:'#C0143C' },
   ppt:   { icon:'📙', label:'PPT',   clr:'#EA580C' },
   xls:   { icon:'📗', label:'Excel', clr:'#65A30D' },
@@ -9404,6 +9404,197 @@ window.addEventListener('DOMContentLoaded', function(){
   _filtersLeftStyles();
   setTimeout(_relocateCalFilters, 0);
 });
+
+/* ══════════════════════════════════════════════════════════════
+   v12 — 사이트 내장 가이드 (매뉴얼 탭에서 바로 열림)
+   원본 슬라이드(스크린샷 포함)는 Drive 링크로 연결한다.
+   ══════════════════════════════════════════════════════════════ */
+
+const MANUAL_GUIDES = {
+  calendar: {
+    title: 'Calendar 사용 방법',
+    category: '공통',
+    updated: '2026-10-08',
+    note: 'Outlook ISK CTA Calendar 추가 · 일정 등록 · 회의실 예약',
+    source: '',   // 원본 PPT 의 Drive 링크를 넣으면 "원본 슬라이드" 버튼이 생깁니다
+    sections: [
+      {
+        h: '1. 캘린더 추가하기',
+        sub: '처음 한 번만 하면 됩니다',
+        steps: [
+          'Outlook <b>classic</b> 으로 접속합니다. (우측 상단 토글 버튼으로 전환)',
+          '좌측의 <b>일정</b> 버튼을 클릭합니다.',
+          '왼쪽 캘린더 목록에서 <b>마우스 오른쪽 버튼</b>을 클릭합니다.',
+          '<b>일정 추가</b> → <b>회의실 목록에서</b> 를 차례로 클릭합니다.',
+          '검색창에 <code>vc-kr</code> 과 <code>ISK CTA Calendar</code> 를 각각 검색합니다.',
+          '회의실 캘린더 <b>16개</b> + CTA 캘린더 <b>1개</b>, 총 <b>17개</b>를 선택해 추가합니다.',
+          '<b>OK</b> 를 누르고, 왼쪽 목록에 새 캘린더가 들어왔는지 확인합니다.'
+        ]
+      },
+      {
+        h: '2. CTA Calendar 에 일정 등록하기',
+        steps: [
+          '일정을 넣을 날짜를 <b>더블 클릭</b> 합니다.',
+          '상단에서 <b>ISK CTA Calendar</b> 가 선택돼 있는지 확인합니다. <span class="g-warn">본인 일정 캘린더에 쓰면 나에게만 보입니다.</span>',
+          '이벤트 명을 규칙에 맞게 작성합니다.',
+          '시간을 조정합니다. 종일 일정은 <b>하루 종일</b> 버튼을 사용합니다.',
+          '본인에 해당하는 <b>카테고리</b>를 선택합니다.',
+          '왼쪽 상단 <b>저장</b> 버튼을 클릭합니다.'
+        ],
+        callout: {
+          label: '이벤트 명 형식',
+          body: '<code>[이니셜] 병원명 과 교수님성함 시스템 / 술기 지원내용</code><br><span class="g-dim">예: [HJ] ○○병원 GYN ○○○ 교수님 dV5 hysterectomy case support</span>'
+        }
+      },
+      {
+        h: '3. 회의실 예약하기',
+        steps: [
+          '<b>본인 일정 캘린더</b>에서 예약할 시간대를 찾습니다.',
+          '해당 시간대에서 <b>마우스 오른쪽 버튼</b>을 클릭합니다.',
+          '<b>새 모임 요청</b> 을 클릭합니다.',
+          '<b>장소</b> 에 사용할 회의실을 추가합니다.',
+          '<b>시간</b> 을 실제 사용 시간으로 맞춥니다.'
+        ],
+        callout: {
+          label: '주의',
+          body: '회의실은 <b>3일 연속 예약이 불가</b> 합니다. 장기간 필요하면 나눠서 예약하세요.',
+          warn: true
+        }
+      }
+    ]
+  }
+};
+
+/* ── 가이드 본문 HTML ──────────────────────────────────────── */
+function _guideHTML(id){
+  const g = MANUAL_GUIDES[id];
+  if (!g) return '<div class="manual-empty">가이드를 찾을 수 없습니다.</div>';
+  const secs = g.sections.map(sec => {
+    const steps = sec.steps.map(t => '<li>' + t + '</li>').join('');
+    const call = sec.callout
+      ? '<div class="g-callout' + (sec.callout.warn ? ' warn' : '') + '">' +
+        '<div class="g-callout-label">' + _safeText(sec.callout.label) + '</div>' +
+        '<div class="g-callout-body">' + sec.callout.body + '</div></div>'
+      : '';
+    return '<section class="g-sec">' +
+      '<h3 class="g-h">' + _safeText(sec.h) + (sec.sub ? '<span class="g-sub">' + _safeText(sec.sub) + '</span>' : '') + '</h3>' +
+      '<ol class="g-steps">' + steps + '</ol>' + call + '</section>';
+  }).join('');
+  return '<article class="guide-body">' +
+    '<header class="g-head">' +
+      '<div class="g-title">' + _safeText(g.title) + '</div>' +
+      '<div class="g-meta">' + _safeText(g.category || '') + (g.updated ? ' · ' + _safeText(g.updated) + ' 기준' : '') + '</div>' +
+      (g.note ? '<div class="g-note">' + _safeText(g.note) + '</div>' : '') +
+    '</header>' + secs +
+    (g.source
+      ? '<a class="g-source" href="' + _safeText(g.source) + '" target="_blank" rel="noopener">원본 슬라이드 열기 (스크린샷 포함) ↗</a>'
+      : '<div class="g-source-empty">화면 캡처가 포함된 원본 슬라이드는 Drive 에 있습니다. ' +
+        '<code>MANUAL_GUIDES.calendar.source</code> 에 링크를 넣으면 여기에 버튼이 생깁니다.</div>') +
+  '</article>';
+}
+
+function openManualGuide(id){
+  _guideStyles();
+  closeManualGuide();
+  const back = document.createElement('div');
+  back.id = 'guideBack';
+  const box = document.createElement('div');
+  box.id = 'guideBox';
+  box.innerHTML = '<button type="button" class="g-x" onclick="closeManualGuide()" aria-label="닫기">×</button>' + _guideHTML(id);
+  back.appendChild(box);
+  back.onclick = e => { if (e.target === back) closeManualGuide(); };
+  document.addEventListener('keydown', function esc(e){
+    if (e.key === 'Escape') { closeManualGuide(); document.removeEventListener('keydown', esc); }
+  });
+  document.body.appendChild(back);
+  document.body.style.overflow = 'hidden';
+}
+function closeManualGuide(){
+  const b = document.getElementById('guideBack');
+  if (b) b.remove();
+  document.body.style.overflow = '';
+}
+
+function _guideStyles(){
+  if (document.getElementById('guideStyles')) return;
+  const st = document.createElement('style');
+  st.id = 'guideStyles';
+  st.textContent = [
+    '#guideBack{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.4);display:flex;',
+    'align-items:flex-start;justify-content:center;padding:30px 18px;overflow:auto;}',
+    '#guideBox{position:relative;background:var(--surface,#fff);color:var(--text,#1a1a1a);border-radius:16px;',
+    'width:min(720px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3);padding:30px 34px 34px;}',
+    '.g-x{position:absolute;top:14px;right:16px;border:0;background:transparent;font-size:24px;line-height:1;',
+    'cursor:pointer;color:inherit;opacity:.4;padding:4px 8px;}',
+    '.g-x:hover{opacity:1;}',
+    '.g-head{border-bottom:1px solid var(--border,#eee);padding-bottom:16px;margin-bottom:22px;}',
+    '.g-title{font-size:21px;font-weight:750;letter-spacing:-.02em;}',
+    '.g-meta{font-size:11.5px;opacity:.5;margin-top:5px;font-family:var(--mono,monospace);}',
+    '.g-note{font-size:13px;opacity:.72;margin-top:9px;line-height:1.5;}',
+    '.g-sec{margin-bottom:26px;}',
+    '.g-h{font-size:15px;font-weight:700;margin:0 0 12px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}',
+    '.g-sub{font-size:11.5px;font-weight:400;opacity:.5;}',
+    '.g-steps{margin:0;padding-left:22px;font-size:13.5px;line-height:1.95;}',
+    '.g-steps li{padding-left:3px;}',
+    '.g-steps b{font-weight:650;}',
+    '.guide-body code{background:var(--surface2,#f3f3f3);border:1px solid var(--border,#e4e4e4);border-radius:5px;',
+    'padding:1px 6px;font-family:var(--mono,monospace);font-size:12px;}',
+    '.g-warn{color:#B45309;font-size:12.5px;}',
+    '.g-dim{opacity:.6;font-size:12.5px;}',
+    '.g-callout{margin-top:13px;border-left:3px solid var(--primary,#00837A);background:var(--primary-soft,#E6F4F3);',
+    'border-radius:0 9px 9px 0;padding:11px 15px;}',
+    '.g-callout.warn{border-left-color:#B45309;background:#FFF7E6;}',
+    'body.dark .g-callout.warn{background:#372A12;}',
+    '.g-callout-label{font-size:10.5px;font-weight:700;letter-spacing:.06em;opacity:.65;margin-bottom:5px;}',
+    '.g-callout-body{font-size:13px;line-height:1.65;}',
+    '.g-source{display:inline-block;margin-top:8px;border:1px solid var(--primary-mid,#A8D8D5);',
+    'color:var(--primary-dark,#005F58);border-radius:9px;padding:9px 16px;font-size:13px;text-decoration:none;}',
+    '.g-source:hover{background:rgba(0,131,122,.1);}',
+    '.g-source-empty{margin-top:8px;font-size:11.5px;opacity:.55;line-height:1.6;}',
+    '@media (max-width:560px){#guideBack{padding:0;}#guideBox{border-radius:0;min-height:100vh;padding:26px 20px 40px;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+/* ── 매뉴얼 목록에 내장 가이드를 항상 포함 ─────────────────── */
+const _origRenderManuals = renderManuals;
+renderManuals = function(){
+  // 시트에 같은 제목이 없으면 내장 가이드를 앞에 끼워 넣는다
+  Object.keys(MANUAL_GUIDES).forEach(id => {
+    const g = MANUAL_GUIDES[id];
+    if (MANUALS.some(m => (m.title || '').trim() === g.title)) return;
+    MANUALS.unshift({
+      category: g.category || '공통',
+      title: g.title,
+      url: '#guide:' + id,
+      type: '가이드',
+      owner: '',
+      updated: g.updated || '',
+      note: g.note || ''
+    });
+  });
+  _origRenderManuals();
+  // 내장 가이드 카드는 새 창이 아니라 사이트 안에서 연다
+  document.querySelectorAll('#allManualGrid .manual-card').forEach(card => {
+    const href = card.getAttribute('href') || '';
+    if (href.indexOf('#guide:') !== 0) return;
+    const id = href.slice(7);
+    card.removeAttribute('href');
+    card.removeAttribute('target');
+    card.style.cursor = 'pointer';
+    card.onclick = e => { e.preventDefault(); openManualGuide(id); };
+    const go = card.querySelector('.mc-go');
+    if (go) go.textContent = '→';
+  });
+};
+
+/* 가이드 유형 아이콘 */
+const _origManualTypeKey = manualTypeKey;
+manualTypeKey = function(m){
+  if (String(m && m.url || '').indexOf('#guide:') === 0) return 'guide';
+  return _origManualTypeKey(m);
+};
+_MANUAL_TYPES.guide = { icon:'📖', label:'가이드', clr:'#00837A' };
 </script>
 
 <div id="confModal" onclick="if(event.target===this)closeConfModal()">
