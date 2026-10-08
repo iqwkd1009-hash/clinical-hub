@@ -2180,6 +2180,7 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
   <button class="sub-btn" id="sub-video" onclick="switchTab('video',this)">🎬 수술영상</button>
   <button class="sub-btn" id="sub-kol" onclick="switchTab('kol',this)">📰 기사</button>
   <button class="sub-btn" id="sub-paper" onclick="switchTab('paper',this)">📄 논문</button>
+  <button class="sub-btn" id="sub-manual" onclick="switchTab('manual',this)">📁 매뉴얼</button>
 </div>
 
 <!-- D-day 배너 -->
@@ -4096,6 +4097,7 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
   <button class="mobile-tab-item active" data-tab="video" onclick="mobileSwitchTab('video')"><span aria-hidden="true">🎬</span><span class="mobile-tab-label">수술영상</span></button>
   <button class="mobile-tab-item" data-tab="kol" onclick="mobileSwitchTab('kol')"><span aria-hidden="true">📰</span><span class="mobile-tab-label">기사</span></button>
   <button class="mobile-tab-item" data-tab="paper" onclick="mobileSwitchTab('paper')"><span aria-hidden="true">📄</span><span class="mobile-tab-label">논문</span></button>
+  <button class="mobile-tab-item" data-tab="manual" onclick="mobileSwitchTab('manual')"><span aria-hidden="true">📁</span><span class="mobile-tab-label">매뉴얼</span></button>
 </nav>
 
 <div id="phoneSpecSheet" hidden aria-hidden="true" style="display:none">
@@ -4121,6 +4123,26 @@ body.dark .calendar-status-pill.ongoing { background:#123431; border-color:#205C
     </div>
     <div id="allCalCardArea"><div id="allCalUpcomingSection"></div><div id="allCalGrid"></div></div>
     <div id="allCalMonthView" style="display:none"><div class="month-nav"><button class="month-nav-btn" onclick="moveAllCalMonth(-1)">‹</button><div id="allCalMonthTitle" class="month-nav-title"></div><button class="month-nav-btn" onclick="moveAllCalMonth(1)">›</button></div><div id="allCalMonthHeader"></div><div id="allCalMonthGrid" class="month-grid"></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-all-manual">
+  <div class="main" style="flex:1;overflow-y:auto;padding:18px 24px 28px">
+    <div class="calendar-first-toolbar">
+      <div class="calendar-first-topline">
+        <div class="calendar-first-left">
+          <div class="search-box calendar-first-search"><input id="allManualSearch" type="text" placeholder="매뉴얼 검색..." oninput="renderManuals()"></div>
+          <button type="button" class="calendar-first-add" onclick="openManualUpload()">+ 파일 업로드</button>
+          <button type="button" class="calendar-today-btn" onclick="openManualSheet()">시트 열기</button>
+        </div>
+        <div class="calendar-first-right"><span id="allManualCount" class="calendar-first-count"></span></div>
+      </div>
+      <div class="calendar-filter-strip"><div class="calendar-filter-line"><span class="calendar-filter-label">분류</span><div id="allManualCatFilter"></div></div></div>
+    </div>
+    <div class="tab-disclaimer" style="margin-bottom:12px">내부 자료입니다. 파일은 Drive/Box 에 두고 이 목록에는 링크만 올립니다. 대외 공유가 금지된 문서는 반드시 <b>조직 내부 공유</b>로 설정해 주세요.</div>
+    <div id="allManualDrop">파일을 여기에 끌어다 놓으면 시트에 붙여넣을 행을 만들어 드립니다</div>
+    <div id="allManualDropOut"></div>
+    <div id="allManualGrid"></div>
   </div>
 </div>
 
@@ -8480,7 +8502,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-06-v10';
+window.CLINICAL_HUB_BUILD='2026-10-08-v11';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -8970,6 +8992,418 @@ calendarFirstInit = function () {
   _origCalendarFirstInit();
   try { _ensureDensityToggle(); } catch (e) { console.error('[density] ' + e.message); }
 };
+
+/* ══════════════════════════════════════════════════════════════
+   v11 — ALL › 매뉴얼 탭
+   구글시트의 "manual" 탭을 읽어 파일 목록을 보여준다.
+   파일 자체는 Google Drive(또는 Box)에 두고 시트에는 링크만 적는다.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 설정: 아래 3개만 채우면 된다 ───────────────────────────── */
+const MANUAL_SHEET_NAME   = 'manual';   // 구글시트 탭 이름 (그대로 두면 됨)
+const MANUAL_SHEET_GID    = '';         // 탭 이름으로 안 읽히면 gid 입력
+const MANUAL_DRIVE_FOLDER = '';         // 파일을 모아둘 Google Drive 폴더 URL
+const MANUAL_UPLOAD_FORM  = '';         // 파일 업로드용 Google Form URL (있으면 업로드 버튼이 이걸 염)
+
+let MANUALS = [];
+let _manualCatFilter = 'all';
+let _manualLoaded = false;
+
+/* ── 시트 읽기 ─────────────────────────────────────────────── */
+function _manualCsvCandidates(){
+  const base = 'https://docs.google.com/spreadsheets/d/' + SOURCE_SHEET_ID;
+  const list = [];
+  if (MANUAL_SHEET_GID) {
+    list.push(BASE_PUB + '?gid=' + MANUAL_SHEET_GID + '&single=true&output=csv');
+    list.push(base + '/export?format=csv&gid=' + MANUAL_SHEET_GID);
+    list.push(base + '/gviz/tq?tqx=out:csv&gid=' + MANUAL_SHEET_GID);
+  }
+  // 탭 "이름"으로 읽기 — gid 를 몰라도 동작한다
+  list.push(base + '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(MANUAL_SHEET_NAME));
+  return list;
+}
+
+function _normalizeManualRow(row, headers){
+  const h = headers.map(x => String(x || '').trim().toLowerCase());
+  const get = (...keys) => {
+    for (const k of keys) {
+      const i = h.indexOf(String(k).trim().toLowerCase());
+      if (i >= 0 && row[i] !== undefined) return String(row[i] || '').trim();
+    }
+    return '';
+  };
+  return {
+    category: get('category', '분류', '카테고리', 'group'),
+    title:    get('title', '제목', 'name', '파일명'),
+    url:      get('url', 'link', '링크', '파일', 'file'),
+    type:     get('type', '형식', '파일형식'),
+    owner:    get('owner', '담당', '담당자', 'duty'),
+    updated:  get('updated', '수정일', 'date', '업데이트'),
+    note:     get('note', '설명', 'memo', '비고')
+  };
+}
+
+async function loadManualsFromSheet(){
+  for (const url of _manualCsvCandidates()) {
+    try {
+      const rows = await fetchCSV(url);
+      if (!rows || rows.length < 2) continue;
+      const rawH = rows[0].map(x => String(x || '').trim());
+      const offset = rawH.findIndex(x => /[a-zA-Z가-힣]/.test(x));
+      const headers = offset > 0 ? rawH.slice(offset) : rawH;
+      const items = rows.slice(1)
+        .map(r => _normalizeManualRow(offset > 0 ? r.slice(offset) : r, headers))
+        .filter(m => m.title || m.url);
+      if (items.length) {
+        MANUALS = items;
+        _manualLoaded = true;
+        renderManuals();
+        return;
+      }
+    } catch (e) { /* 다음 후보 URL 시도 */ }
+  }
+  _manualLoaded = false;
+  renderManuals();
+}
+
+/* ── 파일 유형 ─────────────────────────────────────────────── */
+const _MANUAL_TYPES = {
+  pdf:   { icon:'📕', label:'PDF',   clr:'#C0143C' },
+  ppt:   { icon:'📙', label:'PPT',   clr:'#EA580C' },
+  xls:   { icon:'📗', label:'Excel', clr:'#65A30D' },
+  doc:   { icon:'📘', label:'Word',  clr:'#0071E3' },
+  video: { icon:'🎬', label:'영상',  clr:'#DB2777' },
+  img:   { icon:'🖼',  label:'이미지', clr:'#7C3AED' },
+  zip:   { icon:'🗜',  label:'압축',  clr:'#6B7280' },
+  link:  { icon:'🔗', label:'링크',  clr:'#0891B2' }
+};
+function _manualMatchType(txt){
+  const t = String(txt || '').toLowerCase();
+  if (!t) return null;
+  if (/pptx?|파워포인트|presentation|슬라이드/.test(t)) return 'ppt';
+  if (/xlsx?|xlsm|csv|엑셀|excel|스프레드시트/.test(t)) return 'xls';
+  if (/docx?|워드|\bword\b|한글|hwpx?/.test(t)) return 'doc';
+  if (/\bpdf\b/.test(t)) return 'pdf';
+  if (/mp4|mov|avi|youtu|vimeo|영상|video/.test(t)) return 'video';
+  if (/png|jpe?g|gif|webp|이미지|image/.test(t)) return 'img';
+  if (/\bzip\b|\b7z\b|\brar\b|압축/.test(t)) return 'zip';
+  return null;
+}
+function manualTypeKey(m){
+  // 1) type 열이 최우선
+  const byType = _manualMatchType(m.type);
+  if (byType) return byType;
+  // 2) 파일 확장자
+  const ext = /\.([a-z0-9]{2,5})(?:[?#]|$)/i.exec(String(m.url || ''));
+  if (ext) { const e = _manualMatchType(ext[1]); if (e) return e; }
+  // 3) 구글 문서 링크 종류
+  const u = String(m.url || '').toLowerCase();
+  if (/docs\.google\.com\/presentation/.test(u)) return 'ppt';
+  if (/docs\.google\.com\/spreadsheets/.test(u)) return 'xls';
+  if (/docs\.google\.com\/document/.test(u)) return 'doc';
+  if (/youtu|vimeo/.test(u)) return 'video';
+  // 4) 제목에서 추론
+  return _manualMatchType(m.title) || 'link';
+}
+function manualTypeMeta(m){ return _MANUAL_TYPES[manualTypeKey(m)] || _MANUAL_TYPES.link; }
+
+/* ── 렌더 ──────────────────────────────────────────────────── */
+function _manualFiltered(){
+  const q = (document.getElementById('allManualSearch')?.value || '').toLowerCase();
+  return MANUALS.filter(m => {
+    if (_manualCatFilter !== 'all' && (m.category || '미분류') !== _manualCatFilter) return false;
+    if (q && ![m.title, m.category, m.owner, m.note, m.type].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function _buildManualCatChips(){
+  const host = document.getElementById('allManualCatFilter');
+  if (!host) return;
+  host.innerHTML = '';
+  host.classList.add('calendar-filter-scroll');
+  const counts = {};
+  MANUALS.forEach(m => { const c = m.category || '미분류'; counts[c] = (counts[c] || 0) + 1; });
+  const add = (key, label, n) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'filter-btn' + (_manualCatFilter === key ? ' active' : '');
+    b.innerHTML = _safeText(label) + ' <span class="btn-count">' + n + '</span>';
+    b.onclick = () => { _manualCatFilter = key; renderManuals(); };
+    host.appendChild(b);
+  };
+  add('all', '전체', MANUALS.length);
+  Object.keys(counts).sort((a, b) => counts[b] - counts[a]).forEach(c => add(c, c, counts[c]));
+}
+
+function _manualSetupHTML(){
+  return '<div class="manual-setup">' +
+    '<div class="ms-title">매뉴얼 시트를 아직 못 읽었습니다</div>' +
+    '<ol class="ms-steps">' +
+      '<li>구글시트에 <b>manual</b> 이라는 이름의 탭을 추가합니다.</li>' +
+      '<li>첫 줄에 머리글을 넣습니다 — <code>category · title · url · type · owner · updated · note</code></li>' +
+      '<li>파일은 Drive(또는 Box)에 올리고, <b>url</b> 칸에 그 공유 링크를 붙여넣습니다.</li>' +
+    '</ol>' +
+    '<div class="ms-foot">탭 이름으로 바로 읽습니다. 그래도 안 되면 시트 공유를 “링크가 있는 모든 사용자 — 뷰어”로 바꿔 주세요.</div>' +
+  '</div>';
+}
+
+function renderManuals(){
+  const grid = document.getElementById('allManualGrid');
+  if (!grid) return;
+  _buildManualCatChips();
+  const items = _manualFiltered();
+  const cnt = document.getElementById('allManualCount');
+  if (cnt) cnt.textContent = items.length + ' files';
+
+  if (!MANUALS.length) { grid.innerHTML = _manualSetupHTML(); return; }
+  if (!items.length) { grid.innerHTML = '<div class="manual-empty">검색 결과가 없습니다.</div>'; return; }
+
+  grid.innerHTML = items.map(m => {
+    const t = manualTypeMeta(m);
+    const href = m.url ? _safeText(m.url) : '';
+    const meta = [m.owner, m.updated].filter(Boolean).map(_safeText).join(' · ');
+    return '<a class="manual-card"' + (href ? ' href="' + href + '" target="_blank" rel="noopener"' : '') + '>' +
+      '<div class="mc-icon" style="background:' + t.clr + '1A;color:' + t.clr + '">' + t.icon + '</div>' +
+      '<div class="mc-body">' +
+        '<div class="mc-title">' + _safeText(m.title || '(제목 없음)') + '</div>' +
+        (m.note ? '<div class="mc-note">' + _safeText(m.note) + '</div>' : '') +
+        '<div class="mc-meta">' +
+          '<span class="mc-type" style="color:' + t.clr + '">' + t.label + '</span>' +
+          (m.category ? '<span class="mc-cat">' + _safeText(m.category) + '</span>' : '') +
+          (meta ? '<span>' + meta + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      (href ? '<div class="mc-go">↗</div>' : '') +
+    '</a>';
+  }).join('');
+}
+
+/* ── 업로드 ────────────────────────────────────────────────── */
+function openManualUpload(){
+  if (MANUAL_UPLOAD_FORM) { window.open(MANUAL_UPLOAD_FORM, '_blank', 'noopener'); return; }
+  if (MANUAL_DRIVE_FOLDER) { window.open(MANUAL_DRIVE_FOLDER, '_blank', 'noopener'); return; }
+  alert('업로드 위치가 아직 설정되지 않았습니다.\n\nindex.html 상단의 MANUAL_DRIVE_FOLDER 또는\nMANUAL_UPLOAD_FORM 에 주소를 넣어 주세요.');
+}
+function openManualSheet(){
+  const gid = MANUAL_SHEET_GID || '';
+  const u = 'https://docs.google.com/spreadsheets/d/' + SOURCE_SHEET_ID + '/edit' + (gid ? '?gid=' + gid + '#gid=' + gid : '');
+  window.open(u, '_blank', 'noopener');
+}
+
+/* 드래그한 파일 → 시트에 붙여넣을 행을 만들어 준다 (업로드는 Drive/폼에서) */
+function _bytes(n){
+  if (!n && n !== 0) return '';
+  const u = ['B','KB','MB','GB'];
+  let i = 0, v = n;
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+  return (i ? v.toFixed(1) : v) + u[i];
+}
+function _initManualDrop(){
+  const zone = document.getElementById('allManualDrop');
+  if (!zone || zone.dataset.init === '1') return;
+  zone.dataset.init = '1';
+  const stop = e => { e.preventDefault(); e.stopPropagation(); };
+  ['dragenter','dragover'].forEach(ev => zone.addEventListener(ev, e => { stop(e); zone.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => { stop(e); zone.classList.remove('over'); }));
+  zone.addEventListener('drop', e => {
+    const files = [...(e.dataTransfer?.files || [])];
+    if (!files.length) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = files.map(f => {
+      const t = manualTypeMeta({ title: f.name, type: f.type });
+      return ['', f.name.replace(/\.[^.]+$/, ''), '', t.label, '', today, _bytes(f.size)].join('\t');
+    }).join('\n');
+    const box = document.getElementById('allManualDropOut');
+    if (!box) return;
+    box.style.display = 'block';
+    box.innerHTML =
+      '<div class="md-head"><b>' + files.length + '개 파일</b> — 아래 행을 시트에 붙여넣으세요' +
+      '<button type="button" class="md-btn" id="mdCopy">행 복사</button>' +
+      '<button type="button" class="md-btn" onclick="openManualUpload()">파일 올리기</button>' +
+      '<button type="button" class="md-btn" onclick="openManualSheet()">시트 열기</button></div>' +
+      '<textarea class="md-ta" readonly rows="' + Math.min(files.length + 1, 6) + '">' + _safeText(rows) + '</textarea>' +
+      '<div class="md-foot">파일 자체는 Drive(또는 Box)에 올린 뒤 공유 링크를 <b>url</b> 칸에 넣어 주세요.</div>';
+    document.getElementById('mdCopy').onclick = function () {
+      const ta = box.querySelector('.md-ta');
+      ta.select();
+      try { document.execCommand('copy'); this.textContent = '복사됨'; } catch (err) {}
+    };
+  });
+}
+
+/* ── 스타일 ────────────────────────────────────────────────── */
+function _manualStyles(){
+  if (document.getElementById('manualStyles')) return;
+  const st = document.createElement('style');
+  st.id = 'manualStyles';
+  st.textContent = [
+    '#allManualGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;}',
+    '.manual-card{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;border:1px solid var(--border,#e6e6e6);',
+    'border-radius:11px;background:var(--surface,#fff);text-decoration:none;color:inherit;transition:border-color .12s,box-shadow .12s,transform .12s;}',
+    '.manual-card:hover{border-color:var(--primary-mid,#A8D8D5);box-shadow:0 3px 12px rgba(0,0,0,.07);transform:translateY(-1px);}',
+    '.mc-icon{flex:0 0 auto;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;}',
+    '.mc-body{flex:1;min-width:0;}',
+    '.mc-title{font-size:13.5px;font-weight:650;line-height:1.35;word-break:break-word;}',
+    '.mc-note{font-size:11.5px;opacity:.62;margin-top:3px;line-height:1.4;}',
+    '.mc-meta{display:flex;flex-wrap:wrap;gap:4px 9px;margin-top:7px;font-size:11px;opacity:.72;align-items:center;}',
+    '.mc-type{font-weight:700;}',
+    '.mc-cat{background:var(--surface2,#f2f2f2);border-radius:5px;padding:1px 7px;}',
+    '.mc-go{flex:0 0 auto;opacity:.3;font-size:14px;}',
+    '.manual-card:hover .mc-go{opacity:.75;}',
+    '.manual-empty{grid-column:1/-1;text-align:center;padding:44px 20px;opacity:.5;font-size:13px;}',
+    '.manual-setup{grid-column:1/-1;border:1px dashed var(--border,#ddd);border-radius:12px;padding:20px 22px;background:var(--surface2,#fafafa);}',
+    '.manual-setup .ms-title{font-weight:700;font-size:14px;margin-bottom:10px;}',
+    '.manual-setup .ms-steps{margin:0;padding-left:20px;font-size:12.5px;line-height:1.85;}',
+    '.manual-setup code{background:var(--surface,#fff);border:1px solid var(--border,#e2e2e2);border-radius:5px;padding:1px 6px;font-size:11.5px;}',
+    '.manual-setup .ms-foot{margin-top:12px;font-size:11.5px;opacity:.6;line-height:1.6;}',
+    '#allManualDrop{border:1.5px dashed var(--border,#dcdcdc);border-radius:11px;padding:14px;text-align:center;',
+    'font-size:12.5px;opacity:.8;margin-bottom:12px;transition:border-color .12s,background .12s;}',
+    '#allManualDrop.over{border-color:var(--primary,#00837A);background:var(--primary-soft,#E6F4F3);opacity:1;}',
+    '#allManualDropOut{display:none;margin-bottom:12px;border:1px solid var(--border,#e2e2e2);border-radius:11px;padding:12px 14px;background:var(--surface,#fff);}',
+    '.md-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12.5px;margin-bottom:8px;}',
+    '.md-btn{border:1px solid var(--primary-mid,#A8D8D5);background:transparent;color:var(--primary-dark,#005F58);',
+    'border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;font-family:inherit;}',
+    '.md-btn:hover{background:rgba(0,131,122,.1);}',
+    '.md-ta{width:100%;font-family:var(--mono,monospace);font-size:11px;border:1px solid var(--border,#e2e2e2);',
+    'border-radius:7px;padding:8px;resize:vertical;background:var(--bg,#fafafa);color:inherit;box-sizing:border-box;}',
+    '.md-foot{margin-top:7px;font-size:11px;opacity:.6;}',
+    '@media (max-width:560px){#allManualGrid{grid-template-columns:1fr;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+/* ── 탭 라우팅: ALL 에서 캘린더 + 매뉴얼 둘 다 허용 ─────────── */
+const _ALL_TABS = ['cal', 'manual'];
+const _origSwitchTab = switchTab;
+
+switchTab = function (tab, el) {
+  closeDrawer();
+  if (currentSpec === 'all') {
+    if (_ALL_TABS.indexOf(tab) < 0) tab = 'cal';
+    el = document.getElementById('sub-' + tab) || el;
+    document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pg = document.getElementById(tab === 'manual' ? 'page-all-manual' : 'page-all-cal');
+    if (pg) pg.classList.add('active');
+    updateMobileTabs(tab);
+    if (tab === 'manual') {
+      _manualStyles(); _initManualDrop();
+      if (!_manualLoaded) loadManualsFromSheet(); else renderManuals();
+    } else {
+      renderAllCal();
+    }
+    return;
+  }
+  return _origSwitchTab(tab, el);
+};
+
+setSectionTabAvailability = function () {
+  const allOnly = currentSpec === 'all';
+  document.querySelectorAll('.sub-btn').forEach(b => {
+    const tab = (b.id || '').replace('sub-', '');
+    const disabled = allOnly ? _ALL_TABS.indexOf(tab) < 0 : tab === 'manual';
+    b.disabled = disabled;
+    b.style.opacity = disabled ? '0.35' : '';
+    b.style.cursor = disabled ? 'default' : '';
+  });
+  document.querySelectorAll('.mobile-tab-item').forEach(b => {
+    const tab = b.dataset.tab;
+    b.disabled = allOnly ? _ALL_TABS.indexOf(tab) < 0 : tab === 'manual';
+    b.style.opacity = b.disabled ? '0.35' : '';
+  });
+};
+
+mobileSwitchTab = function (tab) {
+  if (currentSpec === 'all' && _ALL_TABS.indexOf(tab) < 0) return;
+  if (currentSpec !== 'all' && tab === 'manual') return;
+  const b = document.getElementById('sub-' + tab);
+  if (b) switchTab(tab, b);
+};
+
+/* ALL 로 돌아올 때 매뉴얼 탭이 남아 있지 않도록 */
+const _origSwitchSpecAllM = switchSpecAll;
+switchSpecAll = function (el) {
+  const r = _origSwitchSpecAllM(el);
+  _manualStyles();
+  return r;
+};
+
+window.addEventListener('DOMContentLoaded', function () {
+  _manualStyles();
+  setSectionTabAvailability();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   v11 — 캘린더 Specialty / Type 필터를 왼쪽 사이드바로
+   데스크톱: 왼쪽 세로 사이드바 · 모바일: 기존처럼 상단 가로 스트립
+   ══════════════════════════════════════════════════════════════ */
+function _filtersLeftStyles(){
+  if (document.getElementById('filtersLeftStyles')) return;
+  const st = document.createElement('style');
+  st.id = 'filtersLeftStyles';
+  st.textContent = [
+    /* v6 에서 숨겨둔 사이드바를 데스크톱에서만 되살린다 */
+    '@media (min-width:901px){',
+    '  #page-all-cal > .sidebar{display:flex!important;width:208px!important;min-width:208px!important;padding:16px 0!important;}',
+    '  #page-all-cal > .sidebar .search-box{display:none!important;}',
+    '  #sidebar-all-cal .sidebar-inner{padding:0 14px!important;display:block!important;}',
+    /* 사이드바 안에서는 세로로 쌓이고 줄바꿈된다 */
+    '  #sidebar-all-cal .calendar-filter-strip{display:block!important;padding:0!important;border:0!important;}',
+    '  #sidebar-all-cal .calendar-filter-line{display:block!important;margin-bottom:18px;}',
+    '  #sidebar-all-cal .calendar-filter-label{display:block!important;width:auto!important;flex-basis:auto!important;',
+    '    margin-bottom:8px;font-size:10px;font-weight:700;letter-spacing:.08em;opacity:.55;}',
+    '  #sidebar-all-cal .calendar-filter-scroll{display:flex!important;flex-wrap:wrap!important;gap:5px!important;',
+    '    overflow:visible!important;}',
+    '  #sidebar-all-cal .calendar-filter-scroll .filter-btn,',
+    '  #sidebar-all-cal .calendar-filter-scroll .calendar-type-chip{font-size:11px!important;padding:4px 9px!important;}',
+    '  /* 달력 본문은 남은 폭을 그대로 쓴다 */',
+    '  #page-all-cal .calendar-first-main{padding:18px 22px 28px!important;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+/* 뷰포트에 따라 필터 스트립을 사이드바 ↔ 툴바로 옮긴다 */
+function _relocateCalFilters(){
+  const page = document.getElementById('page-all-cal');
+  if (!page) return;
+  const strip = page.querySelector('.calendar-filter-strip');
+  const toolbar = page.querySelector('.calendar-first-toolbar');
+  const inner = document.querySelector('#sidebar-all-cal .sidebar-inner');
+  if (!strip || !toolbar || !inner) return;
+  const desktop = window.innerWidth >= 901;
+  if (desktop) {
+    if (strip.parentElement !== inner) { inner.innerHTML = ''; inner.appendChild(strip); }
+  } else {
+    if (strip.parentElement !== toolbar) toolbar.appendChild(strip);
+  }
+}
+
+let _relocTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_relocTimer);
+  _relocTimer = setTimeout(_relocateCalFilters, 150);
+});
+
+const _origCalFirstInit2 = calendarFirstInit;
+calendarFirstInit = function(){
+  _origCalFirstInit2();
+  try { _filtersLeftStyles(); _relocateCalFilters(); }
+  catch(e){ console.error('[filters] ' + e.message); }
+};
+
+const _origRenderAllCal3 = renderAllCal;
+renderAllCal = function(){
+  _origRenderAllCal3();
+  try { _relocateCalFilters(); } catch(e){}
+};
+
+window.addEventListener('DOMContentLoaded', function(){
+  _filtersLeftStyles();
+  setTimeout(_relocateCalFilters, 0);
+});
 </script>
 
 <div id="confModal" onclick="if(event.target===this)closeConfModal()">
