@@ -8827,7 +8827,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-14-v24';
+window.CLINICAL_HUB_BUILD='2026-10-14-v26';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12013,6 +12013,463 @@ function _cwV24Styles(){
 }
 window.addEventListener('DOMContentLoaded', function(){ _cwV24Styles(); });
 _cwV24Styles();
+
+/* ══════════════════════════════════════════════════════════════
+   v25 — 모바일에서 "일정이 안 보이는" 문제 두 가지
+     A. 화면 절반이 필터·툴바라 첫 일정이 한참 아래에 있었다
+        → 필터를 버튼 뒤로 접고, 중복되던 분포 바는 모바일에서 숨긴다
+     B. 아젠다가 1일부터 시작해 지난 일정이 맨 위에 쌓였다
+        → 이번 달이면 오늘부터 시작하고, 지난 일정은 접어둔다
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── B. 아젠다: 지난 일정 접기 ── */
+var _cwAgPastOpen = {};
+_cwRenderAgendaInto = function(host, items, yr, mo){
+  if (!host) return;
+  var today = _cwDay(new Date());
+  var last = new Date(yr, mo + 1, 0).getDate();
+  var DOW = ['일','월','화','수','목','금','토'];
+  var isThisMonth = (today.getFullYear() === yr && today.getMonth() === mo);
+  var key = yr + '-' + mo;
+
+  host.innerHTML = '';
+
+  /* 날짜별로 묶는다 */
+  var groups = [];
+  for (var d = 1; d <= last; d++) {
+    var day = _cwDay(new Date(yr, mo, d));
+    var evs = items.filter(function(ev){ return _cwCovers(ev, day); });
+    if (evs.length) groups.push({ d: d, day: day, evs: evs });
+  }
+
+  if (!groups.length) {
+    var em = document.createElement('div');
+    em.className = 'cw-ag-empty';
+    em.style.whiteSpace = 'pre-line';
+    em.textContent = yr + '년 ' + (mo+1) + '월에는 표시할 일정이 없습니다.\n‹ › 로 다른 달을 보거나 필터를 해제해 보세요.';
+    host.appendChild(em);
+    return;
+  }
+
+  function dayNode(g){
+    var dow = g.day.getDay();
+    var isPast = g.day.getTime() < today.getTime();
+    var sec = document.createElement('div');
+    sec.className = 'cw-ag-day' + (dow===0?' is-sun':dow===6?' is-sat':'') +
+      (_cwSameDay(g.day, today) ? ' cw-ag-today' : '') + (isPast ? ' is-past' : '');
+    var hd = document.createElement('div'); hd.className='cw-ag-date';
+    var num = document.createElement('span'); num.className='cw-ag-num'; num.textContent=g.d;
+    var dw = document.createElement('span'); dw.className='cw-ag-dow'; dw.textContent=DOW[dow]+'요일';
+    hd.appendChild(num); hd.appendChild(dw);
+    if (_cwSameDay(g.day, today)) {
+      var bg=document.createElement('span'); bg.className='cw-ag-badge'; bg.textContent='오늘'; hd.appendChild(bg);
+    }
+    sec.appendChild(hd);
+    g.evs.slice().sort(function(a,b){
+      var A=_calStartEnd(a).s, B=_calStartEnd(b).s;
+      var r=A.getTime()-B.getTime();
+      return r!==0 ? r : String(a.name||'').localeCompare(String(b.name||''));
+    }).forEach(function(ev){
+      var sp = _calendarCardSpec(ev, 'gyn');
+      var total = _cwDuration(ev);
+      var nth = _calDayDiff(g.day, _calStartEnd(ev).s) + 1;
+      var btn = document.createElement('button');
+      btn.type='button'; btn.className='cw-ag-ev';
+      btn.dataset.evkey = _cwEvKey(ev);
+      btn.style.setProperty('--ev', specColor(sp));
+      btn.onclick = function(){ openConfModal(ev); };
+      var n = document.createElement('div'); n.className='n'; n.textContent = ev.name||'Event';
+      btn.appendChild(n);
+      var m = document.createElement('div'); m.className='m';
+      var s1=document.createElement('span'); s1.className='sp'; s1.textContent=specLabel(sp); m.appendChild(s1);
+      var t1=document.createElement('span');
+      t1.textContent = calendarTypeMeta(ev).label || calendarTypeLabel(calendarTypeKey(ev));
+      m.appendChild(t1);
+      if (total>1){ var d1=document.createElement('span'); d1.textContent='Day '+nth+'/'+total; m.appendChild(d1); }
+      if (ev.loc){ var l1=document.createElement('span'); l1.textContent='📍 '+ev.loc; m.appendChild(l1); }
+      btn.appendChild(m);
+      sec.appendChild(btn);
+    });
+    return sec;
+  }
+
+  var past = isThisMonth ? groups.filter(function(g){ return g.day.getTime() < today.getTime(); }) : [];
+  var rest = isThisMonth ? groups.filter(function(g){ return g.day.getTime() >= today.getTime(); }) : groups;
+
+  /* 지난 일정은 접어서 맨 위에 한 줄로 */
+  if (past.length) {
+    var pastCount = past.reduce(function(n,g){ return n + g.evs.length; }, 0);
+    var wrap = document.createElement('div'); wrap.className = 'cw-ag-past';
+    var tg = document.createElement('button');
+    tg.type='button'; tg.className='cw-ag-past-btn';
+    var open = !!_cwAgPastOpen[key];
+    tg.textContent = '지난 일정 ' + pastCount + '건 ' + (open ? '▴' : '▾');
+    tg.onclick = function(){
+      _cwAgPastOpen[key] = !_cwAgPastOpen[key];
+      _cwRenderAgendaInto(host, items, yr, mo);
+    };
+    wrap.appendChild(tg);
+    if (open) past.forEach(function(g){ wrap.appendChild(dayNode(g)); });
+    host.appendChild(wrap);
+  }
+
+  if (!rest.length) {
+    var em2 = document.createElement('div');
+    em2.className = 'cw-ag-empty';
+    em2.textContent = '이번 달 남은 일정이 없습니다.';
+    host.appendChild(em2);
+  } else {
+    rest.forEach(function(g){ host.appendChild(dayNode(g)); });
+  }
+};
+
+/* ── A. 모바일 툴바 압축 ── */
+function _cwMobileToolbar(){
+  document.querySelectorAll('.calendar-first-toolbar').forEach(function(tb){
+    if (tb.querySelector('.cw-fbtn')) return;
+    var right = tb.querySelector('.calendar-first-right');
+    var strip = tb.querySelector('.calendar-filter-strip');
+    if (!right) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cw-fbtn';
+    b.textContent = '필터';
+    b.setAttribute('aria-expanded','false');
+    b.onclick = function(){
+      var on = tb.classList.toggle('cw-filters-open');
+      b.setAttribute('aria-expanded', on ? 'true' : 'false');
+      b.textContent = on ? '필터 닫기' : '필터';
+    };
+    right.insertBefore(b, right.firstChild);
+  });
+}
+
+function _cwV25Styles(){
+  if (document.getElementById('calV25Styles')) return;
+  var st = document.createElement('style');
+  st.id = 'calV25Styles';
+  st.textContent = [
+    /* 지난 일정 접기 */
+    '.cw-ag-past{border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:2px;}',
+    '.cw-ag-past-btn{display:block;width:100%;text-align:left;padding:9px 2px;border:0;',
+    'background:transparent;color:var(--text3);font-family:var(--font);font-size:11.5px;',
+    'font-weight:650;cursor:pointer;}',
+    '.cw-ag-past-btn:hover{color:var(--primary);}',
+    '.cw-ag-day.is-past{opacity:.62;}',
+    /* 필터 버튼 */
+    '.cw-fbtn{display:none;height:30px;padding:0 12px;border-radius:8px;',
+    'border:1px solid var(--border);background:var(--surface);color:var(--text2);',
+    'font-family:var(--font);font-size:11px;font-weight:650;cursor:pointer;white-space:nowrap;}',
+    '.cw-fbtn[aria-expanded="true"]{background:var(--primary-soft);border-color:var(--primary-mid);',
+    'color:var(--primary);}',
+    '@media (max-width:760px){',
+    /* 필터는 버튼을 눌러야 펼쳐진다 */
+    '  .cw-fbtn{display:inline-flex;align-items:center;}',
+    '  .calendar-first-toolbar:not(.cw-filters-open) .calendar-filter-strip{display:none!important;}',
+    /* 분포 요약은 필터 칩과 겹치므로 모바일에서 숨긴다 */
+    '  #calDdaySummary{display:none!important;}',
+    /* 검색 + 일정추가 를 한 줄로 */
+    '  .calendar-first-topline{flex-wrap:wrap;gap:7px!important;}',
+    '  .calendar-first-left{flex:1 1 100%;gap:7px!important;}',
+    '  .calendar-first-left .calendar-first-search{flex:1;min-width:0;width:auto!important;}',
+    '  .calendar-first-right{flex:1 1 100%;gap:6px!important;flex-wrap:nowrap;overflow-x:auto;',
+    '    -webkit-overflow-scrolling:touch;scrollbar-width:none;}',
+    '  .calendar-first-right::-webkit-scrollbar{display:none;}',
+    '  .calendar-first-toolbar{gap:7px!important;margin-bottom:8px!important;}',
+    '  .calendar-first-add{flex:0 0 auto;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+var _cwOrigRenderAll4 = renderAllCal;
+renderAllCal = function(){
+  _cwV25Styles();
+  _cwOrigRenderAll4();
+  try { _cwMobileToolbar(); } catch(e){}
+};
+var _cwOrigSpecCal4 = renderSpecCal;
+renderSpecCal = function(spec){
+  _cwV25Styles();
+  _cwOrigSpecCal4(spec);
+  try { _cwMobileToolbar(); } catch(e){}
+};
+window.addEventListener('DOMContentLoaded', function(){
+  _cwV25Styles();
+  setTimeout(function(){ try { _cwMobileToolbar(); } catch(e){} }, 0);
+});
+
+/* ══════════════════════════════════════════════════════════════
+   v26 — 기기별 최적화 분리
+     PC   : 비교·기획용. 월 격자 + Upcoming 패널 + 4개 뷰 + 필터 상시
+     모바일: 조회용. "다가오는 일정"(달 경계 없음) 기본 + 2개 뷰 + 필터 접힘
+   같은 화면을 줄이는 대신, 쓰임이 다르므로 구조를 다르게 둔다.
+   ══════════════════════════════════════════════════════════════ */
+var CW_MOBILE_Q = '(max-width:760px)';
+function _cwIsMobile(){
+  try { return window.matchMedia(CW_MOBILE_Q).matches; } catch(e){ return window.innerWidth <= 760; }
+}
+var _cwViewTouched = false;   /* 사용자가 직접 뷰를 고른 적이 있는가 */
+
+/* ── 모바일 전용: 오늘부터 쭉 이어지는 목록 ──────────────────
+   월 뷰와 달리 달 경계가 없다. 10/30 → 11/1 학회가 한 화면에 이어진다. */
+function _cwEnsureUpcomingView(){
+  var vp = document.getElementById('allCalViewport');
+  if (!vp) return null;
+  var el = document.getElementById('allCalUpcomingView');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'allCalUpcomingView';
+    el.style.display = 'none';
+    vp.insertBefore(el, vp.firstChild);
+  }
+  return el;
+}
+
+function renderAllCalUpcomingView(items){
+  var host = _cwEnsureUpcomingView();
+  if (!host) return;
+  var today = _cwDay(new Date());
+  var horizon = _cwAddDays(today, 120);
+  var DOW = ['일','월','화','수','목','금','토'];
+  var MON = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+  /* 오늘 이후로 날짜별 묶음 — 달 경계를 넘어 이어진다 */
+  var groups = [];
+  for (var i = 0; i <= 120; i++) {
+    var day = _cwAddDays(today, i);
+    var evs = items.filter(function(ev){ return _cwCovers(ev, day); });
+    if (evs.length) groups.push({ day: day, evs: evs });
+  }
+
+  host.innerHTML = '';
+
+  /* 상단 고정 요약 — 스크롤해도 따라온다 */
+  var weekEnd = _cwAddDays(_cwWeekStart(today), 6);
+  var nToday = items.filter(function(ev){ return _cwCovers(ev, today); }).length;
+  var nWeek = 0;
+  for (var k = 0; k <= _calDayDiff(weekEnd, today); k++) {
+    nWeek += items.filter(function(ev){ return _cwCovers(ev, _cwAddDays(today, k)); }).length;
+  }
+  var bar = document.createElement('div');
+  bar.className = 'cw-up-sticky';
+  bar.innerHTML =
+    '<span class="t">오늘 <b>' + nToday + '</b></span>' +
+    '<span class="s"></span>' +
+    '<span class="t">이번 주 <b>' + nWeek + '</b></span>' +
+    '<span class="s"></span>' +
+    '<span class="t dim">앞으로 <b>' + groups.reduce(function(n,g){ return n + g.evs.length; }, 0) + '</b></span>';
+  host.appendChild(bar);
+
+  if (!groups.length) {
+    var em = document.createElement('div');
+    em.className = 'cw-ag-empty';
+    em.style.whiteSpace = 'pre-line';
+    em.textContent = '앞으로 120일 안에 예정된 일정이 없습니다.\n필터를 해제하거나 월 뷰에서 지난 일정을 확인해 보세요.';
+    host.appendChild(em);
+    return;
+  }
+
+  var lastMonth = -1;
+  groups.forEach(function(g){
+    /* 달이 바뀌면 구분선 */
+    var m = g.day.getMonth();
+    if (m !== lastMonth) {
+      lastMonth = m;
+      var div = document.createElement('div');
+      div.className = 'cw-up-month';
+      div.textContent = g.day.getFullYear() + '년 ' + MON[m];
+      host.appendChild(div);
+    }
+
+    var dow = g.day.getDay();
+    var sec = document.createElement('div');
+    sec.className = 'cw-ag-day' + (dow===0?' is-sun':dow===6?' is-sat':'') +
+      (_cwSameDay(g.day, today) ? ' cw-ag-today' : '');
+    var hd = document.createElement('div'); hd.className='cw-ag-date';
+    var num = document.createElement('span'); num.className='cw-ag-num'; num.textContent=g.day.getDate();
+    var dw = document.createElement('span'); dw.className='cw-ag-dow'; dw.textContent=DOW[dow]+'요일';
+    hd.appendChild(num); hd.appendChild(dw);
+    if (_cwSameDay(g.day, today)) {
+      var bg=document.createElement('span'); bg.className='cw-ag-badge'; bg.textContent='오늘'; hd.appendChild(bg);
+    } else {
+      var dd = _calDayDiff(g.day, today);
+      var pill = document.createElement('span'); pill.className='cw-up-dday';
+      pill.textContent = 'D-' + dd;
+      pill.style.color = _cwUrgencyColor({ key:'upcoming', days:dd });
+      hd.appendChild(pill);
+    }
+    sec.appendChild(hd);
+
+    g.evs.slice().sort(function(a,b){
+      var A=_calStartEnd(a).s, B=_calStartEnd(b).s;
+      var r=A.getTime()-B.getTime();
+      return r!==0 ? r : String(a.name||'').localeCompare(String(b.name||''));
+    }).forEach(function(ev){
+      var sp = _calendarCardSpec(ev, 'gyn');
+      var total = _cwDuration(ev);
+      var nth = _calDayDiff(g.day, _calStartEnd(ev).s) + 1;
+      var btn = document.createElement('button');
+      btn.type='button'; btn.className='cw-ag-ev';
+      btn.dataset.evkey = _cwEvKey(ev);
+      btn.style.setProperty('--ev', specColor(sp));
+      btn.onclick = function(){ openConfModal(ev); };
+      var n = document.createElement('div'); n.className='n'; n.textContent = ev.name||'Event';
+      btn.appendChild(n);
+      var mt = document.createElement('div'); mt.className='m';
+      var s1=document.createElement('span'); s1.className='sp'; s1.textContent=specLabel(sp); mt.appendChild(s1);
+      var t1=document.createElement('span');
+      t1.textContent = calendarTypeMeta(ev).label || calendarTypeLabel(calendarTypeKey(ev));
+      mt.appendChild(t1);
+      if (total>1){ var d1=document.createElement('span'); d1.textContent='Day '+nth+'/'+total; mt.appendChild(d1); }
+      if (ev.loc){ var l1=document.createElement('span'); l1.textContent='📍 '+ev.loc; mt.appendChild(l1); }
+      btn.appendChild(mt);
+      sec.appendChild(btn);
+    });
+    host.appendChild(sec);
+  });
+}
+
+/* ── 뷰 전환: 기기별로 버튼 구성이 다르다 ──────────────────── */
+var _cwOrigSetView2 = setAllCalView;
+setAllCalView = function(view, fromUser){
+  /* 초기화 과정의 호출(인자 없음)은 사용자의 선택으로 보지 않는다 */
+  if (fromUser === true) _cwViewTouched = true;
+
+  if (view === 'upcoming') {
+    _allCalView = 'upcoming';
+    ['allCalDayView','allCalWeekView','allCalMonthView','allCalCardArea'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    var up = _cwEnsureUpcomingView(); if (up) up.style.display = '';
+    ['day','week','month','card','upcoming'].forEach(function(k){
+      var btn = document.getElementById('allCalView_' + k);
+      if (btn) btn.classList.toggle('active', k === 'upcoming');
+    });
+    renderAllCal();
+    return;
+  }
+
+  var up2 = _cwEnsureUpcomingView();
+  if (up2) up2.style.display = 'none';
+  var btnU = document.getElementById('allCalView_upcoming');
+  if (btnU) btnU.classList.remove('active');
+  _cwOrigSetView2(view);
+};
+
+/* "다가오는" 버튼을 뷰 전환기 맨 앞에 심는다 (모바일에서만 보인다) */
+function _cwEnsureUpcomingBtn(){
+  var toggle = document.querySelector('#page-all-cal .cal-view-toggle');
+  if (!toggle || document.getElementById('allCalView_upcoming')) return;
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'cal-view-btn cw-only-mobile';
+  b.id = 'allCalView_upcoming';
+  b.textContent = '다가오는';
+  b.onclick = function(){ setAllCalView('upcoming', true); };
+  toggle.insertBefore(b, toggle.firstChild);
+  /* PC 전용 버튼에 표식 + 클릭은 사용자의 선택으로 기록 */
+  ['day','week','month','card'].forEach(function(k){
+    var x = document.getElementById('allCalView_' + k);
+    if (!x) return;
+    if (k !== 'month') x.classList.add('cw-only-desktop');
+    x.onclick = (function(key){ return function(){ setAllCalView(key, true); }; })(k);
+  });
+}
+
+/* 기기에 맞는 기본 뷰로 맞춘다 (사용자가 직접 고른 뒤에는 건드리지 않는다) */
+function _cwApplyDeviceDefault(){
+  var pg = document.getElementById('page-all-cal');
+  if (!pg || !pg.classList.contains('active')) return;
+  _cwEnsureUpcomingBtn();
+  if (_cwViewTouched) {
+    /* 모바일에서 PC 전용 뷰에 갇히지 않도록만 보정 */
+    if (_cwIsMobile() && (_allCalView === 'day' || _allCalView === 'week' || _allCalView === 'card')) {
+      setAllCalView('upcoming', false);
+    }
+    return;
+  }
+  if (_cwIsMobile()) { if (_allCalView !== 'upcoming') setAllCalView('upcoming', false); }
+  else if (_allCalView === 'upcoming') { setAllCalView('month', false); }
+}
+
+/* 폭이 바뀌면 다시 판단 */
+var _cwMqTimer = null;
+window.addEventListener('resize', function(){
+  clearTimeout(_cwMqTimer);
+  _cwMqTimer = setTimeout(function(){ try { _cwApplyDeviceDefault(); } catch(e){} }, 180);
+});
+
+/* ── 스타일: 기기별 노출 분기 + 모바일 터치 타겟 ───────────── */
+function _cwV26Styles(){
+  if (document.getElementById('calV26Styles')) return;
+  var st = document.createElement('style');
+  st.id = 'calV26Styles';
+  st.textContent = [
+    '.cw-only-mobile{display:none;}',
+
+    /* 다가오는 일정 — 상단 고정 요약 */
+    '.cw-up-sticky{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:9px;',
+    'padding:9px 2px 10px;margin-bottom:2px;background:var(--bg);',
+    'border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);}',
+    '.cw-up-sticky b{color:var(--primary);font-weight:750;font-size:13px;}',
+    '.cw-up-sticky .s{width:1px;height:11px;background:var(--border-strong);}',
+    '.cw-up-sticky .dim{color:var(--text3);}',
+    '.cw-up-sticky .dim b{color:var(--text2);}',
+    '.cw-up-month{margin:16px 0 2px;font-size:11px;font-weight:700;letter-spacing:.06em;',
+    'color:var(--text3);text-transform:uppercase;}',
+    '.cw-up-month:first-of-type{margin-top:8px;}',
+    '.cw-up-dday{margin-left:auto;font-size:10.5px;font-weight:700;}',
+
+    '@media (max-width:760px){',
+    /* 모바일에서만 보이는 것 / PC 전용 숨김 */
+    '  .cw-only-mobile{display:inline-flex!important;align-items:center;}',
+    '  .cw-only-desktop{display:none!important;}',
+    /* 조회가 목적이므로 좌측 Upcoming 패널은 본문이 대신한다 */
+    '  #page-all-cal .cal-upcoming{display:none!important;}',
+    /* 터치 타겟 확보 */
+    '  .cal-view-btn{min-height:36px;padding:0 13px!important;}',
+    '  .calendar-today-btn,.calendar-first-add,.cw-fbtn{min-height:36px!important;}',
+    '  .cw-ag-ev{padding:12px 13px!important;}',
+    '  .cw-ag-ev .n{font-size:13.5px!important;}',
+    '  .cw-ag-ev .m{font-size:11px!important;margin-top:5px!important;}',
+    '  .cw-ag-date{margin-bottom:9px!important;}',
+    '  .cw-ag-num{font-size:18px!important;}',
+    '}',
+    /* PC: 다가오는 뷰는 쓰지 않는다 */
+    '@media (min-width:761px){',
+    '  #allCalUpcomingView{display:none!important;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+/* ── 배선 ──────────────────────────────────────────────────── */
+var _cwOrigRenderAll5 = renderAllCal;
+renderAllCal = function(){
+  _cwV26Styles();
+  _cwOrigRenderAll5();
+  try {
+    _cwEnsureUpcomingBtn();
+    if (_allCalView === 'upcoming') renderAllCalUpcomingView(currentAllCalItems());
+  } catch(e){ console.error('[upcoming-view] ' + e.message); }
+};
+
+var _cwOrigOpenAllCal = openAllCal;
+openAllCal = function(el){
+  _cwOrigOpenAllCal(el);
+  try { _cwApplyDeviceDefault(); } catch(e){}
+};
+var _cwOrigSwitchAll = switchSpecAll;
+switchSpecAll = function(el){
+  _cwOrigSwitchAll(el);
+  try { _cwApplyDeviceDefault(); } catch(e){}
+};
+
+window.addEventListener('DOMContentLoaded', function(){
+  _cwV26Styles();
+  setTimeout(function(){ try { _cwEnsureUpcomingBtn(); _cwApplyDeviceDefault(); } catch(e){} }, 60);
+});
 
 </script>
 
