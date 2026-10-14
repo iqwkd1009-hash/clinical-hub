@@ -8827,7 +8827,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-14-v26';
+window.CLINICAL_HUB_BUILD='2026-10-14-v27';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12470,6 +12470,229 @@ window.addEventListener('DOMContentLoaded', function(){
   _cwV26Styles();
   setTimeout(function(){ try { _cwEnsureUpcomingBtn(); _cwApplyDeviceDefault(); } catch(e){} }, 60);
 });
+
+/* ══════════════════════════════════════════════════════════════
+   v27 — 모바일 Month 를 진짜 달력으로
+   폰에서 7칸 격자를 숨기고 목록으로 대체했더니 "다가오는"과 구분이
+   안 됐다. 390px 에 들어가는 전용 격자를 만든다.
+     · 칸에는 날짜 + 점(최대 3개) 만 — 제목은 넣지 않는다
+     · 날짜를 누르면 그 날 일정이 격자 아래에 펼쳐진다
+     · 기본 선택 = 오늘 (다른 달이면 1일)
+   ══════════════════════════════════════════════════════════════ */
+var _cwMiniSel = {};   /* 컨테이너별 선택 날짜 */
+
+function _cwMiniKey(host, yr, mo){ return (host.id || 'x') + ':' + yr + '-' + mo; }
+
+function _cwRenderMiniMonth(host, items, yr, mo){
+  if (!host) return;
+  var today = _cwDay(new Date());
+  var key = _cwMiniKey(host, yr, mo);
+  var isThisMonth = (today.getFullYear() === yr && today.getMonth() === mo);
+
+  /* 선택 날짜 기본값 */
+  if (!_cwMiniSel[key]) {
+    _cwMiniSel[key] = isThisMonth ? today.getDate() : 1;
+  }
+  var selDay = _cwMiniSel[key];
+
+  var first = new Date(yr, mo, 1).getDay();
+  var last  = new Date(yr, mo + 1, 0).getDate();
+  var prevLast = new Date(yr, mo, 0).getDate();
+  var cells = Math.ceil((first + last) / 7) * 7;
+  var DOW = ['일','월','화','수','목','금','토'];
+
+  host.innerHTML = '';
+
+  /* 요일 머리글 */
+  var hd = document.createElement('div');
+  hd.className = 'cw-mini-dow';
+  DOW.forEach(function(d, i){
+    var c = document.createElement('div');
+    c.className = i === 0 ? 'sun' : i === 6 ? 'sat' : '';
+    c.textContent = d;
+    hd.appendChild(c);
+  });
+  host.appendChild(hd);
+
+  /* 격자 */
+  var grid = document.createElement('div');
+  grid.className = 'cw-mini-grid';
+
+  for (var i = 0; i < cells; i++) {
+    (function(i){
+      var inMonth = (i >= first && i < first + last);
+      var dnum = inMonth ? (i - first + 1)
+               : (i < first ? prevLast - first + i + 1 : i - first - last + 1);
+      var cell = document.createElement('button');
+      cell.type = 'button';
+      var dow = i % 7;
+      cell.className = 'cw-mini-cell' + (inMonth ? '' : ' out') +
+        (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '');
+
+      if (!inMonth) {
+        cell.disabled = true;
+        var n0 = document.createElement('span'); n0.className='n'; n0.textContent=dnum;
+        cell.appendChild(n0);
+        grid.appendChild(cell);
+        return;
+      }
+
+      var day = _cwDay(new Date(yr, mo, dnum));
+      var evs = items.filter(function(ev){ return _cwCovers(ev, day); });
+      var isToday = _cwSameDay(day, today);
+      if (isToday) cell.classList.add('is-today');
+      if (dnum === selDay) cell.classList.add('is-sel');
+      if (evs.length) cell.classList.add('has-ev');
+
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = dnum;
+      cell.appendChild(n);
+
+      /* 점 — 과 색상, 최대 3개 */
+      var dots = document.createElement('span'); dots.className = 'dots';
+      var seen = [];
+      evs.forEach(function(ev){
+        var sp = _calendarCardSpec(ev, 'gyn');
+        if (seen.indexOf(sp) < 0) seen.push(sp);
+      });
+      seen.slice(0, 3).forEach(function(sp){
+        var dt = document.createElement('i');
+        dt.style.background = specColor(sp);
+        dots.appendChild(dt);
+      });
+      if (seen.length > 3) {
+        var more = document.createElement('i');
+        more.className = 'more';
+        dots.appendChild(more);
+      }
+      cell.appendChild(dots);
+
+      cell.setAttribute('aria-label', (mo+1) + '월 ' + dnum + '일 일정 ' + evs.length + '건');
+      cell.onclick = function(){
+        _cwMiniSel[key] = dnum;
+        _cwRenderMiniMonth(host, items, yr, mo);
+      };
+      grid.appendChild(cell);
+    })(i);
+  }
+  host.appendChild(grid);
+
+  /* 선택한 날짜의 일정 */
+  var selDate = _cwDay(new Date(yr, mo, selDay));
+  var selEvs = items.filter(function(ev){ return _cwCovers(ev, selDate); });
+
+  var panel = document.createElement('div');
+  panel.className = 'cw-mini-day';
+
+  var ph = document.createElement('div');
+  ph.className = 'cw-mini-dayhead';
+  ph.innerHTML = '<span class="d">' + (mo+1) + '월 ' + selDay + '일 ' +
+    DOW[selDate.getDay()] + '요일</span>' +
+    (_cwSameDay(selDate, today) ? '<span class="cw-ag-badge">오늘</span>' : '') +
+    '<span class="c">' + selEvs.length + '건</span>';
+  panel.appendChild(ph);
+
+  if (!selEvs.length) {
+    var em = document.createElement('div');
+    em.className = 'cw-mini-none';
+    em.textContent = '이 날짜에는 일정이 없습니다.';
+    panel.appendChild(em);
+  } else {
+    selEvs.slice().sort(function(a,b){
+      var A=_calStartEnd(a).s, B=_calStartEnd(b).s;
+      var r=A.getTime()-B.getTime();
+      return r!==0 ? r : String(a.name||'').localeCompare(String(b.name||''));
+    }).forEach(function(ev){
+      var sp = _calendarCardSpec(ev, 'gyn');
+      var total = _cwDuration(ev);
+      var nth = _calDayDiff(selDate, _calStartEnd(ev).s) + 1;
+      var btn = document.createElement('button');
+      btn.type='button'; btn.className='cw-ag-ev';
+      btn.dataset.evkey = _cwEvKey(ev);
+      btn.style.setProperty('--ev', specColor(sp));
+      btn.onclick = function(){ openConfModal(ev); };
+      var nm = document.createElement('div'); nm.className='n'; nm.textContent = ev.name||'Event';
+      btn.appendChild(nm);
+      var mt = document.createElement('div'); mt.className='m';
+      var s1=document.createElement('span'); s1.className='sp'; s1.textContent=specLabel(sp); mt.appendChild(s1);
+      var t1=document.createElement('span');
+      t1.textContent = calendarTypeMeta(ev).label || calendarTypeLabel(calendarTypeKey(ev));
+      mt.appendChild(t1);
+      if (total>1){ var d1=document.createElement('span'); d1.textContent='Day '+nth+'/'+total; mt.appendChild(d1); }
+      if (ev.loc){ var l1=document.createElement('span'); l1.textContent='📍 '+ev.loc; mt.appendChild(l1); }
+      btn.appendChild(mt);
+      panel.appendChild(btn);
+    });
+  }
+  host.appendChild(panel);
+}
+
+/* 모바일 Month 는 미니 격자, PC 는 기존 격자를 쓴다.
+   (컨테이너는 기존 아젠다 자리를 그대로 재사용한다) */
+_cwRenderAgendaInto = function(host, items, yr, mo){
+  if (!host) return;
+  _cwRenderMiniMonth(host, items, yr, mo);
+};
+
+function _cwV27Styles(){
+  if (document.getElementById('calV27Styles')) return;
+  var st = document.createElement('style');
+  st.id = 'calV27Styles';
+  st.textContent = [
+    /* ── 미니 달력: 390px 안에 7칸이 들어간다 (가로 스크롤 없음) ── */
+    '.cw-mini-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}',
+    '.cw-mini-dow > div{text-align:center;font-size:10.5px;font-weight:700;color:var(--text3);',
+    'padding:6px 0;letter-spacing:.02em;}',
+    '.cw-mini-dow .sun{color:#A66;}.cw-mini-dow .sat{color:#5C7FA8;}',
+    'body.dark .cw-mini-dow .sun{color:#C99;}',
+
+    '.cw-mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}',
+    '.cw-mini-cell{position:relative;display:flex;flex-direction:column;align-items:center;',
+    'justify-content:flex-start;gap:3px;min-height:46px;padding:6px 0 5px;border:0;',
+    'background:transparent;border-radius:9px;cursor:pointer;font-family:var(--font);',
+    'transition:background .13s;}',
+    '.cw-mini-cell .n{font-size:14px;font-weight:600;color:var(--text);line-height:1;',
+    'width:26px;height:26px;display:flex;align-items:center;justify-content:center;',
+    'border-radius:50%;}',
+    '.cw-mini-cell.sun .n{color:#A66;}.cw-mini-cell.sat .n{color:#5C7FA8;}',
+    'body.dark .cw-mini-cell.sun .n{color:#C99;}',
+    '.cw-mini-cell.out{opacity:.3;cursor:default;}',
+    '.cw-mini-cell.out .n{font-weight:400;}',
+    '.cw-mini-cell:not(.out):active{background:var(--surface2);}',
+    /* 오늘 = 채운 원 */
+    '.cw-mini-cell.is-today .n{background:var(--primary);color:#fff!important;font-weight:750;}',
+    /* 선택 = 테두리 원 */
+    '.cw-mini-cell.is-sel .n{box-shadow:inset 0 0 0 2px var(--primary);}',
+    '.cw-mini-cell.is-today.is-sel .n{box-shadow:inset 0 0 0 2px var(--primary),0 0 0 2px var(--primary-mid);}',
+    /* 점 */
+    '.cw-mini-cell .dots{display:flex;gap:2.5px;align-items:center;height:6px;}',
+    '.cw-mini-cell .dots i{width:5px;height:5px;border-radius:50%;display:block;}',
+    '.cw-mini-cell .dots i.more{width:3px;height:3px;background:var(--text3);}',
+
+    /* 선택한 날짜 패널 */
+    '.cw-mini-day{margin-top:14px;padding-top:13px;border-top:1px solid var(--border);}',
+    '.cw-mini-dayhead{display:flex;align-items:center;gap:7px;margin-bottom:10px;}',
+    '.cw-mini-dayhead .d{font-size:14px;font-weight:700;color:var(--text);}',
+    '.cw-mini-dayhead .c{margin-left:auto;font-size:11.5px;font-weight:650;color:var(--text3);}',
+    '.cw-mini-none{padding:26px 10px;text-align:center;font-size:12px;color:var(--text3);}',
+
+    /* PC 에서는 미니 달력을 쓰지 않는다 */
+    '@media (min-width:761px){.cw-agenda{display:none!important;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+var _cwOrigRenderAll6 = renderAllCal;
+renderAllCal = function(){
+  _cwV27Styles();
+  _cwOrigRenderAll6();
+};
+var _cwOrigSpecCal6 = renderSpecCal;
+renderSpecCal = function(spec){
+  _cwV27Styles();
+  _cwOrigSpecCal6(spec);
+};
+window.addEventListener('DOMContentLoaded', function(){ _cwV27Styles(); });
+_cwV27Styles();
 
 </script>
 
