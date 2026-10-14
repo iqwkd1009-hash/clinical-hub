@@ -8825,7 +8825,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-14-v21';
+window.CLINICAL_HUB_BUILD='2026-10-14-v22';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -10978,6 +10978,94 @@ window.addEventListener('DOMContentLoaded', function(){
   _cwStyles(); _cwStyles2();
   setTimeout(function(){
     try { _cwBuildLayout(); _cwRecolorSpecDots(); } catch(e){}
+  }, 0);
+});
+
+
+/* ══════════════════════════════════════════════════════════════
+   v22 — 달력 헤더 정리
+     · 월 이동 화살표를 제목 옆으로 (참고 이미지 레이아웃)
+     · 밀도 토글(여유/보통/빽빽) 숨김 · 기본값 빽빽 고정
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1) 기본 밀도를 빽빽으로 고정하고 토글은 감춘다 ── */
+(function _cwForceDenseCalendar(){
+  try {
+    _calDensity = 'dense';
+    storageSet('chubCalDensity', 'dense');
+  } catch(e){ _calDensity = 'dense'; }
+  try { _applyDensity(); } catch(e){}
+})();
+
+/* 토글을 아예 만들지 않는다 (이미 만들어졌으면 제거) */
+_ensureDensityToggle = function(){
+  try {
+    document.querySelectorAll('.cal-density').forEach(function(el){ el.remove(); });
+    _calDensity = 'dense';
+    _applyDensity();
+  } catch(e){}
+};
+
+function _cwDenseStyles(){
+  if (document.getElementById('calDenseLockStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'calDenseLockStyles';
+  st.textContent = '.cal-density,#calDensityToggle{display:none!important;}';
+  document.head.appendChild(st);
+}
+
+/* ── 2) 월 이동 화살표를 제목 옆으로 ── */
+function _cwNavStyles(){
+  if (document.getElementById('calNavInlineStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'calNavInlineStyles';
+  st.textContent = [
+    /* 가운데 정렬 + 양끝 absolute 였던 것을 왼쪽 정렬 한 줄로 */
+    '.calendar-first-main .month-nav{position:static!important;justify-content:flex-start!important;',
+    'gap:2px;margin:2px 0 12px!important;min-height:34px;}',
+    '.calendar-first-main .month-nav > .month-nav-btn:first-child{position:static!important;left:auto!important;order:2;}',
+    '.calendar-first-main .month-nav > .month-nav-btn:nth-last-of-type(1){position:static!important;right:auto!important;order:3;}',
+    '.calendar-first-main .month-nav-title{order:1;flex:0 0 auto;margin-right:8px;',
+    'font-size:20px!important;white-space:nowrap;}',
+    /* 화살표를 테두리 없는 작은 글리프로 */
+    '.calendar-first-main .month-nav-btn{width:26px!important;height:26px!important;',
+    'border:0!important;background:transparent!important;color:var(--text3)!important;',
+    'border-radius:7px!important;font-size:17px!important;line-height:1;padding:0;}',
+    '.calendar-first-main .month-nav-btn:hover{background:var(--surface2)!important;',
+    'color:var(--primary)!important;}',
+    /* Day / Week 뷰 나브도 같은 모양으로 */
+    '.cw-nav{gap:2px;}',
+    '.cw-nav .cw-nav-title{order:1;flex:0 0 auto;margin-right:8px;font-size:20px;white-space:nowrap;}',
+    '.cw-nav .cw-nav-btn:first-child{order:2;}',
+    '.cw-nav .cw-nav-btn:nth-last-of-type(1){order:3;}',
+    '.cw-nav .cw-nav-btn{width:26px;height:26px;border:0;background:transparent;',
+    'color:var(--text3);font-size:17px;}',
+    '.cw-nav .cw-nav-btn:hover{background:var(--surface2);color:var(--primary);}',
+    '@media (max-width:560px){',
+    '  .calendar-first-main .month-nav-title,.cw-nav .cw-nav-title{font-size:17px;margin-right:4px;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+/* 렌더마다 보장 */
+var _cwOrigRenderAll2 = renderAllCal;
+renderAllCal = function(){
+  _cwDenseStyles();
+  _cwNavStyles();
+  _cwOrigRenderAll2();
+  try { document.querySelectorAll('.cal-density').forEach(function(el){ el.remove(); }); } catch(e){}
+};
+
+window.addEventListener('DOMContentLoaded', function(){
+  _cwDenseStyles();
+  _cwNavStyles();
+  setTimeout(function(){
+    try {
+      _calDensity = 'dense';
+      _applyDensity();
+      document.querySelectorAll('.cal-density').forEach(function(el){ el.remove(); });
+    } catch(e){}
   }, 0);
 });
 
