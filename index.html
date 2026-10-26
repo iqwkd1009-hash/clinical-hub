@@ -7772,10 +7772,14 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
 
   if(header) {
     header.innerHTML='';
-    ['일','월','화','수','목','금','토'].forEach((d,i)=>{
+    [['일','일요일'],['월','월요일'],['화','화요일'],['수','수요일'],
+     ['목','목요일'],['금','금요일'],['토','토요일']].forEach((pair,i)=>{
       const el=document.createElement('div');
       el.className='month-weekday'+(i===0?' sun':i===6?' sat':'');
-      el.textContent=d; header.appendChild(el);
+      const f=document.createElement('span'); f.className='dw-f'; f.textContent=pair[1];
+      const sh=document.createElement('span'); sh.className='dw-s'; sh.textContent=pair[0];
+      el.appendChild(f); el.appendChild(sh);
+      header.appendChild(el);
     });
   }
 
@@ -7854,7 +7858,19 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
     const cell=document.createElement('div');
     cell.className='month-day'+(!isCurrent?' other-month':'')+(isToday?' today':'')+(dow===0?' sunday':dow===6?' saturday':'');
     const num=document.createElement('div');
-    num.className='month-day-num';num.textContent=dayNum;cell.appendChild(num);
+    num.className='month-day-num';
+    // 달이 바뀌는 칸(격자 첫 칸, 매월 1일)에는 "10월 1" 처럼 월을 함께 쓴다
+    let _mLab='';
+    if(cellIdx===0 || dayNum===1){
+      const _m2 = isCurrent ? mo : (cellIdx < firstDay ? mo-1 : mo+1);
+      _mLab = (new Date(yr,_m2,1).getMonth()+1) + '월 ';
+    }
+    num.textContent = _mLab + dayNum;
+    if(_mLab) num.classList.add('has-mo');
+    cell.appendChild(num);
+    if(isCurrent){
+      try { cell.dataset.date = yr + '-' + String(mo+1).padStart(2,'0') + '-' + String(dayNum).padStart(2,'0'); } catch(e){}
+    }
 
     if(isCurrent){
       const slots=rowSlots[cellIdx]||[];
@@ -8827,7 +8843,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-27-v31-open';
+window.CLINICAL_HUB_BUILD='2026-10-27-v37-upfold';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -11349,24 +11365,30 @@ renderDdaySummary = function(){
     });
   }
 
-  /* Specialty 분포 — 색 범례 겸용 (전체 보기일 때만) */
-  if (_allCalSpecFilter === 'all') {
+  /* Specialty — 전체 보기면 분포(색 범례 겸용),
+     필터 중이면 선택된 과 하나만 남겨 다시 눌러 해제할 수 있게 한다 */
+  {
     var specCount = {};
     scope.rows.forEach(function(e){
       var sp = _calendarCardSpec(e, 'gyn');
       specCount[sp] = (specCount[sp] || 0) + 1;
     });
     var specs = Object.keys(specCount).sort(function(a,b){ return specCount[b]-specCount[a]; });
-    if (specs.length > 1) {
+    if (_allCalSpecFilter !== 'all') {
+      specs = [_allCalSpecFilter];
+      if (specCount[_allCalSpecFilter] === undefined) specCount[_allCalSpecFilter] = 0;
+    }
+    if (specs.length > 1 || _allCalSpecFilter !== 'all') {
       var sep2 = document.createElement('span'); sep2.className='cw-stat-sep is-spec'; wrap.appendChild(sep2);
       specs.forEach(function(sp){
         var c = document.createElement('button');
-        c.type='button'; c.className='cw-stat-chip is-spec';
+        c.type='button';
+        c.className='cw-stat-chip is-spec' + (_allCalSpecFilter === sp ? ' on' : '');
         c.innerHTML = '<span class="sd" style="background:' + specColor(sp) + '"></span>' +
           _safeText(specLabel(sp)) + ' <span class="c">' + specCount[sp] + '</span>';
-        c.title = specLabel(sp) + '만 보기';
+        c.title = _allCalSpecFilter === sp ? '이 과 필터 해제' : specLabel(sp) + '만 보기';
         c.onclick = function(){
-          _allCalSpecFilter = sp;
+          _allCalSpecFilter = (_allCalSpecFilter === sp) ? 'all' : sp;
           _cwResetFilterHosts();
           renderAllCal();
         };
@@ -11527,6 +11549,7 @@ function _cwRenderWeekInto(host, items, onMove){
       hd.innerHTML = '<div class="cw-wdow">'+DOW[i]+'</div><div class="cw-wnum">'+d.getDate()+'</div>';
       col.appendChild(hd);
       var bd = document.createElement('div'); bd.className='cw-wbody';
+      try { col.dataset.date = _cwISO(d); } catch(e){}
       var evs = items.filter(function(ev){ return _cwCovers(ev, d); });
       if (!evs.length) {
         var n = document.createElement('div'); n.className='cw-wnone'; n.textContent='–'; bd.appendChild(n);
@@ -11583,7 +11606,15 @@ function _cwRenderDayInto(host, items, fallbackSpec, onMove){
   h1.textContent = (d.getMonth()+1)+'월 '+d.getDate()+'일 '+DOW[d.getDay()];
   var h2 = document.createElement('div'); h2.className='cw-dsub';
   h2.textContent = (_cwSameDay(d, today) ? '오늘 · ' : '') + evs.length + '건';
-  hd.appendChild(h1); hd.appendChild(h2); box.appendChild(hd);
+  hd.appendChild(h1); hd.appendChild(h2);
+  if (typeof _sbAuthed === 'function' && _sbAuthed()) {
+    var dAdd = document.createElement('button');
+    dAdd.type='button'; dAdd.className='cw-day-add';
+    dAdd.textContent='+ 추가';
+    dAdd.onclick = function(){ _sbQuickAdd(_cwISO(d)); };
+    hd.appendChild(dAdd);
+  }
+  box.appendChild(hd);
 
   if (!evs.length) {
     var none = document.createElement('div'); none.className='cw-dnone';
@@ -11990,6 +12021,7 @@ var _cwOrigBuildMonthGrid = _buildMonthGrid;
 _buildMonthGrid = function(grid, header, titleEl, items, yr, mo, colorFn, clickFn, titleFn){
   _cwOrigBuildMonthGrid(grid, header, titleEl, items, yr, mo, colorFn, clickFn, titleFn);
   try { _cwMonthEmptyOverlay(grid, items, yr, mo); } catch(e){}
+  try { _krPaintMonthGrid(grid); } catch(e){}
 };
 
 function _cwV24Styles(){
@@ -12538,6 +12570,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
       }
 
       var day = _cwDay(new Date(yr, mo, dnum));
+      try { cell.setAttribute('data-iso', _cwISO(day)); } catch(e){}
       var evs = items.filter(function(ev){ return _cwCovers(ev, day); });
       var isToday = _cwSameDay(day, today);
       if (isToday) cell.classList.add('is-today');
@@ -12589,6 +12622,21 @@ function _cwRenderMiniMonth(host, items, yr, mo){
     DOW[selDate.getDay()] + '요일</span>' +
     (_cwSameDay(selDate, today) ? '<span class="cw-ag-badge">오늘</span>' : '') +
     '<span class="c">' + selEvs.length + '건</span>';
+  try {
+    var hn = krHoliday(_cwISO(selDate));
+    if (hn) {
+      var hs = document.createElement('span');
+      hs.className = 'kr-hol-chip'; hs.textContent = hn;
+      ph.appendChild(hs);
+    }
+  } catch(e){}
+  if (typeof _sbAuthed === 'function' && _sbAuthed()) {
+    var addB = document.createElement('button');
+    addB.type='button'; addB.className='cw-day-add';
+    addB.textContent='+ 추가';
+    addB.onclick = function(){ _sbQuickAdd(_cwISO(selDate)); };
+    ph.appendChild(addB);
+  }
   panel.appendChild(ph);
 
   if (!selEvs.length) {
@@ -12624,6 +12672,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
     });
   }
   host.appendChild(panel);
+  try { _krPaintMini(host); } catch(e){}
 }
 
 /* 모바일 Month 는 미니 격자, PC 는 기존 격자를 쓴다.
@@ -13217,6 +13266,689 @@ window.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){ _sbEnsureAuthBtn(); _sbPaintAuth(); }, 80);
 });
 setTimeout(function(){ try { _sbEnsureAuthBtn(); } catch(e){} }, 1200);
+
+/* ══════════════════════════════════════════════════════════════
+   v32 — 날짜를 클릭해서 바로 일정 만들기 (캘린더 앱처럼)
+     · 월 격자의 빈 칸 클릭
+     · 주간 뷰의 빈 칸 클릭
+     · 모바일 미니 달력 / Day 뷰의 "+ 추가" 버튼
+   ══════════════════════════════════════════════════════════════ */
+function _cwISO(d){
+  if (!d) return '';
+  var dt = (d instanceof Date) ? d : new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  return dt.getFullYear() + '-' +
+         String(dt.getMonth() + 1).padStart(2, '0') + '-' +
+         String(dt.getDate()).padStart(2, '0');
+}
+
+/* 날짜만 채워진 새 일정 폼 */
+function _sbQuickAdd(dateStr){
+  if (!dateStr) return;
+  var spec = (typeof currentSpec !== 'undefined' && currentSpec && currentSpec !== 'all')
+    ? currentSpec : 'gyn';
+  openEventForm({ start: dateStr, end: dateStr, _spec: spec });
+}
+
+/* 빈 칸 클릭 → 추가 (이벤트 막대나 버튼을 누른 건 제외) */
+document.addEventListener('click', function(e){
+  if (typeof _sbAuthed !== 'function' || !_sbAuthed()) return;
+  var t = e.target;
+  if (!t || !t.closest) return;
+  /* 일정 막대·더보기·버튼을 눌렀으면 원래 동작을 둔다 */
+  if (t.closest('.month-event, .cw-wev, .cw-dev, .cw-ag-ev, .month-more, button, a')) return;
+  var cell = t.closest('.month-day[data-date], .cw-wcol[data-date]');
+  if (!cell) return;
+  e.preventDefault();
+  _sbQuickAdd(cell.dataset.date);
+});
+
+function _cwQuickStyles(){
+  if (document.getElementById('cwQuickStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'cwQuickStyles';
+  st.textContent = [
+    /* 빈 칸에 마우스를 올리면 추가할 수 있다는 걸 알려준다 */
+    'body.sb-editing .month-day[data-date]{cursor:pointer;}',
+    'body.sb-editing .month-day[data-date]:hover{background:var(--primary-soft);}',
+    'body.sb-editing .month-day[data-date]:hover .month-day-num{color:var(--primary);}',
+    'body.sb-editing .month-day[data-date].today:hover .month-day-num{color:#fff;}',
+    'body.sb-editing .cw-wcol[data-date] .cw-wbody{cursor:pointer;}',
+    'body.sb-editing .cw-wcol[data-date]:hover .cw-wbody{background:var(--primary-soft);}',
+    /* + 추가 버튼 (모바일 미니 달력 · Day 뷰) */
+    '.cw-day-add{margin-left:8px;height:26px;padding:0 11px;border-radius:99px;',
+    'border:1px solid var(--primary-mid);background:var(--primary-soft);color:var(--primary);',
+    'font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}',
+    '.cw-day-add:hover{background:var(--primary);color:#fff;border-color:var(--primary);}',
+    '.cw-mini-dayhead .cw-day-add,.cw-dhead .cw-day-add{margin-left:auto;}',
+    '.cw-mini-dayhead .c + .cw-day-add,.cw-dhead .cw-dsub + .cw-day-add{margin-left:8px;}',
+    '@media (max-width:760px){.cw-day-add{height:30px;padding:0 13px;font-size:11.5px;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_cwQuickStyles();
+window.addEventListener('DOMContentLoaded', function(){
+  _cwQuickStyles();
+  document.body.classList.toggle('sb-editing', typeof _sbAuthed === 'function' && _sbAuthed());
+});
+
+/* ══════════════════════════════════════════════════════════════
+   v33 — 공휴일 표시 + 월/연도 바로 이동
+   ══════════════════════════════════════════════════════════════ */
+
+/* 관공서 공휴일 + 대체공휴일. 근로자의 날은 관공서 공휴일은 아니지만
+   회사는 쉬므로 따로 표시한다. 제헌절(7/17)은 2008년부터 공휴일이 아니다. */
+var KR_HOLIDAYS = {
+  '2026-01-01':'신정',
+  '2026-02-16':'설날 연휴', '2026-02-17':'설날', '2026-02-18':'설날 연휴',
+  '2026-03-01':'삼일절',    '2026-03-02':'대체공휴일',
+  '2026-05-01':'근로자의 날',
+  '2026-05-05':'어린이날',
+  '2026-05-24':'부처님오신날','2026-05-25':'대체공휴일',
+  '2026-06-03':'지방선거',
+  '2026-06-06':'현충일',
+  '2026-08-15':'광복절',     '2026-08-17':'대체공휴일',
+  '2026-09-24':'추석 연휴',  '2026-09-25':'추석', '2026-09-26':'추석 연휴',
+  '2026-09-28':'대체공휴일',
+  '2026-10-03':'개천절',     '2026-10-05':'대체공휴일',
+  '2026-10-09':'한글날',
+  '2026-12-25':'크리스마스',
+
+  '2027-01-01':'신정',
+  '2027-02-06':'설날 연휴', '2027-02-07':'설날', '2027-02-08':'설날 연휴',
+  '2027-02-09':'대체공휴일',
+  '2027-03-01':'삼일절',
+  '2027-05-01':'근로자의 날',
+  '2027-05-05':'어린이날',
+  '2027-05-13':'부처님오신날',
+  '2027-06-06':'현충일',
+  '2027-08-15':'광복절',    '2027-08-16':'대체공휴일',
+  '2027-09-14':'추석 연휴', '2027-09-15':'추석', '2027-09-16':'추석 연휴',
+  '2027-10-03':'개천절',    '2027-10-04':'대체공휴일',
+  '2027-10-09':'한글날',    '2027-10-11':'대체공휴일',
+  '2027-12-25':'크리스마스'
+};
+/* 관공서 공휴일이 아닌 것 — 옅게 표시한다 */
+var KR_SOFT = { '2026-05-01':1, '2027-05-01':1, '2026-06-03':1 };
+
+function krHoliday(iso){ return KR_HOLIDAYS[iso] || ''; }
+
+/* 월 격자에 공휴일 이름을 얹는다 */
+function _krPaintMonthGrid(grid){
+  if (!grid) return;
+  grid.querySelectorAll('.month-day[data-date]').forEach(function(cell){
+    var nm = krHoliday(cell.dataset.date);
+    var old = cell.querySelector(':scope > .kr-hol');
+    if (old) old.remove();
+    cell.classList.toggle('is-holiday', !!nm && !KR_SOFT[cell.dataset.date]);
+    if (!nm) return;
+    var t = document.createElement('div');
+    t.className = 'kr-hol' + (KR_SOFT[cell.dataset.date] ? ' soft' : '');
+    t.textContent = nm;
+    cell.appendChild(t);
+  });
+}
+
+/* 미니 달력(모바일)에도 */
+function _krPaintMini(host){
+  if (!host) return;
+  host.querySelectorAll('.cw-mini-cell').forEach(function(cell){
+    var n = cell.querySelector('.n');
+    if (!n || cell.classList.contains('out')) return;
+    var d = cell.getAttribute('data-iso');
+    if (!d) return;
+    var nm = krHoliday(d);
+    cell.classList.toggle('is-holiday', !!nm && !KR_SOFT[d]);
+    if (nm) cell.title = nm;
+  });
+}
+
+/* ── 월/연도 바로 이동 (ALL 캘린더) ─────────────────────────
+   과별 캘린더엔 이미 있던 기능을 ALL 에도 붙인다. */
+function openAllCalMonthPicker(){
+  var old = document.getElementById('krPick');
+  if (old) { old.remove(); return; }
+
+  var titleEl = document.getElementById('allCalMonthTitle');
+  if (!titleEl) return;
+  var yr = _allCalYear, mo = _allCalMonth;
+  var today = new Date();
+
+  var box = document.createElement('div');
+  box.id = 'krPick'; box.className = 'kr-pick';
+  var head = document.createElement('div'); head.className = 'kr-pick-head';
+  var prev = document.createElement('button'); prev.type='button'; prev.className='kr-pick-nav'; prev.textContent='‹';
+  var ylab = document.createElement('div'); ylab.className='kr-pick-y'; ylab.textContent = yr + '년';
+  var next = document.createElement('button'); next.type='button'; next.className='kr-pick-nav'; next.textContent='›';
+  head.appendChild(prev); head.appendChild(ylab); head.appendChild(next);
+  box.appendChild(head);
+
+  var grid = document.createElement('div'); grid.className = 'kr-pick-grid';
+  box.appendChild(grid);
+
+  var shownYear = yr;
+  function paint(){
+    ylab.textContent = shownYear + '년';
+    grid.innerHTML = '';
+    for (var m = 0; m < 12; m++) {
+      (function(m){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'kr-pick-m';
+        if (shownYear === yr && m === mo) b.classList.add('on');
+        if (shownYear === today.getFullYear() && m === today.getMonth()) b.classList.add('now');
+        b.textContent = (m + 1) + '월';
+        b.onclick = function(){
+          _allCalYear = shownYear; _allCalMonth = m;
+          try { _cwCursor = _cwDay(new Date(shownYear, m, 1)); } catch(e){}
+          box.remove();
+          renderAllCal();
+        };
+        grid.appendChild(b);
+      })(m);
+    }
+  }
+  prev.onclick = function(){ shownYear--; paint(); };
+  next.onclick = function(){ shownYear++; paint(); };
+  paint();
+
+  titleEl.parentElement.style.position = 'relative';
+  titleEl.parentElement.appendChild(box);
+
+  setTimeout(function(){
+    document.addEventListener('click', function off(e){
+      if (!box.contains(e.target) && e.target !== titleEl) {
+        box.remove(); document.removeEventListener('click', off);
+      }
+    });
+  }, 0);
+}
+
+(function(){
+  function bind(){
+    var t = document.getElementById('allCalMonthTitle');
+    if (!t || t.dataset.pick === '1') return;
+    t.dataset.pick = '1';
+    t.style.cursor = 'pointer';
+    t.title = '클릭하면 다른 달로 이동';
+    t.addEventListener('click', function(e){ e.stopPropagation(); openAllCalMonthPicker(); });
+  }
+  window.addEventListener('DOMContentLoaded', function(){ setTimeout(bind, 200); });
+  setTimeout(bind, 1500);
+  var _o = renderAllCal;
+  renderAllCal = function(){ _o(); try { bind(); } catch(e){} };
+})();
+
+/* ── 스타일 ─────────────────────────────────────────────── */
+function _krStyles(){
+  if (document.getElementById('krStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'krStyles';
+  st.textContent = [
+    /* 공휴일 */
+    '.month-day{position:relative;}',
+    '.kr-hol{position:absolute;top:6px;right:7px;font-size:10px;font-weight:650;',
+    'color:#C2474F;pointer-events:none;max-width:72%;overflow:hidden;white-space:nowrap;',
+    'text-overflow:ellipsis;}',
+    '.kr-hol.soft{color:var(--text3);font-weight:600;}',
+    '.month-day.is-holiday .month-day-num{color:#C2474F;}',
+    '.month-day.is-holiday.today .month-day-num{color:#fff;}',
+    'body.dark .kr-hol{color:#E09aa0;}',
+    'body.dark .month-day.is-holiday .month-day-num{color:#E09aa0;}',
+    '.cw-mini-cell.is-holiday .n{color:#C2474F;}',
+    '.cw-mini-cell.is-holiday.is-today .n{color:#fff;}',
+    'body.dark .cw-mini-cell.is-holiday .n{color:#E09aa0;}',
+    '.kr-hol-chip{margin-left:7px;padding:2px 8px;border-radius:99px;background:#FBEAEC;',
+    'color:#C2474F;font-size:10.5px;font-weight:700;}',
+    'body.dark .kr-hol-chip{background:#3A2225;color:#E09aa0;}',
+
+    /* 월 선택기 */
+    '.kr-pick{position:absolute;top:calc(100% + 8px);left:0;z-index:60;width:248px;',
+    'background:var(--surface);border:1px solid var(--border);border-radius:13px;',
+    'box-shadow:0 14px 38px rgba(0,0,0,.17);padding:12px;}',
+    '.kr-pick-head{display:flex;align-items:center;gap:6px;margin-bottom:9px;}',
+    '.kr-pick-y{flex:1;text-align:center;font-size:13.5px;font-weight:750;color:var(--text);}',
+    '.kr-pick-nav{width:26px;height:26px;border:0;background:transparent;border-radius:7px;',
+    'font-size:16px;color:var(--text2);cursor:pointer;line-height:1;}',
+    '.kr-pick-nav:hover{background:var(--surface2);color:var(--primary);}',
+    '.kr-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}',
+    '.kr-pick-m{height:34px;border:1px solid transparent;border-radius:8px;background:transparent;',
+    'font-family:var(--font);font-size:12px;font-weight:650;color:var(--text2);cursor:pointer;}',
+    '.kr-pick-m:hover{background:var(--surface2);color:var(--primary);}',
+    '.kr-pick-m.now{border-color:var(--primary-mid);}',
+    '.kr-pick-m.on{background:var(--primary);color:#fff;border-color:var(--primary);}',
+    '@media (max-width:760px){.kr-pick{width:min(260px,88vw);} .kr-hol{font-size:9px;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_krStyles();
+window.addEventListener('DOMContentLoaded', _krStyles);
+
+/* ══════════════════════════════════════════════════════════════
+   v34 — Outlook 월 보기에서 가져온 것
+     ① 칸에 마우스 올리면 +
+     ② 달이 바뀌는 칸에 월 표시  (격자 쪽에서 처리)
+     ③ 요일 전체 이름 + 좌측 정렬
+     ④ 격자선 옅게
+   ══════════════════════════════════════════════════════════════ */
+function _olStyles(){
+  if (document.getElementById('olStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'olStyles';
+  st.textContent = [
+    /* ── ③ 요일 헤더: 전체 이름 · 왼쪽 정렬 ── */
+    '.month-weekday{text-align:left!important;padding-left:9px!important;',
+    'font-size:11px!important;font-weight:650!important;letter-spacing:0!important;}',
+    '.month-weekday .dw-s{display:none;}',
+    '.month-weekday .dw-f{display:inline;}',
+
+    /* ── ② 월이 바뀌는 칸 — 원형 고정폭을 풀어 한 줄로 ── */
+    '.month-day-num.has-mo{width:auto!important;min-width:22px;height:22px;',
+    '  padding:0 7px;border-radius:11px;white-space:nowrap;font-weight:700;',
+    '  letter-spacing:-.01em;}',
+
+    /* ── ④ 격자선 옅게 ── */
+    '.month-grid .month-day{border-color:color-mix(in srgb, var(--border) 55%, transparent)!important;}',
+    '#allCalMonthHeader,[id$="MonthHeader"]{border-color:color-mix(in srgb, var(--border) 55%, transparent)!important;}',
+    '@supports not (color: color-mix(in srgb, red, blue)){',
+    '  .month-grid .month-day{border-color:var(--border)!important;opacity:1;}',
+    '}',
+
+    /* ── ① 호버 시 + ── */
+    'body.sb-editing .month-day[data-date]::after{',
+    '  content:"+";position:absolute;top:3px;right:6px;width:19px;height:19px;',
+    '  display:flex;align-items:center;justify-content:center;border-radius:6px;',
+    '  background:var(--primary);color:#fff;font-size:14px;font-weight:700;line-height:1;',
+    '  opacity:0;transform:scale(.82);transition:.12s;pointer-events:none;}',
+    'body.sb-editing .month-day[data-date]:hover::after{opacity:1;transform:scale(1);}',
+    /* 공휴일 이름과 겹치지 않게 — 호버하면 잠시 숨긴다 */
+    'body.sb-editing .month-day[data-date]:hover .kr-hol{opacity:0;}',
+    '.kr-hol{transition:opacity .12s;}',
+
+    /* ── 모바일: 요일은 한 글자, + 는 숨김 ── */
+    '@media (max-width:760px){',
+    '  .month-weekday{text-align:center!important;padding-left:0!important;}',
+    '  .month-weekday .dw-f{display:none;}',
+    '  .month-weekday .dw-s{display:inline;}',
+    '  body.sb-editing .month-day[data-date]::after{display:none;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_olStyles();
+window.addEventListener('DOMContentLoaded', _olStyles);
+
+/* ══════════════════════════════════════════════════════════════
+   v35 — 좌측 미니 달력 (Outlook 스타일)
+   사이드바 맨 위에 붙고, 날짜를 누르면 본 달력이 그 달로 이동한다.
+   일정이 있는 날엔 작은 점을 찍어 어디에 몰렸는지 한눈에 보이게 한다.
+   ══════════════════════════════════════════════════════════════ */
+var _msYear = null, _msMonth = null;   /* 미니 달력이 보여주는 달 */
+
+function _msHost(){
+  var inner = document.querySelector('#sidebar-all-cal .sidebar-inner');
+  if (!inner) return null;
+  var el = document.getElementById('calMiniSide');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'calMiniSide';
+    el.className = 'ms-wrap';
+    inner.insertBefore(el, inner.firstChild);
+  } else if (el.parentElement !== inner) {
+    inner.insertBefore(el, inner.firstChild);   /* 필터 재배치로 지워졌으면 다시 넣는다 */
+  }
+  return el;
+}
+
+function _msEventDays(yr, mo){
+  var set = {};
+  try {
+    var items = currentAllCalItems() || [];
+    var ms = _cwDay(new Date(yr, mo, 1));
+    var me = _cwDay(new Date(yr, mo + 1, 0));
+    items.forEach(function(ev){
+      var se = _calStartEnd(ev); if (!se.s) return;
+      var a = se.s < ms ? ms : se.s;
+      var b = (se.e || se.s) > me ? me : (se.e || se.s);
+      for (var d = new Date(a); d <= b; d.setDate(d.getDate() + 1)) set[d.getDate()] = 1;
+    });
+  } catch(e){}
+  return set;
+}
+
+function renderCalMiniSide(){
+  if (window.innerWidth < 901) return;
+  var host = _msHost();
+  if (!host) return;
+
+  if (_msYear === null) { _msYear = _allCalYear; _msMonth = _allCalMonth; }
+  var yr = _msYear, mo = _msMonth;
+  var today = _cwDay(new Date());
+  var evDays = _msEventDays(yr, mo);
+
+  var first = new Date(yr, mo, 1).getDay();
+  var last  = new Date(yr, mo + 1, 0).getDate();
+  var prevLast = new Date(yr, mo, 0).getDate();
+  var cells = Math.ceil((first + last) / 7) * 7;
+
+  host.innerHTML = '';
+
+  var head = document.createElement('div'); head.className = 'ms-head';
+  var t = document.createElement('div'); t.className = 'ms-title';
+  t.textContent = yr + '년 ' + (mo + 1) + '월';
+  var nav = document.createElement('div'); nav.className = 'ms-nav';
+  var up = document.createElement('button');
+  up.type='button'; up.className='ms-nav-btn'; up.textContent='‹'; up.title='이전 달';
+  up.onclick = function(){ _msMove(-1); };
+  var dn = document.createElement('button');
+  dn.type='button'; dn.className='ms-nav-btn'; dn.textContent='›'; dn.title='다음 달';
+  dn.onclick = function(){ _msMove(1); };
+  nav.appendChild(up); nav.appendChild(dn);
+  head.appendChild(t); head.appendChild(nav);
+  host.appendChild(head);
+
+  var dow = document.createElement('div'); dow.className = 'ms-dow';
+  ['일','월','화','수','목','금','토'].forEach(function(d, i){
+    var c = document.createElement('div');
+    c.className = i === 0 ? 'sun' : i === 6 ? 'sat' : '';
+    c.textContent = d; dow.appendChild(c);
+  });
+  host.appendChild(dow);
+
+  var grid = document.createElement('div'); grid.className = 'ms-grid';
+  for (var i = 0; i < cells; i++) {
+    (function(i){
+      var inMo = (i >= first && i < first + last);
+      var dnum = inMo ? (i - first + 1)
+               : (i < first ? prevLast - first + i + 1 : i - first - last + 1);
+      var b = document.createElement('button');
+      b.type = 'button';
+      var w = i % 7;
+      b.className = 'ms-c' + (inMo ? '' : ' out') + (w === 0 ? ' sun' : w === 6 ? ' sat' : '');
+
+      var day = inMo ? _cwDay(new Date(yr, mo, dnum))
+                     : _cwDay(new Date(yr, mo + (i < first ? -1 : 1), dnum));
+      var iso = _cwISO(day);
+      if (_cwSameDay(day, today)) b.classList.add('is-today');
+      if (inMo && _allCalYear === yr && _allCalMonth === mo) b.classList.add('in-view');
+      if (krHoliday(iso) && !KR_SOFT[iso]) b.classList.add('is-hol');
+      if (inMo && evDays[dnum]) b.classList.add('has-ev');
+      var hn = krHoliday(iso);
+      if (hn) b.title = hn;
+
+      b.textContent = dnum;
+      b.onclick = function(){ _msGo(day); };
+      grid.appendChild(b);
+    })(i);
+  }
+  host.appendChild(grid);
+
+  var foot = document.createElement('button');
+  foot.type = 'button'; foot.className = 'ms-today';
+  foot.textContent = '오늘로';
+  foot.onclick = function(){ _msGo(_cwDay(new Date())); };
+  host.appendChild(foot);
+}
+
+function _msMove(n){
+  var d = new Date(_msYear, _msMonth + n, 1);
+  _msYear = d.getFullYear(); _msMonth = d.getMonth();
+  renderCalMiniSide();
+}
+
+/* 날짜를 누르면 본 달력이 그 날짜로 이동 */
+function _msGo(day){
+  _msYear = day.getFullYear(); _msMonth = day.getMonth();
+  _allCalYear = _msYear; _allCalMonth = _msMonth;
+  try { _cwCursor = _cwDay(day); } catch(e){}
+  renderAllCal();
+}
+
+/* 본 달력이 움직이면 미니도 따라간다 */
+var _msOrigRenderAll = renderAllCal;
+renderAllCal = function(){
+  _msOrigRenderAll();
+  try {
+    if (_msYear === null || _allCalYear !== _msYear || _allCalMonth !== _msMonth) {
+      _msYear = _allCalYear; _msMonth = _allCalMonth;
+    }
+    renderCalMiniSide();
+  } catch(e){ console.error('[mini-side] ' + e.message); }
+};
+
+var _msTimer = null;
+window.addEventListener('resize', function(){
+  clearTimeout(_msTimer);
+  _msTimer = setTimeout(function(){ try { renderCalMiniSide(); } catch(e){} }, 180);
+});
+
+function _msStyles(){
+  if (document.getElementById('msStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'msStyles';
+  st.textContent = [
+    '.ms-wrap{padding:0 0 16px;margin-bottom:16px;border-bottom:1px solid var(--border);}',
+    '.ms-head{display:flex;align-items:center;gap:6px;margin-bottom:9px;}',
+    '.ms-title{flex:1;font-size:12.5px;font-weight:750;color:var(--text);letter-spacing:-.01em;}',
+    '.ms-nav{display:flex;gap:1px;}',
+    '.ms-nav-btn{width:22px;height:22px;border:0;background:transparent;border-radius:6px;',
+    'color:var(--text3);font-size:14px;line-height:1;cursor:pointer;font-family:var(--font);}',
+    '.ms-nav-btn:hover{background:var(--surface2);color:var(--primary);}',
+
+    '.ms-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:3px;}',
+    '.ms-dow > div{text-align:center;font-size:9.5px;font-weight:700;color:var(--text3);padding:2px 0;}',
+    '.ms-dow .sun{color:#A66;}.ms-dow .sat{color:#5C7FA8;}',
+    'body.dark .ms-dow .sun{color:#C99;}',
+
+    '.ms-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}',
+    '.ms-c{position:relative;height:23px;border:0;background:transparent;border-radius:6px;',
+    'font-family:var(--font);font-size:10.5px;font-weight:600;color:var(--text2);cursor:pointer;',
+    'padding:0;transition:background .1s;}',
+    '.ms-c:hover{background:var(--surface2);color:var(--primary);}',
+    '.ms-c.out{opacity:.32;}',
+    '.ms-c.sun,.ms-c.is-hol{color:#A66;}',
+    'body.dark .ms-c.sun,body.dark .ms-c.is-hol{color:#C99;}',
+    '.ms-c.sat{color:#5C7FA8;}',
+    /* 보고 있는 달 */
+    '.ms-c.in-view{background:var(--primary-soft);}',
+    '.ms-c.in-view:hover{background:var(--primary-mid);}',
+    /* 오늘 */
+    '.ms-c.is-today{background:var(--primary)!important;color:#fff!important;font-weight:750;}',
+    /* 일정 있는 날 — 작은 점 */
+    '.ms-c.has-ev::after{content:"";position:absolute;left:50%;bottom:2px;transform:translateX(-50%);',
+    'width:3px;height:3px;border-radius:50%;background:var(--primary);opacity:.75;}',
+    '.ms-c.is-today.has-ev::after{background:#fff;opacity:.9;}',
+
+    '.ms-today{width:100%;margin-top:9px;height:26px;border-radius:7px;',
+    'border:1px solid var(--border);background:var(--surface);color:var(--text2);',
+    'font-family:var(--font);font-size:10.5px;font-weight:650;cursor:pointer;}',
+    '.ms-today:hover{border-color:var(--primary-mid);color:var(--primary);background:var(--primary-soft);}',
+
+    '@media (max-width:900px){.ms-wrap{display:none!important;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_msStyles();
+window.addEventListener('DOMContentLoaded', function(){
+  _msStyles();
+  setTimeout(function(){ try { renderCalMiniSide(); } catch(e){} }, 300);
+});
+
+/* ══════════════════════════════════════════════════════════════
+   v36 — 사이드바 정리
+   같은 필터가 좌측과 요약 바에 중복돼 있었다.
+   요약 바가 가로라 공간을 덜 먹고, 보고 있는 달 기준이라 더 맞다.
+   좌측은 미니 달력만 남기고 폭을 줄여 달력에 공간을 넘긴다.
+   ══════════════════════════════════════════════════════════════ */
+function _slimStyles(){
+  if (document.getElementById('slimStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'slimStyles';
+  st.textContent = [
+    '@media (min-width:901px){',
+    /* 사이드바는 미니 달력 전용 — 폭을 줄인다 */
+    '  body #page-all-cal > .sidebar.sidebar{width:178px!important;min-width:178px!important;}',
+    /* 좌측의 중복 필터 제거 (모바일의 "필터" 버튼 쪽은 그대로 둔다) */
+    '  body #sidebar-all-cal .calendar-filter-strip{display:none!important;}',
+    '  #sidebar-all-cal .sidebar-title,#sidebar-all-cal > .sidebar-inner > .filter-section{display:none!important;}',
+    /* 미니 달력이 사이드바 전체를 쓰도록 */
+    '  .ms-wrap{border-bottom:0;padding-bottom:0;margin-bottom:10px;}',
+    /* 달력 본문이 넓어진 만큼 여백 조정 */
+    '  #page-all-cal .calendar-first-main{padding:18px 20px 28px!important;}',
+    '}',
+    /* 전체 건수 한 줄 */
+    '.ms-total{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);',
+    'font-size:10.5px;color:var(--text3);line-height:1.6;}',
+    '.ms-total b{color:var(--text2);font-weight:700;}',
+    '.ms-total .clr{display:block;margin-top:6px;border:0;background:transparent;padding:0;',
+    'color:var(--primary);font-family:var(--font);font-size:10.5px;font-weight:650;cursor:pointer;}',
+    '.ms-total .clr:hover{text-decoration:underline;}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+/* 미니 달력 아래에 전체 건수 (요약 바는 그 달 기준이라 총계가 안 보인다) */
+var _msOrigRender = renderCalMiniSide;
+renderCalMiniSide = function(){
+  _msOrigRender();
+  try {
+    var host = document.getElementById('calMiniSide');
+    if (!host) return;
+    var all = 0, shown = 0;
+    try { if (typeof ALL_CONFERENCES !== 'undefined') all = ALL_CONFERENCES.length; } catch(e){}
+    try { shown = (currentAllCalItems() || []).length; } catch(e){}
+    if (!all) all = shown;
+
+    var box = document.createElement('div');
+    box.className = 'ms-total';
+    var filtered = (typeof _allCalSpecFilter !== 'undefined' && _allCalSpecFilter !== 'all') ||
+                   (typeof _allCalTagFilter  !== 'undefined' && _allCalTagFilter  !== 'all');
+    box.innerHTML = filtered
+      ? '<b>' + shown + '</b>건 표시 중 · 전체 <b>' + all + '</b>건'
+      : '전체 <b>' + all + '</b>건';
+    if (filtered) {
+      var b = document.createElement('button');
+      b.type='button'; b.className='clr'; b.textContent='필터 해제';
+      b.onclick = function(){
+        _allCalSpecFilter = 'all'; _allCalTagFilter = 'all';
+        var sv = document.getElementById('allCalSearch'); if (sv) sv.value = '';
+        try { _cwResetFilterHosts(); } catch(e){}
+        renderAllCal();
+      };
+      box.appendChild(b);
+    }
+    host.appendChild(box);
+  } catch(e){}
+};
+
+_slimStyles();
+window.addEventListener('DOMContentLoaded', _slimStyles);
+
+/* ══════════════════════════════════════════════════════════════
+   v37 — Upcoming 패널 접기
+   패널이 가로 400px 가까이 먹어서 월 격자의 일정 이름이 잘렸다.
+   접으면 달력이 그만큼 넓어진다. 상태는 브라우저에 기억된다.
+   ══════════════════════════════════════════════════════════════ */
+var _UP_KEY = 'clinicalHubUpcomingCollapsed';
+var _upCollapsed = false;
+try { _upCollapsed = localStorage.getItem(_UP_KEY) === '1'; } catch(e){}
+
+function _upApply(){
+  document.querySelectorAll('.cal-split').forEach(function(sp){
+    sp.classList.toggle('up-collapsed', _upCollapsed);
+  });
+  document.querySelectorAll('.cup-toggle').forEach(function(b){
+    b.textContent = _upCollapsed ? '›' : '‹';
+    b.title = _upCollapsed ? 'Upcoming 펼치기' : 'Upcoming 접기';
+  });
+}
+
+function toggleUpcoming(){
+  _upCollapsed = !_upCollapsed;
+  try { localStorage.setItem(_UP_KEY, _upCollapsed ? '1' : '0'); } catch(e){}
+  _upApply();
+  /* 접었다 펴면 막대 폭이 달라지므로 다시 그린다 */
+  try {
+    if (typeof renderAllCal === 'function') renderAllCal();
+    if (typeof currentSpec !== 'undefined' && currentSpec && currentSpec !== 'all'
+        && typeof renderSpecMonth === 'function') renderSpecMonth(currentSpec);
+  } catch(e){}
+}
+
+function _upEnsureButtons(){
+  document.querySelectorAll('.cal-upcoming').forEach(function(panel){
+    var head = panel.querySelector('.cup-head');
+    if (head && !head.querySelector('.cup-toggle')) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'cup-toggle';
+      b.onclick = function(e){ e.stopPropagation(); toggleUpcoming(); };
+      head.appendChild(b);
+    }
+    if (!panel.querySelector('.cup-reopen')) {
+      var r = document.createElement('button');
+      r.type = 'button'; r.className = 'cup-reopen';
+      r.innerHTML = '<span class="ic">›</span><span class="tx">Upcoming</span>';
+      r.title = 'Upcoming 펼치기';
+      r.onclick = function(e){ e.stopPropagation(); toggleUpcoming(); };
+      panel.insertBefore(r, panel.firstChild);
+    }
+  });
+  _upApply();
+}
+
+function _upStyles(){
+  if (document.getElementById('upStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'upStyles';
+  st.textContent = [
+    '.cup-head{position:relative;}',
+    '.cup-toggle{position:absolute;top:-2px;right:-4px;width:24px;height:24px;border:0;',
+    'background:transparent;border-radius:7px;color:var(--text3);font-size:15px;line-height:1;',
+    'cursor:pointer;font-family:var(--font);}',
+    '.cup-toggle:hover{background:var(--surface2);color:var(--primary);}',
+    '.cup-reopen{display:none;}',
+
+    '@media (min-width:1181px){',
+    /* 접힌 상태 — 패널은 얇은 세로 띠만 남는다 */
+    '  .cal-split.up-collapsed{grid-template-columns:36px minmax(0,1fr)!important;}',
+    '  .cal-split.up-collapsed .cal-upcoming{padding:0!important;background:transparent!important;',
+    '    border:0!important;box-shadow:none!important;overflow:hidden;}',
+    '  .cal-split.up-collapsed .cal-upcoming > *{display:none!important;}',
+    '  .cal-split.up-collapsed .cup-reopen{display:flex!important;flex-direction:column;',
+    '    align-items:center;gap:9px;width:32px;padding:11px 0;border-radius:10px;',
+    '    border:1px solid var(--border);background:var(--surface);color:var(--text3);',
+    '    cursor:pointer;font-family:var(--font);transition:.14s;}',
+    '  .cal-split.up-collapsed .cup-reopen:hover{border-color:var(--primary-mid);',
+    '    color:var(--primary);background:var(--primary-soft);}',
+    '  .cal-split.up-collapsed .cup-reopen .ic{font-size:15px;line-height:1;}',
+    '  .cal-split.up-collapsed .cup-reopen .tx{writing-mode:vertical-rl;font-size:10.5px;',
+    '    font-weight:700;letter-spacing:.07em;}',
+    '}',
+    /* 두 칸 배치가 아닐 땐 접기 자체가 의미 없다 */
+    '@media (max-width:1180px){',
+    '  .cup-toggle{display:none;}',
+    '  .cal-split.up-collapsed{grid-template-columns:minmax(0,1fr)!important;}',
+    '  .cal-split.up-collapsed .cal-upcoming > *{display:revert!important;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+var _upOrigRenderAll = renderAllCal;
+renderAllCal = function(){
+  _upOrigRenderAll();
+  try { _upEnsureButtons(); } catch(e){}
+};
+var _upOrigSpecCal = renderSpecCal;
+renderSpecCal = function(spec){
+  _upOrigSpecCal(spec);
+  try { _upEnsureButtons(); } catch(e){}
+};
+
+_upStyles();
+window.addEventListener('DOMContentLoaded', function(){
+  _upStyles();
+  setTimeout(function(){ try { _upEnsureButtons(); } catch(e){} }, 300);
+});
 
 </script>
 
