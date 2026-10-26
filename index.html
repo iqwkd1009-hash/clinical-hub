@@ -8827,7 +8827,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-14-v27';
+window.CLINICAL_HUB_BUILD='2026-10-27-v30-write';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12693,6 +12693,526 @@ renderSpecCal = function(spec){
 };
 window.addEventListener('DOMContentLoaded', function(){ _cwV27Styles(); });
 _cwV27Styles();
+
+/* ══════════════════════════════════════════════════════════════
+   v28 — 데이터 출처를 Google Sheet → Supabase 로
+   
+   기존 로더 8개를 건드리지 않는다. 구글 시트로 나가는 요청만
+   가로채서 Supabase 응답을 같은 CSV 모양으로 돌려준다.
+   매핑에 없는 시트는 그대로 구글로 나간다(= 지금과 동일하게 동작).
+   
+   문제가 생기면 SB_ENABLED 를 false 로 바꾸면 전부 원상복귀된다.
+   ══════════════════════════════════════════════════════════════ */
+var SB_ENABLED = true;
+var SB_URL = 'https://xgrnzntsfcehcaexxrzz.supabase.co';
+var SB_KEY = 'sb_publishable_rKAPC9QVRahQxdoeNRkmPA_6b065cqN';
+
+/* 어떤 시트를 어떤 테이블로 바꿀지.
+   headers 는 "원본 시트의 컬럼명" 그대로 써야 기존 파서가 알아본다. */
+var SB_SOURCES = {
+  // GYN 캘린더 (gid=0)
+  '0': {
+    table: 'events', order: 'start_date.asc', filter: 'spec=eq.gyn',
+    headers: ['Name','Start','End','Location','Tag','주최','System','url','Duty','Note'],
+    cols:    ['name','start_date','end_date','loc','tag','organizer','system','url','duty','note']
+  },
+  // GYN 기사
+  '1711701439': {
+    table: 'articles', order: 'pub_date.desc',
+    headers: ['Hospital','Surgeon','Date','tag','System','indication','title','desc','link_label','image','link_url'],
+    cols:    ['hospital','surgeon','pub_date','tag','system','indication','title','descr','link_label','image_url','link_url']
+  },
+  // GYN 수술영상
+  '468200524': {
+    table: 'videos', order: 'created_at.asc', filter: 'spec=eq.gyn',
+    headers: ['수술종류','시스템','ADV. Tech','주제','링크','채널명'],
+    cols:    ['procedure','system','adv_tech','title','url','channel']
+  },
+  // 과별 캘린더 — 한 테이블에서 spec 으로 걸러 쓴다
+  '1103866127': { table:'events', order:'start_date.asc', filter:'spec=eq.uro',      headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+  '1214647289': { table:'events', order:'start_date.asc', filter:'spec=eq.cr',       headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+  '1333544214': { table:'events', order:'start_date.asc', filter:'spec=eq.thoracic', headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+  '1351379084': { table:'events', order:'start_date.asc', filter:'spec=eq.stomach',  headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+  '1715897257': { table:'events', order:'start_date.asc', filter:'spec=eq.breast',   headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+  '1504255784': { table:'events', order:'start_date.asc', filter:'spec=eq.hn',       headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+  '614572531':  { table:'events', order:'start_date.asc', filter:'spec=eq.hbp',      headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+  '971357331':  { table:'events', order:'start_date.asc', filter:'spec=eq.hernia',   headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+
+  // Cardiac 수술영상 (이 탭은 '영상 제목'과 '주제'가 따로 있다)
+  '46157436': {
+    table:'videos', order:'created_at.asc', filter:'spec=eq.cardiac',
+    headers:['수술종류','시스템','ADV. Tech','영상 제목','주제','링크','채널명'],
+    cols:   ['procedure','system','adv_tech','title','descr','url','channel']
+  },
+
+  // 매뉴얼 (탭 이름으로 읽는다)
+  '__manual__': {
+    table: 'manuals', order: 'created_at.asc',
+    headers: ['category','title','url','type','owner','updated','note','audience','thumb'],
+    cols:    ['category','title','url','type','owner','updated','note','audience','thumb_path']
+  }
+};
+
+/* 요청 URL 을 보고 어떤 소스인지 판단한다 */
+function _sbSourceFor(url){
+  if (!SB_ENABLED || !url || url.indexOf('docs.google.com/spreadsheets') < 0) return null;
+  try {
+    var q = url.indexOf('?') >= 0 ? url.slice(url.indexOf('?') + 1) : '';
+    var p = new URLSearchParams(q);
+    var sheet = p.get('sheet');
+    if (sheet) {
+      var nm = decodeURIComponent(sheet);
+      if (['메뉴얼','매뉴얼','manual','Manual','MANUAL'].indexOf(nm) >= 0) return SB_SOURCES['__manual__'];
+      return null;
+    }
+    var gid = p.get('gid');
+    if (gid && typeof MANUAL_SHEET_GID !== 'undefined' && MANUAL_SHEET_GID && gid === String(MANUAL_SHEET_GID)) {
+      return SB_SOURCES['__manual__'];
+    }
+    return gid ? (SB_SOURCES[gid] || null) : null;
+  } catch(e){ return null; }
+}
+
+/* Supabase REST 호출 */
+async function _sbSelect(src){
+  var u = SB_URL + '/rest/v1/' + src.table + '?select=*';
+  if (src.filter) u += '&' + src.filter;
+  if (src.order)  u += '&order=' + src.order;
+  var r = await _sbRawFetch(u, { headers: {
+    apikey: SB_KEY,
+    Authorization: 'Bearer ' + SB_KEY,
+    Accept: 'application/json'
+  }});
+  if (!r.ok) throw new Error('Supabase HTTP ' + r.status);
+  return await r.json();
+}
+
+/* 행 배열 → 기존 파서가 읽을 수 있는 CSV 문자열 */
+function _sbToCSV(src, rows){
+  var esc = function(v){
+    var s = (v === null || v === undefined) ? '' : String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  var out = [src.headers.map(esc).join(',')];
+  rows.forEach(function(row){
+    out.push(src.cols.map(function(c){ return esc(row[c]); }).join(','));
+  });
+  return out.join('\n');
+}
+
+/* ── fetch 가로채기 ───────────────────────────────────────── */
+var _sbRawFetch = window.fetch.bind(window);
+window.fetch = function(input, init){
+  var url = (typeof input === 'string') ? input : (input && input.url) || '';
+  var src = _sbSourceFor(url);
+  if (!src) return _sbRawFetch(input, init);
+
+  return _sbSelect(src).then(function(rows){
+    var csv = _sbToCSV(src, rows);
+    console.log('[supabase] ' + src.table + ' ' + rows.length + '건');
+    return new Response(csv, { status: 200, headers: { 'Content-Type': 'text/csv' } });
+  }).catch(function(e){
+    console.warn('[supabase] ' + src.table + ' 실패 → 구글 시트로 대체: ' + e.message);
+    return _sbRawFetch(input, init);   // 실패하면 기존 시트에서 읽는다
+  });
+};
+
+/* ══════════════════════════════════════════════════════════════
+   v30 — 2단계: 쓰기
+     · 공용 계정으로 로그인하면 사이트에서 일정을 추가·수정·삭제
+     · 로그인 안 하면 지금과 똑같이 보기 전용
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 인증 ─────────────────────────────────────────────────── */
+var _SB_AUTH_KEY = 'clinicalHubAuth';
+var _sbAuth = null;
+try { _sbAuth = JSON.parse(localStorage.getItem(_SB_AUTH_KEY) || 'null'); } catch(e){}
+
+function _sbAuthed(){ return !!(_sbAuth && _sbAuth.access_token); }
+function _sbSaveAuth(a){
+  _sbAuth = a;
+  try {
+    if (a) localStorage.setItem(_SB_AUTH_KEY, JSON.stringify(a));
+    else   localStorage.removeItem(_SB_AUTH_KEY);
+  } catch(e){}
+  _sbPaintAuth();
+}
+
+async function sbLogin(email, password){
+  var r = await _sbRawFetch(SB_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: password })
+  });
+  var j = await r.json();
+  if (!r.ok) throw new Error(j.error_description || j.msg || j.message || ('HTTP ' + r.status));
+  _sbSaveAuth({ access_token: j.access_token, refresh_token: j.refresh_token, email: email });
+  return true;
+}
+
+async function _sbRefreshToken(){
+  if (!_sbAuth || !_sbAuth.refresh_token) return false;
+  try {
+    var r = await _sbRawFetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: _sbAuth.refresh_token })
+    });
+    if (!r.ok) return false;
+    var j = await r.json();
+    _sbSaveAuth({ access_token: j.access_token, refresh_token: j.refresh_token, email: _sbAuth.email });
+    return true;
+  } catch(e){ return false; }
+}
+
+function sbLogout(){
+  _sbSaveAuth(null);
+  _sbToast('로그아웃했습니다');
+}
+
+/* 쓰기 요청 — 토큰이 만료됐으면 한 번 갱신하고 재시도한다 */
+async function _sbWrite(method, path, body, retried){
+  var opt = {
+    method: method,
+    headers: {
+      apikey: SB_KEY,
+      Authorization: 'Bearer ' + ((_sbAuth && _sbAuth.access_token) || SB_KEY),
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    }
+  };
+  if (body) opt.body = JSON.stringify(body);
+  var r = await _sbRawFetch(SB_URL + '/rest/v1/' + path, opt);
+  if (r.status === 401 && !retried && await _sbRefreshToken()) {
+    return _sbWrite(method, path, body, true);
+  }
+  if (!r.ok) {
+    var t = await r.text();
+    throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 160));
+  }
+  return r.status === 204 ? null : await r.json().catch(function(){ return null; });
+}
+
+/* ── 저장 후 다시 읽기 ───────────────────────────────────── */
+async function _sbReload(spec){
+  try {
+    if (spec === 'gyn' || !spec) { await loadConferencesFromSheet(); }
+    else if (typeof loadSpecCalendarFromSheet === 'function') { await loadSpecCalendarFromSheet(spec, true); }
+    if (typeof renderAllCal === 'function') renderAllCal();
+    if (spec && spec !== 'gyn' && typeof renderSpecCal === 'function') { renderSpecCal(spec); renderSpecMonth(spec); }
+  } catch(e){ location.reload(); }
+}
+
+/* ── 작은 알림 ───────────────────────────────────────────── */
+function _sbToast(msg, bad){
+  var t = document.getElementById('sbToast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'sbToast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = 'sb-toast show' + (bad ? ' bad' : '');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function(){ t.className = 'sb-toast'; }, 2600);
+}
+
+/* ── 헤더 로그인 버튼 ─────────────────────────────────────── */
+function _sbPaintAuth(){
+  var btn = document.getElementById('sbAuthBtn');
+  if (!btn) return;
+  if (_sbAuthed()) {
+    btn.textContent = '편집 중';
+    btn.title = (_sbAuth.email || '') + ' — 클릭하면 로그아웃';
+    btn.classList.add('on');
+  } else {
+    btn.textContent = '로그인';
+    btn.title = '로그인하면 일정을 추가·수정할 수 있습니다';
+    btn.classList.remove('on');
+  }
+  document.body.classList.toggle('sb-editing', _sbAuthed());
+}
+
+function _sbEnsureAuthBtn(){
+  if (document.getElementById('sbAuthBtn')) return;
+  var theme = document.querySelector('[onclick*="toggleTheme"]');
+  var host = theme && theme.parentElement;
+  if (!host) return;
+  var b = document.createElement('button');
+  b.type = 'button'; b.id = 'sbAuthBtn'; b.className = 'sb-auth-btn';
+  b.onclick = function(){ _sbAuthed() ? sbLogout() : openLoginModal(); };
+  host.insertBefore(b, theme);
+  _sbPaintAuth();
+}
+
+/* ── 로그인 모달 ─────────────────────────────────────────── */
+function openLoginModal(){
+  _sbCloseOverlay();
+  var back = document.createElement('div'); back.className = 'sb-back'; back.id = 'sbOverlay';
+  back.innerHTML =
+    '<div class="sb-box" style="max-width:360px">' +
+      '<div class="sb-h">로그인</div>' +
+      '<div class="sb-sub">공용 계정으로 로그인하면 일정을 추가·수정할 수 있습니다.</div>' +
+      '<label class="sb-l">이메일</label>' +
+      '<input class="sb-i" id="sbEmail" type="email" autocomplete="username">' +
+      '<label class="sb-l">비밀번호</label>' +
+      '<input class="sb-i" id="sbPw" type="password" autocomplete="current-password">' +
+      '<div class="sb-err" id="sbErr"></div>' +
+      '<div class="sb-actions">' +
+        '<button type="button" class="sb-btn ghost" id="sbCancel">취소</button>' +
+        '<button type="button" class="sb-btn prim" id="sbGo">로그인</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(back);
+  document.body.style.overflow = 'hidden';
+  back.onclick = function(e){ if (e.target === back) _sbCloseOverlay(); };
+  document.getElementById('sbCancel').onclick = _sbCloseOverlay;
+
+  var go = document.getElementById('sbGo');
+  var submit = async function(){
+    var em = document.getElementById('sbEmail').value.trim();
+    var pw = document.getElementById('sbPw').value;
+    var err = document.getElementById('sbErr');
+    if (!em || !pw) { err.textContent = '이메일과 비밀번호를 입력하세요.'; return; }
+    go.disabled = true; go.textContent = '확인 중...';
+    try {
+      await sbLogin(em, pw);
+      _sbCloseOverlay();
+      _sbToast('로그인했습니다');
+    } catch(e) {
+      err.textContent = '로그인 실패 — ' + e.message;
+      go.disabled = false; go.textContent = '로그인';
+    }
+  };
+  go.onclick = submit;
+  back.addEventListener('keydown', function(e){ if (e.key === 'Enter') submit(); });
+  setTimeout(function(){ document.getElementById('sbEmail').focus(); }, 30);
+}
+
+function _sbCloseOverlay(){
+  var o = document.getElementById('sbOverlay');
+  if (o) o.remove();
+  if (!document.querySelector('.conf-modal.open')) document.body.style.overflow = '';
+}
+
+/* ── 일정 추가 / 수정 폼 ─────────────────────────────────── */
+var SB_SPECS = [['gyn','GYN'],['cardiac','Cardiac'],['uro','URO'],['cr','CR'],
+                ['thoracic','Thoracic'],['stomach','Stomach'],['breast','Breast'],
+                ['hn','H&N'],['hbp','HBP'],['hernia','Hernia']];
+var SB_TAGS = ['conference','workshop','symposium','p2p','itp','society','roadshow','internal','bam'];
+
+function openEventForm(ev){
+  _sbCloseOverlay();
+  /* 상세 모달이 열려 있으면 닫는다 — 겹치면 폼 버튼이 안 눌린다 */
+  try { if (typeof closeConfModal === 'function') closeConfModal(); } catch(e){}
+  var editing = !!(ev && ev._id);
+  var cur = (ev && (ev._spec || ev.spec)) ||
+            (typeof currentSpec !== 'undefined' && currentSpec !== 'all' ? currentSpec : 'gyn');
+
+  var opt = function(list, sel){
+    return list.map(function(x){
+      var v = Array.isArray(x) ? x[0] : x, t = Array.isArray(x) ? x[1] : x;
+      return '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + t + '</option>';
+    }).join('');
+  };
+  var val = function(k){ return _safeText((ev && ev[k]) || ''); };
+
+  var back = document.createElement('div'); back.className = 'sb-back'; back.id = 'sbOverlay';
+  back.innerHTML =
+    '<div class="sb-box">' +
+      '<div class="sb-h">' + (editing ? '일정 수정' : '일정 추가') + '</div>' +
+      '<div class="sb-grid">' +
+        '<div class="sb-f"><label class="sb-l">과</label><select class="sb-i" id="f_spec">' + opt(SB_SPECS, cur) + '</select></div>' +
+        '<div class="sb-f"><label class="sb-l">유형</label><select class="sb-i" id="f_tag">' + opt(SB_TAGS, (ev && ev.tag) || 'conference') + '</select></div>' +
+      '</div>' +
+      '<label class="sb-l">학회명 / 행사명 <span class="req">*</span></label>' +
+      '<input class="sb-i" id="f_name" value="' + val('name') + '">' +
+      '<div class="sb-grid">' +
+        '<div class="sb-f"><label class="sb-l">시작일 <span class="req">*</span></label><input class="sb-i" id="f_start" type="date" value="' + val('start') + '"></div>' +
+        '<div class="sb-f"><label class="sb-l">종료일</label><input class="sb-i" id="f_end" type="date" value="' + val('end') + '"></div>' +
+      '</div>' +
+      '<label class="sb-l">장소</label><input class="sb-i" id="f_loc" value="' + val('loc') + '">' +
+      '<div class="sb-grid">' +
+        '<div class="sb-f"><label class="sb-l">주최</label><input class="sb-i" id="f_org" value="' + val('organizer') + '"></div>' +
+        '<div class="sb-f"><label class="sb-l">System</label><input class="sb-i" id="f_sys" value="' + val('system') + '"></div>' +
+      '</div>' +
+      '<div class="sb-grid">' +
+        '<div class="sb-f"><label class="sb-l">URL</label><input class="sb-i" id="f_url" value="' + val('url') + '"></div>' +
+        '<div class="sb-f"><label class="sb-l">Duty</label><input class="sb-i" id="f_duty" value="' + val('duty') + '"></div>' +
+      '</div>' +
+      '<label class="sb-l">메모</label><textarea class="sb-i" id="f_note" rows="2">' + val('note') + '</textarea>' +
+      '<div class="sb-err" id="sbErr"></div>' +
+      '<div class="sb-actions">' +
+        (editing ? '<button type="button" class="sb-btn danger" id="sbDel">삭제</button>' : '') +
+        '<div style="flex:1"></div>' +
+        '<button type="button" class="sb-btn ghost" id="sbCancel">취소</button>' +
+        '<button type="button" class="sb-btn prim" id="sbSave">저장</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(back);
+  document.body.style.overflow = 'hidden';
+  back.onclick = function(e){ if (e.target === back) _sbCloseOverlay(); };
+  document.getElementById('sbCancel').onclick = _sbCloseOverlay;
+
+  var save = document.getElementById('sbSave');
+  save.onclick = async function(){
+    var g = function(id){ return (document.getElementById(id).value || '').trim(); };
+    var err = document.getElementById('sbErr');
+    var name = g('f_name'), start = g('f_start');
+    if (!name || !start) { err.textContent = '학회명과 시작일은 필수입니다.'; return; }
+    var row = {
+      spec: g('f_spec'), name: name, start_date: start,
+      end_date: g('f_end') || start, loc: g('f_loc'), tag: g('f_tag'),
+      organizer: g('f_org'), system: g('f_sys'), url: g('f_url'),
+      duty: g('f_duty'), note: g('f_note')
+    };
+    save.disabled = true; save.textContent = '저장 중...';
+    try {
+      if (editing) await _sbWrite('PATCH', 'events?id=eq.' + encodeURIComponent(ev._id), row);
+      else         await _sbWrite('POST', 'events', row);
+      _sbCloseOverlay();
+      if (typeof closeConfModal === 'function') closeConfModal();
+      _sbToast(editing ? '수정했습니다' : '추가했습니다');
+      await _sbReload(row.spec);
+    } catch(e) {
+      err.textContent = '저장 실패 — ' + e.message;
+      save.disabled = false; save.textContent = '저장';
+    }
+  };
+
+  var del = document.getElementById('sbDel');
+  if (del) del.onclick = async function(){
+    if (!confirm('"' + (ev.name || '') + '" 일정을 삭제할까요?\n되돌릴 수 없습니다.')) return;
+    del.disabled = true; del.textContent = '삭제 중...';
+    try {
+      await _sbWrite('DELETE', 'events?id=eq.' + encodeURIComponent(ev._id));
+      _sbCloseOverlay();
+      if (typeof closeConfModal === 'function') closeConfModal();
+      _sbToast('삭제했습니다');
+      await _sbReload(ev._spec || 'gyn');
+    } catch(e) {
+      document.getElementById('sbErr').textContent = '삭제 실패 — ' + e.message;
+      del.disabled = false; del.textContent = '삭제';
+    }
+  };
+  setTimeout(function(){ document.getElementById('f_name').focus(); }, 30);
+}
+
+/* ── 기존 UI 에 연결 ─────────────────────────────────────── */
+
+/* 1. events 조회에 id 를 실어 보낸다 (수정·삭제에 필요) */
+(function(){
+  Object.keys(SB_SOURCES).forEach(function(k){
+    var s = SB_SOURCES[k];
+    if (s.table !== 'events' || s.cols.indexOf('id') >= 0) return;
+    s.headers = ['id'].concat(s.headers);
+    s.cols    = ['id'].concat(s.cols);
+  });
+})();
+
+/* 2. 파서가 id 를 버리지 않도록 통과시킨다 */
+var _sbOrigNormCal = normalizeCalendarRow;
+normalizeCalendarRow = function(row, headers){
+  var o = _sbOrigNormCal(row, headers);
+  try {
+    var i = headers.map(function(h){ return String(h||'').trim().toLowerCase(); }).indexOf('id');
+    if (i >= 0 && row[i]) o._id = String(row[i]).trim();
+  } catch(e){}
+  return o;
+};
+
+/* 3. 상세 모달에 수정 버튼 */
+var _sbOrigOpenConf = openConfModal;
+openConfModal = function(ev){
+  _sbOrigOpenConf(ev);
+  try {
+    if (!_sbAuthed() || !ev || !ev._id) return;
+    var foot = document.querySelector('#confModalFooter');
+    if (!foot || foot.querySelector('.sb-edit-btn')) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'conf-btn sec sb-edit-btn';
+    b.textContent = '수정 / 삭제';
+    b.onclick = function(){ openEventForm(ev); };
+    foot.insertBefore(b, foot.firstChild);
+  } catch(e){}
+};
+
+/* 4. "+ 일정 추가" 가 시트 대신 폼을 연다 (로그인 상태에서만) */
+document.addEventListener('click', function(e){
+  if (!_sbAuthed()) return;
+  var a = e.target && e.target.closest && e.target.closest('a[href*="docs.google.com/spreadsheets"]');
+  if (!a) return;
+  var txt = (a.textContent || '') + ' ' + (a.getAttribute('href') || '');
+  if (txt.indexOf('일정') < 0 && txt.indexOf('gid=') < 0) return;
+  if ((a.textContent || '').indexOf('일정') < 0) return;   // 논문/기사 추가 버튼은 건드리지 않는다
+  e.preventDefault(); e.stopPropagation();
+  openEventForm(null);
+}, true);
+
+/* ── 스타일 ──────────────────────────────────────────────── */
+function _sbWriteStyles(){
+  if (document.getElementById('sbWriteStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'sbWriteStyles';
+  st.textContent = [
+    '.sb-auth-btn{height:32px;padding:0 13px;border-radius:9px;border:1px solid var(--border);',
+    'background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11.5px;',
+    'font-weight:650;cursor:pointer;white-space:nowrap;transition:.14s;}',
+    '.sb-auth-btn:hover{border-color:var(--primary-mid);color:var(--primary);}',
+    '.sb-auth-btn.on{background:var(--primary);border-color:var(--primary);color:#fff;}',
+
+    '.sb-back{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.45);display:flex;',
+    'align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;}',
+    '.sb-box{background:var(--surface);color:var(--text);border-radius:15px;width:min(540px,100%);',
+    'box-shadow:0 24px 64px rgba(0,0,0,.3);padding:24px 26px 22px;}',
+    '.sb-h{font-size:17px;font-weight:750;letter-spacing:-.01em;margin-bottom:4px;}',
+    '.sb-sub{font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.55;}',
+    '.sb-l{display:block;font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--text3);',
+    'margin:12px 0 5px;text-transform:uppercase;}',
+    '.sb-l .req{color:#DC2626;}',
+    '.sb-i{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--border);',
+    'background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;outline:none;}',
+    '.sb-i:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}',
+    'textarea.sb-i{resize:vertical;line-height:1.6;}',
+    '.sb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}',
+    '.sb-f{min-width:0;}',
+    '.sb-err{margin-top:12px;font-size:12px;color:#DC2626;line-height:1.5;min-height:16px;word-break:break-all;}',
+    '.sb-actions{display:flex;align-items:center;gap:8px;margin-top:16px;}',
+    '.sb-btn{height:36px;padding:0 17px;border-radius:9px;border:1px solid var(--border);',
+    'background:var(--surface);color:var(--text2);font-family:var(--font);font-size:12.5px;',
+    'font-weight:650;cursor:pointer;transition:.14s;}',
+    '.sb-btn:disabled{opacity:.55;cursor:default;}',
+    '.sb-btn.prim{background:var(--primary);border-color:var(--primary);color:#fff;}',
+    '.sb-btn.prim:hover:not(:disabled){background:var(--primary-dark);}',
+    '.sb-btn.ghost:hover:not(:disabled){border-color:var(--text3);}',
+    '.sb-btn.danger{color:#DC2626;border-color:#F3C2C2;}',
+    '.sb-btn.danger:hover:not(:disabled){background:#DC2626;color:#fff;border-color:#DC2626;}',
+
+    '.sb-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(14px);',
+    'z-index:10100;padding:11px 20px;border-radius:99px;background:var(--text);color:var(--bg);',
+    'font-family:var(--font);font-size:12.5px;font-weight:650;opacity:0;pointer-events:none;',
+    'transition:.22s;box-shadow:0 8px 24px rgba(0,0,0,.25);}',
+    '.sb-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}',
+    '.sb-toast.bad{background:#DC2626;color:#fff;}',
+
+    /* 편집 중이면 추가 버튼을 강조 */
+    'body.sb-editing a[href*="docs.google.com/spreadsheets"]{border-style:solid!important;}',
+
+    '@media (max-width:560px){',
+    '  .sb-back{padding:0;}',
+    '  .sb-box{border-radius:0;min-height:100vh;padding:22px 18px 40px;}',
+    '  .sb-grid{grid-template-columns:1fr;gap:0;}',
+    '  .sb-btn{height:40px;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+_sbWriteStyles();
+window.addEventListener('DOMContentLoaded', function(){
+  _sbWriteStyles();
+  setTimeout(function(){ _sbEnsureAuthBtn(); _sbPaintAuth(); }, 80);
+});
+setTimeout(function(){ try { _sbEnsureAuthBtn(); } catch(e){} }, 1200);
 
 </script>
 
