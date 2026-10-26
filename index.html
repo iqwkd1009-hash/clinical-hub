@@ -8827,7 +8827,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-27-v30-write';
+window.CLINICAL_HUB_BUILD='2026-10-27-v31-open';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12828,7 +12828,10 @@ var _SB_AUTH_KEY = 'clinicalHubAuth';
 var _sbAuth = null;
 try { _sbAuth = JSON.parse(localStorage.getItem(_SB_AUTH_KEY) || 'null'); } catch(e){}
 
-function _sbAuthed(){ return !!(_sbAuth && _sbAuth.access_token); }
+/* true 면 로그인 없이 누구나 편집할 수 있다.
+   false 로 바꾸면 다시 로그인해야 편집 가능 (RLS 정책도 함께 되돌려야 함) */
+var SB_OPEN_WRITE = true;
+function _sbAuthed(){ return SB_OPEN_WRITE || !!(_sbAuth && _sbAuth.access_token); }
 function _sbSaveAuth(a){
   _sbAuth = a;
   try {
@@ -12919,7 +12922,7 @@ function _sbToast(msg, bad){
 /* ── 헤더 로그인 버튼 ─────────────────────────────────────── */
 function _sbPaintAuth(){
   var btn = document.getElementById('sbAuthBtn');
-  if (!btn) return;
+  if (!btn) { document.body.classList.toggle('sb-editing', _sbAuthed()); return; }
   if (_sbAuthed()) {
     btn.textContent = '편집 중';
     btn.title = (_sbAuth.email || '') + ' — 클릭하면 로그아웃';
@@ -12933,6 +12936,7 @@ function _sbPaintAuth(){
 }
 
 function _sbEnsureAuthBtn(){
+  if (SB_OPEN_WRITE) return;          // 로그인 없이 쓰는 모드 — 버튼 자체를 만들지 않는다
   if (document.getElementById('sbAuthBtn')) return;
   var theme = document.querySelector('[onclick*="toggleTheme"]');
   var host = theme && theme.parentElement;
