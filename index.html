@@ -8858,7 +8858,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-02-v39-category';
+window.CLINICAL_HUB_BUILD='2026-11-02-v40-none';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -13073,7 +13073,8 @@ function _sbCloseOverlay(){
 /* ── 일정 추가 / 수정 폼 ─────────────────────────────────── */
 var SB_SPECS = [['gyn','GYN'],['cardiac','Cardiac'],['uro','URO'],['cr','CR'],
                 ['thoracic','Thoracic'],['stomach','Stomach'],['breast','Breast'],
-                ['hn','H&N'],['hbp','HBP'],['hernia','Hernia']];
+                ['hn','H&N'],['hbp','HBP'],['hernia','Hernia'],
+                ['none','해당없음']];
 var SB_TAGS = ['conference','workshop','symposium','p2p','itp','society','roadshow','internal','bam'];
 
 /* 유형(대분류) — Marketing 만 과 선택이 필요하다 */
@@ -13088,8 +13089,11 @@ var SB_CAT_TAGS = {
     ['conf_dom',  '학회 (국내)'],
     ['conf_intl', '학회 (해외)'],
     ['roadshow',  '로드쇼'],
-    ['workshop',  '워크샵']
+    ['workshop',  '워크샵'],
+    ['none',      '해당없음']
   ],
+  /* 아직 종류가 정해지지 않은 유형 — 해당없음을 기본으로 두고
+     필요하면 기존 목록에서 고를 수 있게 한다 */
   clinical_sales: [],
   capital_sales:  []
 };
@@ -13098,7 +13102,8 @@ function _evCat(ev){ return (ev && ev.category) || 'marketing'; }
 function _catTagOptions(cat){
   var list = SB_CAT_TAGS[cat];
   if (list && list.length) return list;
-  return SB_TAGS;                 /* 아직 정해지지 않은 유형은 기존 목록 */
+  /* 정해지지 않은 유형: 해당없음이 기본, 뒤에 기존 목록 */
+  return [['none','해당없음']].concat(SB_TAGS);
 }
 
 function openEventForm(ev){
@@ -13179,9 +13184,11 @@ function openEventForm(ev){
         return '<option value="' + v + '"' + (v === keep ? ' selected' : '') + '>' + t + '</option>';
       }).join('');
     }
-    /* Marketing 만 과가 필수 */
+    /* Marketing 만 과가 필수 — 나머지는 해당없음으로 맞춰준다 */
     var req = document.getElementById('f_specreq');
     if (req) req.style.display = (cat === 'marketing') ? '' : 'none';
+    var sp = document.getElementById('f_spec');
+    if (sp && cat !== 'marketing' && sp.value !== 'none') sp.value = 'none';
   };
 
   var ad = document.getElementById('f_allday');
@@ -14161,6 +14168,44 @@ function _catStyles(){
 }
 _catStyles();
 window.addEventListener('DOMContentLoaded', _catStyles);
+
+/* ══════════════════════════════════════════════════════════════
+   v40 — '해당없음' 을 과 · 종류 양쪽의 정식 값으로 등록
+   색은 회색 계열로 두어 실제 과들과 섞이지 않게 한다.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+  try {
+    if (typeof SPECIALTY_COLORS !== 'undefined' && SPECIALTY_COLORS && !SPECIALTY_COLORS.none) {
+      SPECIALTY_COLORS.none = { light:'#8A94A0', dark:'#A3ADB9', label:'해당없음' };
+      if (typeof _syncLegacySpecMaps === 'function') _syncLegacySpecMaps();
+    }
+  } catch(e){}
+  try {
+    if (typeof _TYPE_META_CF !== 'undefined' && _TYPE_META_CF) {
+      _TYPE_META_CF.none = _TYPE_META_CF.none || { label:'해당없음' };
+    }
+  } catch(e){}
+  try {
+    if (typeof _SPEC_LABELS_CF !== 'undefined' && _SPEC_LABELS_CF) {
+      _SPEC_LABELS_CF.none = _SPEC_LABELS_CF.none || '해당없음';
+    }
+  } catch(e){}
+})();
+
+var _noneOrigTypeLabel = (typeof calendarTypeLabel === 'function') ? calendarTypeLabel : null;
+if (_noneOrigTypeLabel) {
+  calendarTypeLabel = function(k){
+    if (k === 'none') return '해당없음';
+    return _noneOrigTypeLabel(k);
+  };
+}
+var _noneOrigSpecLabel = (typeof specLabel === 'function') ? specLabel : null;
+if (_noneOrigSpecLabel) {
+  specLabel = function(sp){
+    if (sp === 'none') return '해당없음';
+    return _noneOrigSpecLabel(sp);
+  };
+}
 
 </script>
 
