@@ -7911,6 +7911,13 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
           elN.style.cssText = 'background:'+clrN+'12;border-left:3px solid '+clrN+';'
             + 'margin:0 5px 2px 5px;border-radius:6px;';
           elN.textContent = '';
+          if(typeof _evAllDay==='function' && !_evAllDay(ev)){
+            elN.classList.add('is-timed');
+            elN.style.setProperty('--ev', clrN);
+            const tmN = document.createElement('span');
+            tmN.className = 'ev-time'; tmN.textContent = _evTimeLabel(ev) + ' ';
+            elN.appendChild(tmN);
+          }
           const nmN = document.createElement('span');
           nmN.textContent = ev.name || '';
           elN.appendChild(nmN);
@@ -7955,6 +7962,13 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
               : '');
 
         el.textContent='';
+        if(typeof _evAllDay==='function' && !_evAllDay(ev)){
+          el.classList.add('is-timed');
+          el.style.setProperty('--ev', clr);
+          const tmEl=document.createElement('span');
+          tmEl.className='ev-time'; tmEl.textContent=_evTimeLabel(ev)+' ';
+          el.appendChild(tmEl);
+        }
         const nameEl=document.createElement('span');
         nameEl.textContent=ev.name||'';
         el.appendChild(nameEl);
@@ -8175,7 +8189,8 @@ function openConfModal(ev){
   const n=document.createElement('div'); n.style.cssText='font-size:19px;font-weight:750;line-height:1.35;color:#fff;margin-top:4px'; n.textContent=ev.name||'Event';
   wrap.append(t,n); banner.appendChild(wrap);
   body.innerHTML='';
-  const rows=[['📅','일정',date],['📍','장소',ev.loc],['🏛️','주최',ev.organizer],['🤖','System',ev.system],['👥','Duty',ev.duty],['📝','Note',ev.note]].filter(r=>r[2]);
+  const rows=[['📅','일정', date + ((typeof _evTimeRange==='function' && _evTimeRange(ev)) ? '  ' + _evTimeRange(ev) : '')],['🗂️','유형', (typeof SB_CAT_LABEL!=='undefined' ? (SB_CAT_LABEL[(ev.category||'marketing')]||'') : '')],
+    ['📍','장소',ev.loc],['🏛️','주최',ev.organizer],['🤖','System',ev.system],['👥','Duty',ev.duty],['📝','Note',ev.note]].filter(r=>r[2]);
   rows.forEach(([icon,label,value])=>{ const row=document.createElement('div'); row.className='conf-row'; const i=document.createElement('div');i.className='conf-row-icon';i.textContent=icon; const l=document.createElement('div');l.className='conf-row-label';l.textContent=label; const v=document.createElement('div');v.className='conf-row-val';v.textContent=value; row.append(i,l,v); body.appendChild(row); });
   foot.innerHTML='';
   if(ev.url){ const a=document.createElement('a');a.className='conf-btn prim';a.href=ev.url;a.target='_blank';a.rel='noopener';a.textContent='공식 페이지 열기';foot.appendChild(a); }
@@ -8843,7 +8858,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-10-27-v37-upfold';
+window.CLINICAL_HUB_BUILD='2026-11-02-v39-category';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -11565,7 +11580,8 @@ function _cwRenderWeekInto(host, items, onMove){
           var nm = document.createElement('div'); nm.className='n'; nm.textContent = ev.name||'Event';
           b.appendChild(nm);
           var m = document.createElement('div'); m.className='m';
-          m.textContent = specLabel(sp) + (ev.loc ? ' · '+ev.loc : '');
+          var _tw = (typeof _evTimeLabel==='function') ? _evTimeLabel(ev) : '';
+          m.textContent = (_tw ? _tw + ' · ' : '') + specLabel(sp) + (ev.loc ? ' · '+ev.loc : '');
           b.appendChild(m);
           b.onclick = function(){ openConfModal(ev); };
           bd.appendChild(b);
@@ -11644,7 +11660,8 @@ function _cwRenderDayInto(host, items, fallbackSpec, onMove){
       var nm = document.createElement('div'); nm.className='n'; nm.textContent = ev.name||'Event';
       bd.appendChild(nm);
       var m = document.createElement('div'); m.className='m';
-      [calendarTypeMeta(ev).label||'', _cwFmtRange(ev),
+      [calendarTypeMeta(ev).label||'',
+       (typeof _evTimeRange==='function' ? _evTimeRange(ev) : '') || _cwFmtRange(ev),
        ev.loc ? '📍 '+ev.loc : '', ev.organizer||ev.host||''
       ].filter(Boolean).forEach(function(p){
         var s2=document.createElement('span'); s2.textContent=p; m.appendChild(s2);
@@ -12113,6 +12130,8 @@ _cwRenderAgendaInto = function(host, items, yr, mo){
       var n = document.createElement('div'); n.className='n'; n.textContent = ev.name||'Event';
       btn.appendChild(n);
       var m = document.createElement('div'); m.className='m';
+      var _tg = (typeof _evTimeLabel==='function') ? _evTimeLabel(ev) : '';
+      if (_tg) { var tg1=document.createElement('span'); tg1.className='tm'; tg1.textContent=_tg; m.appendChild(tg1); }
       var s1=document.createElement('span'); s1.className='sp'; s1.textContent=specLabel(sp); m.appendChild(s1);
       var t1=document.createElement('span');
       t1.textContent = calendarTypeMeta(ev).label || calendarTypeLabel(calendarTypeKey(ev));
@@ -12349,6 +12368,8 @@ function renderAllCalUpcomingView(items){
       var n = document.createElement('div'); n.className='n'; n.textContent = ev.name||'Event';
       btn.appendChild(n);
       var mt = document.createElement('div'); mt.className='m';
+      var _ta = (typeof _evTimeLabel==='function') ? _evTimeLabel(ev) : '';
+      if (_ta) { var tm1=document.createElement('span'); tm1.className='tm'; tm1.textContent=_ta; mt.appendChild(tm1); }
       var s1=document.createElement('span'); s1.className='sp'; s1.textContent=specLabel(sp); mt.appendChild(s1);
       var t1=document.createElement('span');
       t1.textContent = calendarTypeMeta(ev).label || calendarTypeLabel(calendarTypeKey(ev));
@@ -12661,6 +12682,8 @@ function _cwRenderMiniMonth(host, items, yr, mo){
       var nm = document.createElement('div'); nm.className='n'; nm.textContent = ev.name||'Event';
       btn.appendChild(nm);
       var mt = document.createElement('div'); mt.className='m';
+      var _ta = (typeof _evTimeLabel==='function') ? _evTimeLabel(ev) : '';
+      if (_ta) { var tm1=document.createElement('span'); tm1.className='tm'; tm1.textContent=_ta; mt.appendChild(tm1); }
       var s1=document.createElement('span'); s1.className='sp'; s1.textContent=specLabel(sp); mt.appendChild(s1);
       var t1=document.createElement('span');
       t1.textContent = calendarTypeMeta(ev).label || calendarTypeLabel(calendarTypeKey(ev));
@@ -13053,6 +13076,31 @@ var SB_SPECS = [['gyn','GYN'],['cardiac','Cardiac'],['uro','URO'],['cr','CR'],
                 ['hn','H&N'],['hbp','HBP'],['hernia','Hernia']];
 var SB_TAGS = ['conference','workshop','symposium','p2p','itp','society','roadshow','internal','bam'];
 
+/* 유형(대분류) — Marketing 만 과 선택이 필요하다 */
+var SB_CATS = [
+  ['marketing',      'Marketing'],
+  ['clinical_sales', 'Clinical Sales'],
+  ['capital_sales',  'Capital Sales']
+];
+/* 유형별 종류(소분류). 비워두면 기존 전체 목록을 쓴다. */
+var SB_CAT_TAGS = {
+  marketing: [
+    ['conf_dom',  '학회 (국내)'],
+    ['conf_intl', '학회 (해외)'],
+    ['roadshow',  '로드쇼'],
+    ['workshop',  '워크샵']
+  ],
+  clinical_sales: [],
+  capital_sales:  []
+};
+var SB_CAT_LABEL = { marketing:'Marketing', clinical_sales:'Clinical Sales', capital_sales:'Capital Sales' };
+function _evCat(ev){ return (ev && ev.category) || 'marketing'; }
+function _catTagOptions(cat){
+  var list = SB_CAT_TAGS[cat];
+  if (list && list.length) return list;
+  return SB_TAGS;                 /* 아직 정해지지 않은 유형은 기존 목록 */
+}
+
 function openEventForm(ev){
   _sbCloseOverlay();
   /* 상세 모달이 열려 있으면 닫는다 — 겹치면 폼 버튼이 안 눌린다 */
@@ -13074,14 +13122,27 @@ function openEventForm(ev){
     '<div class="sb-box">' +
       '<div class="sb-h">' + (editing ? '일정 수정' : '일정 추가') + '</div>' +
       '<div class="sb-grid">' +
-        '<div class="sb-f"><label class="sb-l">과</label><select class="sb-i" id="f_spec">' + opt(SB_SPECS, cur) + '</select></div>' +
-        '<div class="sb-f"><label class="sb-l">유형</label><select class="sb-i" id="f_tag">' + opt(SB_TAGS, (ev && ev.tag) || 'conference') + '</select></div>' +
+        '<div class="sb-f"><label class="sb-l">유형 <span class="req">*</span></label><select class="sb-i" id="f_cat">' + opt(SB_CATS, _evCat(ev)) + '</select></div>' +
+        '<div class="sb-f"><label class="sb-l">종류</label><select class="sb-i" id="f_tag">' +
+          opt(_catTagOptions(_evCat(ev)), (ev && ev.tag) || 'conf_dom') + '</select></div>' +
+      '</div>' +
+      '<div class="sb-grid" id="f_specrow">' +
+        '<div class="sb-f"><label class="sb-l">과 <span class="req" id="f_specreq">*</span></label><select class="sb-i" id="f_spec">' + opt(SB_SPECS, cur) + '</select></div>' +
+        '<div class="sb-f"></div>' +
       '</div>' +
       '<label class="sb-l">학회명 / 행사명 <span class="req">*</span></label>' +
       '<input class="sb-i" id="f_name" value="' + val('name') + '">' +
       '<div class="sb-grid">' +
         '<div class="sb-f"><label class="sb-l">시작일 <span class="req">*</span></label><input class="sb-i" id="f_start" type="date" value="' + val('start') + '"></div>' +
         '<div class="sb-f"><label class="sb-l">종료일</label><input class="sb-i" id="f_end" type="date" value="' + val('end') + '"></div>' +
+      '</div>' +
+      '<div class="sb-allday">' +
+        '<label for="f_allday">하루 종일</label>' +
+        '<span class="sb-sw"><input type="checkbox" id="f_allday"' + (_evAllDay(ev||{}) ? ' checked' : '') + '><i></i></span>' +
+      '</div>' +
+      '<div class="sb-times' + (_evAllDay(ev||{}) ? ' hide' : '') + '" id="f_timerow">' +
+        '<div class="sb-f"><label class="sb-l">시작 시간</label><input class="sb-i" id="f_stime" type="time" value="' + _safeText((ev && ev.start_time) || '09:00') + '"></div>' +
+        '<div class="sb-f"><label class="sb-l">종료 시간</label><input class="sb-i" id="f_etime" type="time" value="' + _safeText((ev && ev.end_time) || '10:00') + '"></div>' +
       '</div>' +
       '<label class="sb-l">장소</label><input class="sb-i" id="f_loc" value="' + val('loc') + '">' +
       '<div class="sb-grid">' +
@@ -13106,17 +13167,44 @@ function openEventForm(ev){
   back.onclick = function(e){ if (e.target === back) _sbCloseOverlay(); };
   document.getElementById('sbCancel').onclick = _sbCloseOverlay;
 
+  var catSel = document.getElementById('f_cat');
+  if (catSel) catSel.onchange = function(){
+    var cat = catSel.value;
+    var tagSel = document.getElementById('f_tag');
+    var keep = tagSel ? tagSel.value : '';
+    var list = _catTagOptions(cat);
+    if (tagSel) {
+      tagSel.innerHTML = list.map(function(x){
+        var v = Array.isArray(x) ? x[0] : x, t = Array.isArray(x) ? x[1] : x;
+        return '<option value="' + v + '"' + (v === keep ? ' selected' : '') + '>' + t + '</option>';
+      }).join('');
+    }
+    /* Marketing 만 과가 필수 */
+    var req = document.getElementById('f_specreq');
+    if (req) req.style.display = (cat === 'marketing') ? '' : 'none';
+  };
+
+  var ad = document.getElementById('f_allday');
+  if (ad) ad.onchange = function(){
+    var r = document.getElementById('f_timerow');
+    if (r) r.classList.toggle('hide', ad.checked);
+  };
+
   var save = document.getElementById('sbSave');
   save.onclick = async function(){
     var g = function(id){ return (document.getElementById(id).value || '').trim(); };
     var err = document.getElementById('sbErr');
     var name = g('f_name'), start = g('f_start');
     if (!name || !start) { err.textContent = '학회명과 시작일은 필수입니다.'; return; }
+    var allDay = !document.getElementById('f_allday') || document.getElementById('f_allday').checked;
     var row = {
-      spec: g('f_spec'), name: name, start_date: start,
+      spec: g('f_spec'), category: g('f_cat') || 'marketing', name: name, start_date: start,
       end_date: g('f_end') || start, loc: g('f_loc'), tag: g('f_tag'),
       organizer: g('f_org'), system: g('f_sys'), url: g('f_url'),
-      duty: g('f_duty'), note: g('f_note')
+      duty: g('f_duty'), note: g('f_note'),
+      all_day: allDay,
+      start_time: allDay ? null : (g('f_stime') || null),
+      end_time:   allDay ? null : (g('f_etime') || null)
     };
     save.disabled = true; save.textContent = '저장 중...';
     try {
@@ -13157,8 +13245,8 @@ function openEventForm(ev){
   Object.keys(SB_SOURCES).forEach(function(k){
     var s = SB_SOURCES[k];
     if (s.table !== 'events' || s.cols.indexOf('id') >= 0) return;
-    s.headers = ['id'].concat(s.headers);
-    s.cols    = ['id'].concat(s.cols);
+    s.headers = ['id','all_day','start_time','end_time','category'].concat(s.headers);
+    s.cols    = ['id','all_day','start_time','end_time','category'].concat(s.cols);
   });
 })();
 
@@ -13167,8 +13255,15 @@ var _sbOrigNormCal = normalizeCalendarRow;
 normalizeCalendarRow = function(row, headers){
   var o = _sbOrigNormCal(row, headers);
   try {
-    var i = headers.map(function(h){ return String(h||'').trim().toLowerCase(); }).indexOf('id');
+    var low = headers.map(function(h){ return String(h||'').trim().toLowerCase(); });
+    var pick = function(k){ var i = low.indexOf(k); return (i >= 0 && row[i] !== undefined) ? String(row[i]).trim() : ''; };
+    var i = low.indexOf('id');
     if (i >= 0 && row[i]) o._id = String(row[i]).trim();
+    var ad = pick('all_day');
+    if (ad !== '') o.all_day = !(ad === 'false' || ad === 'FALSE' || ad === '0' || ad === 'f');
+    var stt = pick('start_time'); if (stt) o.start_time = stt;
+    var ent = pick('end_time');   if (ent) o.end_time   = ent;
+    var cat = pick('category');   if (cat) o.category   = cat;
   } catch(e){}
   return o;
 };
@@ -13949,6 +14044,123 @@ window.addEventListener('DOMContentLoaded', function(){
   _upStyles();
   setTimeout(function(){ try { _upEnsureButtons(); } catch(e){} }, 300);
 });
+
+/* ══════════════════════════════════════════════════════════════
+   v38 — 시간 표시 · 종일 구분 · 시간 입력
+     종일 일정  : 지금처럼 색이 채워진 막대
+     시간 일정  : 색 점 + 시간 + 제목 (배경 없음) — 캘린더 앱 관례
+   ══════════════════════════════════════════════════════════════ */
+
+/* 종일인가? 값이 없으면 시작 시간 유무로 판단한다 */
+function _evAllDay(ev){
+  if (!ev) return true;
+  var v = ev.all_day;
+  if (v === false || v === 'false' || v === 'FALSE' || v === '0' || v === 'f') return false;
+  if (v === true  || v === 'true'  || v === 'TRUE'  || v === '1' || v === 't') return true;
+  return !(ev.start_time);
+}
+
+/* 'HH:MM' → '오후 7:30' (정각이면 '오후 7') */
+function _fmtTime(hhmm, compact){
+  if (!hhmm) return '';
+  var m = String(hhmm).match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return '';
+  var h = parseInt(m[1], 10), mi = m[2];
+  var ap = h < 12 ? '오전' : '오후';
+  var h12 = h % 12; if (h12 === 0) h12 = 12;
+  if (compact && mi === '00') return ap + ' ' + h12;
+  return ap + ' ' + h12 + ':' + mi;
+}
+
+/* 막대에 붙일 짧은 시간 */
+function _evTimeLabel(ev){
+  if (!ev || _evAllDay(ev)) return '';
+  return _fmtTime(ev.start_time, true);
+}
+
+/* 상세·Day 뷰용 전체 범위 */
+function _evTimeRange(ev){
+  if (!ev) return '';
+  if (_evAllDay(ev)) return '종일';
+  var a = _fmtTime(ev.start_time), b = _fmtTime(ev.end_time);
+  if (a && b && b !== a) return a + ' ~ ' + b;
+  return a || '';
+}
+
+function _timeStyles(){
+  if (document.getElementById('timeStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'timeStyles';
+  st.textContent = [
+    /* 시간 일정 — 배경을 걷어내고 점으로 표시한다 */
+    '.month-event.is-timed{background:transparent!important;border-left:0!important;',
+    '  padding-left:3px!important;}',
+    '.month-event.is-timed::before{content:"";display:inline-block;width:6px;height:6px;',
+    '  border-radius:50%;background:var(--ev,#888);margin-right:5px;',
+    '  vertical-align:middle;flex:0 0 auto;}',
+    '.month-event.is-timed:hover{background:var(--surface2)!important;}',
+    '.month-event .ev-time{font-weight:700;color:var(--text2);opacity:.9;}',
+    '.month-event.is-timed .ev-time{color:var(--ev,var(--text2));}',
+
+    /* 목록형 뷰의 시간 뱃지 */
+    '.cw-ag-ev .m .tm,.cup-meta .tm{font-weight:700;color:var(--text2);}',
+
+    /* 폼 — 하루 종일 토글 */
+    '.sb-allday{display:flex;align-items:center;gap:9px;margin-top:14px;',
+    '  padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);}',
+    '.sb-allday label{flex:1;font-size:12.5px;font-weight:650;color:var(--text2);cursor:pointer;}',
+    '.sb-sw{position:relative;width:40px;height:22px;flex:0 0 auto;}',
+    '.sb-sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2;}',
+    '.sb-sw i{position:absolute;inset:0;border-radius:99px;background:var(--border-strong,#c8ced4);transition:.16s;}',
+    '.sb-sw i::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;',
+    '  border-radius:50%;background:#fff;transition:.16s;box-shadow:0 1px 3px rgba(0,0,0,.25);}',
+    '.sb-sw input:checked + i{background:var(--primary);}',
+    '.sb-sw input:checked + i::after{transform:translateX(18px);}',
+    '.sb-times{display:grid;grid-template-columns:1fr 1fr;gap:12px;}',
+    '.sb-times.hide{display:none;}',
+    '@media (max-width:560px){.sb-times{grid-template-columns:1fr;gap:0;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_timeStyles();
+window.addEventListener('DOMContentLoaded', _timeStyles);
+
+/* ══════════════════════════════════════════════════════════════
+   v39 — 유형(Marketing / Clinical Sales / Capital Sales)
+   새 종류 라벨을 기존 표시 체계에 등록한다.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+  try {
+    if (typeof _TYPE_META_CF !== 'undefined' && _TYPE_META_CF) {
+      _TYPE_META_CF.conf_dom  = _TYPE_META_CF.conf_dom  || { label:'학회 (국내)' };
+      _TYPE_META_CF.conf_intl = _TYPE_META_CF.conf_intl || { label:'학회 (해외)' };
+    }
+  } catch(e){}
+})();
+
+var _catOrigTypeLabel = (typeof calendarTypeLabel === 'function') ? calendarTypeLabel : null;
+if (_catOrigTypeLabel) {
+  calendarTypeLabel = function(k){
+    if (k === 'conf_dom')  return '학회 (국내)';
+    if (k === 'conf_intl') return '학회 (해외)';
+    return _catOrigTypeLabel(k);
+  };
+}
+
+function _catStyles(){
+  if (document.getElementById('catStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'catStyles';
+  st.textContent = [
+    '#f_specrow{margin-top:0;}',
+    '#f_specrow .sb-f:last-child{display:none;}',
+    '@media (min-width:561px){#f_specrow{grid-template-columns:1fr 1fr;}',
+    '  #f_specrow .sb-f:last-child{display:block;visibility:hidden;}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_catStyles();
+window.addEventListener('DOMContentLoaded', _catStyles);
 
 </script>
 
