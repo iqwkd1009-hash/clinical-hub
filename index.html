@@ -8859,7 +8859,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-02-v43-nonebucket';
+window.CLINICAL_HUB_BUILD='2026-11-02-v44-upload';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -14250,6 +14250,214 @@ if (_noneOrigSpecLabel) {
     return _noneOrigSpecLabel(sp);
   };
 }
+
+/* ══════════════════════════════════════════════════════════════
+   v44 — 매뉴얼 진짜 업로드
+   기존 "+ 파일 업로드" 는 Drive 폴더를 열어주는 링크였을 뿐,
+   실제로 파일을 올리지 않았다. Supabase Storage 로 바꾼다.
+   PDF 는 1페이지를 썸네일로 자동 생성해 함께 올린다.
+   ══════════════════════════════════════════════════════════════ */
+var SB_BUCKET = 'manuals';
+
+function _sbPublicUrl(path){
+  return SB_URL + '/storage/v1/object/public/' + SB_BUCKET + '/' + encodeURIComponent(path);
+}
+
+/* 파일명 안전하게 — 한글/공백은 두되 경로 문자만 제거하고 앞에 날짜를 붙인다 */
+function _sbSafeName(name){
+  var base = String(name || 'file').replace(/[\/\\?%*:|"<>#]/g, '-').replace(/\s+/g, '_');
+  var d = new Date();
+  var p = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  return p + '_' + base;
+}
+
+async function _sbUploadFile(path, blob, type, retried){
+  var r = await _sbRawFetch(SB_URL + '/storage/v1/object/' + SB_BUCKET + '/' + encodeURIComponent(path), {
+    method: 'POST',
+    headers: {
+      apikey: SB_KEY,
+      Authorization: 'Bearer ' + ((_sbAuth && _sbAuth.access_token) || SB_KEY),
+      'Content-Type': type || 'application/octet-stream',
+      'x-upsert': 'true'
+    },
+    body: blob
+  });
+  if (r.status === 401 && !retried && typeof _sbRefreshToken === 'function' && await _sbRefreshToken()) {
+    return _sbUploadFile(path, blob, type, true);
+  }
+  if (!r.ok) {
+    var t = await r.text();
+    if (/Bucket not found/i.test(t)) {
+      throw new Error('Storage 버킷이 없습니다.\nSupabase SQL Editor 에서 버킷 생성 SQL 을 먼저 실행하세요.');
+    }
+    if (r.status === 403 || /row-level security|Unauthorized/i.test(t)) {
+      throw new Error('Storage 쓰기 권한이 없습니다.\nstorage.objects 정책을 확인하세요.');
+    }
+    throw new Error('업로드 실패 (' + r.status + ') — ' + t.slice(0, 140));
+  }
+  return _sbPublicUrl(path);
+}
+
+/* PDF 1페이지 → PNG Blob */
+async function _sbPdfCover(file){
+  try {
+    var lib = await _loadPdfjs();
+    var buf = await file.arrayBuffer();
+    var doc = await lib.getDocument({ data: buf }).promise;
+    var pg  = await doc.getPage(1);
+    var vp0 = pg.getViewport({ scale: 1 });
+    var scale = Math.min(900 / vp0.width, 2);
+    var vp = pg.getViewport({ scale: scale });
+    var cv = document.createElement('canvas');
+    cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    return await new Promise(function(res){ cv.toBlob(res, 'image/png', 0.9); });
+  } catch(e){ return null; }
+}
+
+/* ── 업로드 폼 ───────────────────────────────────────────── */
+var MANUAL_CATS = ['공통', '규약·신고', 'GYN', 'Cardiac', '기타'];
+
+function openManualUploadForm(preFile){
+  _sbCloseOverlay();
+  var back = document.createElement('div'); back.className = 'sb-back'; back.id = 'sbOverlay';
+  back.innerHTML =
+    '<div class="sb-box">' +
+      '<div class="sb-h">매뉴얼 업로드</div>' +
+      '<div class="sb-sub">파일은 Supabase Storage 에 저장되고 목록에 바로 올라갑니다.</div>' +
+      '<label class="sb-l">파일 <span class="req">*</span></label>' +
+      '<input class="sb-i" id="m_file" type="file" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">' +
+      '<div class="sb-fileinfo" id="m_fileinfo"></div>' +
+      '<label class="sb-l">제목 <span class="req">*</span></label>' +
+      '<input class="sb-i" id="m_title">' +
+      '<div class="sb-grid">' +
+        '<div class="sb-f"><label class="sb-l">분류</label><select class="sb-i" id="m_cat">' +
+          MANUAL_CATS.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select></div>' +
+        '<div class="sb-f"><label class="sb-l">읽을 사람</label><input class="sb-i" id="m_aud"></div>' +
+      '</div>' +
+      '<label class="sb-l">설명</label><textarea class="sb-i" id="m_note" rows="2"></textarea>' +
+      '<div class="sb-err" id="sbErr"></div>' +
+      '<div class="sb-actions">' +
+        '<div style="flex:1"></div>' +
+        '<button type="button" class="sb-btn ghost" id="sbCancel">취소</button>' +
+        '<button type="button" class="sb-btn prim" id="sbUp">업로드</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(back);
+  document.body.style.overflow = 'hidden';
+  back.onclick = function(e){ if (e.target === back) _sbCloseOverlay(); };
+  document.getElementById('sbCancel').onclick = _sbCloseOverlay;
+
+  var fi = document.getElementById('m_file');
+  var info = document.getElementById('m_fileinfo');
+  var title = document.getElementById('m_title');
+
+  function showFile(f){
+    if (!f) { info.textContent = ''; return; }
+    var kb = f.size / 1024;
+    info.textContent = f.name + '  ·  ' + (kb > 1024 ? (kb/1024).toFixed(1) + ' MB' : Math.round(kb) + ' KB');
+    if (!title.value) title.value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+  }
+  fi.onchange = function(){ showFile(fi.files[0]); };
+  if (preFile) {
+    try { var dt = new DataTransfer(); dt.items.add(preFile); fi.files = dt.files; } catch(e){}
+    showFile(preFile);
+  }
+
+  var btn = document.getElementById('sbUp');
+  btn.onclick = async function(){
+    var err = document.getElementById('sbErr');
+    var f = fi.files && fi.files[0];
+    var t = (title.value || '').trim();
+    if (!f) { err.textContent = '파일을 선택하세요.'; return; }
+    if (!t) { err.textContent = '제목을 입력하세요.'; return; }
+    btn.disabled = true; err.textContent = '';
+
+    try {
+      var ext = (f.name.match(/\.([^.]+)$/) || [,''])[1].toLowerCase();
+      var base = _sbSafeName(f.name);
+
+      btn.textContent = '파일 올리는 중...';
+      var fileUrl = await _sbUploadFile(base, f, f.type);
+
+      var thumbUrl = '';
+      if (ext === 'pdf') {
+        btn.textContent = '표지 만드는 중...';
+        var cover = await _sbPdfCover(f);
+        if (cover) {
+          try { thumbUrl = await _sbUploadFile(base.replace(/\.pdf$/i, '') + '-cover.png', cover, 'image/png'); } catch(e){}
+        }
+      } else if (['png','jpg','jpeg'].indexOf(ext) >= 0) {
+        thumbUrl = fileUrl;
+      }
+
+      btn.textContent = '목록에 추가 중...';
+      await _sbWrite('POST', 'manuals', {
+        category:   document.getElementById('m_cat').value,
+        title:      t,
+        url:        fileUrl,
+        file_path:  base,
+        thumb_path: thumbUrl || null,
+        type:       ext,
+        owner:      'Henry',
+        audience:   (document.getElementById('m_aud').value || '').trim(),
+        note:       (document.getElementById('m_note').value || '').trim(),
+        updated:    _cwISO(new Date())
+      });
+
+      _sbCloseOverlay();
+      _sbToast('업로드했습니다');
+      try { await loadManualsFromSheet(); renderManuals(); } catch(e){ location.reload(); }
+    } catch(e) {
+      err.textContent = e.message || '업로드에 실패했습니다.';
+      btn.disabled = false; btn.textContent = '업로드';
+    }
+  };
+  setTimeout(function(){ fi.focus(); }, 30);
+}
+
+/* 기존 버튼과 드롭존을 진짜 업로드로 바꾼다 */
+openManualUpload = function(){ openManualUploadForm(); };
+
+(function(){
+  function bindDrop(){
+    var z = document.getElementById('allManualDrop');
+    if (!z || z.dataset.up === '1') return;
+    z.dataset.up = '1';
+    z.textContent = '파일을 여기에 끌어다 놓으면 바로 업로드됩니다';
+    z.style.cursor = 'pointer';
+    z.onclick = function(){ openManualUploadForm(); };
+    ['dragenter','dragover'].forEach(function(ev){
+      z.addEventListener(ev, function(e){ e.preventDefault(); z.classList.add('drag-on'); });
+    });
+    ['dragleave','drop'].forEach(function(ev){
+      z.addEventListener(ev, function(e){ e.preventDefault(); z.classList.remove('drag-on'); });
+    });
+    z.addEventListener('drop', function(e){
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) openManualUploadForm(f);
+    });
+  }
+  window.addEventListener('DOMContentLoaded', function(){ setTimeout(bindDrop, 400); });
+  setTimeout(bindDrop, 1600);
+  var _o = renderManuals;
+  renderManuals = function(){ _o(); try { bindDrop(); } catch(e){} };
+})();
+
+function _uplStyles(){
+  if (document.getElementById('uplStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'uplStyles';
+  st.textContent = [
+    '.sb-fileinfo{margin-top:7px;font-size:11.5px;color:var(--text3);min-height:14px;}',
+    '#allManualDrop.drag-on{border-color:var(--primary)!important;background:var(--primary-soft)!important;',
+    '  color:var(--primary)!important;}',
+    'input[type=file].sb-i{padding:8px 10px;font-size:12px;}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_uplStyles();
+window.addEventListener('DOMContentLoaded', _uplStyles);
 
 </script>
 
