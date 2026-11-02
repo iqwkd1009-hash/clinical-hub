@@ -4550,6 +4550,7 @@ const SPEC_CAL_SHEET_GIDS = {
   hn:      '1504255784',
   hbp:     '614572531',
   hernia:  '971357331',
+  none:    'spec-none',     /* 해당없음 — Supabase 전용 가상 소스 */
 };
 
 async function loadSpecCalFromSheet(spec) {
@@ -7335,7 +7336,7 @@ function buildAllConferences() {
   // Cardiac
   CARDIAC_CALS.forEach(e => ALL_CONFERENCES.push({...e, _spec:'cardiac'}));
   // 기타 과 - window._CAL_{SPEC} 배열 사용 (loadSpecCalFromSheet가 채움)
-  const specKeys = ['uro','cr','thoracic','stomach','breast','hn','hbp','hernia'];
+  const specKeys = ['uro','cr','thoracic','stomach','breast','hn','hbp','hernia','none'];
   specKeys.forEach(spec => {
     const arr = window['_CAL_' + spec.toUpperCase()] || [];
     arr.forEach(e => ALL_CONFERENCES.push({...e, _spec: e._spec || spec}));
@@ -8490,7 +8491,7 @@ async function loadSpecCalendars(){
   if(currentSpec==='all') renderAllCal();
 }
 async function loadAllSpecCalendars() {
-  const specs = ['uro','cr','thoracic','stomach','breast','hn','hbp','hernia'];
+  const specs = ['uro','cr','thoracic','stomach','breast','hn','hbp','hernia','none'];
   await Promise.allSettled(specs.map(spec => loadSpecCalFromSheet(spec)));
   if(typeof buildAllConferences === 'function') buildAllConferences();
   // 현재 열린 spec 캘린더 재렌더
@@ -8858,7 +8859,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-02-v40-none';
+window.CLINICAL_HUB_BUILD='2026-11-02-v43-nonebucket';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12810,6 +12811,11 @@ var SB_SOURCES = {
   '614572531':  { table:'events', order:'start_date.asc', filter:'spec=eq.hbp',      headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
   '971357331':  { table:'events', order:'start_date.asc', filter:'spec=eq.hernia',   headers:['name','start','end','location','tag','주최','System','url','Duty','note'], cols:['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
 
+  // 해당없음 (과가 없는 일정) — 시트에는 없고 Supabase 에만 있다
+  'spec-none': { table:'events', order:'start_date.asc', filter:'spec=eq.none',
+    headers:['name','start','end','location','tag','주최','System','url','Duty','note'],
+    cols:   ['name','start_date','end_date','loc','tag','organizer','system','url','duty','note'] },
+
   // Cardiac 수술영상 (이 탭은 '영상 제목'과 '주제'가 따로 있다)
   '46157436': {
     table:'videos', order:'created_at.asc', filter:'spec=eq.cardiac',
@@ -12963,18 +12969,44 @@ async function _sbWrite(method, path, body, retried){
   }
   if (!r.ok) {
     var t = await r.text();
-    throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 160));
+    throw new Error(_sbFriendlyError(r.status, t));
   }
   return r.status === 204 ? null : await r.json().catch(function(){ return null; });
+}
+
+/* Supabase 에러를 사람이 읽을 수 있게 */
+function _sbFriendlyError(status, body){
+  var msg = '', code = '';
+  try { var j = JSON.parse(body); msg = j.message || j.msg || ''; code = j.code || ''; } catch(e){ msg = String(body||''); }
+
+  var m = msg.match(/Could not find the '(\w+)' column/);
+  if (m) {
+    return 'DB에 \'' + m[1] + '\' 컬럼이 없습니다.\n' +
+           'Supabase SQL Editor 에서 아래를 실행한 뒤 다시 시도하세요.\n' +
+           'alter table events add column if not exists ' + m[1] +
+           (m[1] === 'all_day' ? ' boolean default true;' : ' text;');
+  }
+  if (status === 401 || status === 403 || code === '42501') {
+    return '쓰기 권한이 없습니다. Supabase 에서 events 테이블의 쓰기 정책(open write)을 확인하세요.';
+  }
+  if (code === '23505') return '같은 일정이 이미 있습니다.';
+  if (status === 0 || status >= 500) return '서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  return msg ? ('저장 실패 (' + status + ') — ' + msg) : ('저장 실패 — HTTP ' + status);
 }
 
 /* ── 저장 후 다시 읽기 ───────────────────────────────────── */
 async function _sbReload(spec){
   try {
-    if (spec === 'gyn' || !spec) { await loadConferencesFromSheet(); }
-    else if (typeof loadSpecCalendarFromSheet === 'function') { await loadSpecCalendarFromSheet(spec, true); }
+    if (spec === 'gyn' || !spec) {
+      await loadConferencesFromSheet();
+    } else if (typeof loadSpecCalFromSheet === 'function') {
+      await loadSpecCalFromSheet(spec);          /* window._CAL_<SPEC> 를 채운다 */
+    }
+    if (typeof buildAllConferences === 'function') buildAllConferences();
     if (typeof renderAllCal === 'function') renderAllCal();
-    if (spec && spec !== 'gyn' && typeof renderSpecCal === 'function') { renderSpecCal(spec); renderSpecMonth(spec); }
+    if (spec && spec !== 'gyn' && spec !== 'none' && typeof renderSpecCal === 'function') {
+      try { renderSpecCal(spec); renderSpecMonth(spec); } catch(e){}
+    }
   } catch(e){ location.reload(); }
 }
 
@@ -13071,10 +13103,10 @@ function _sbCloseOverlay(){
 }
 
 /* ── 일정 추가 / 수정 폼 ─────────────────────────────────── */
-var SB_SPECS = [['gyn','GYN'],['cardiac','Cardiac'],['uro','URO'],['cr','CR'],
+var SB_SPECS = [['none','해당없음'],
+                ['gyn','GYN'],['cardiac','Cardiac'],['uro','URO'],['cr','CR'],
                 ['thoracic','Thoracic'],['stomach','Stomach'],['breast','Breast'],
-                ['hn','H&N'],['hbp','HBP'],['hernia','Hernia'],
-                ['none','해당없음']];
+                ['hn','H&N'],['hbp','HBP'],['hernia','Hernia']];
 var SB_TAGS = ['conference','workshop','symposium','p2p','itp','society','roadshow','internal','bam'];
 
 /* 유형(대분류) — Marketing 만 과 선택이 필요하다 */
@@ -13086,11 +13118,11 @@ var SB_CATS = [
 /* 유형별 종류(소분류). 비워두면 기존 전체 목록을 쓴다. */
 var SB_CAT_TAGS = {
   marketing: [
+    ['none',      '해당없음'],
     ['conf_dom',  '학회 (국내)'],
     ['conf_intl', '학회 (해외)'],
     ['roadshow',  '로드쇼'],
-    ['workshop',  '워크샵'],
-    ['none',      '해당없음']
+    ['workshop',  '워크샵']
   ],
   /* 아직 종류가 정해지지 않은 유형 — 해당없음을 기본으로 두고
      필요하면 기존 목록에서 고를 수 있게 한다 */
@@ -13099,11 +13131,21 @@ var SB_CAT_TAGS = {
 };
 var SB_CAT_LABEL = { marketing:'Marketing', clinical_sales:'Clinical Sales', capital_sales:'Capital Sales' };
 function _evCat(ev){ return (ev && ev.category) || 'marketing'; }
-function _catTagOptions(cat){
+function _catTagOptions(cat, keep){
   var list = SB_CAT_TAGS[cat];
-  if (list && list.length) return list;
-  /* 정해지지 않은 유형: 해당없음이 기본, 뒤에 기존 목록 */
-  return [['none','해당없음']].concat(SB_TAGS);
+  if (!list || !list.length) {
+    /* 정해지지 않은 유형: 해당없음이 기본, 뒤에 기존 목록 */
+    list = [['none','해당없음']].concat(SB_TAGS);
+  }
+  /* 지금 들어 있는 값이 목록에 없으면 살려둔다 — 수정할 때 값이 바뀌면 안 된다 */
+  if (keep) {
+    var has = list.some(function(x){ return (Array.isArray(x) ? x[0] : x) === keep; });
+    if (!has) {
+      var lab = (typeof calendarTypeLabel === 'function') ? calendarTypeLabel(keep) : keep;
+      list = list.concat([[keep, lab || keep]]);
+    }
+  }
+  return list;
 }
 
 function openEventForm(ev){
@@ -13111,8 +13153,9 @@ function openEventForm(ev){
   /* 상세 모달이 열려 있으면 닫는다 — 겹치면 폼 버튼이 안 눌린다 */
   try { if (typeof closeConfModal === 'function') closeConfModal(); } catch(e){}
   var editing = !!(ev && ev._id);
+  /* 과 기본값 — 과별 탭에서 추가하면 그 과, ALL 탭이면 해당없음 */
   var cur = (ev && (ev._spec || ev.spec)) ||
-            (typeof currentSpec !== 'undefined' && currentSpec !== 'all' ? currentSpec : 'gyn');
+            (typeof currentSpec !== 'undefined' && currentSpec !== 'all' ? currentSpec : 'none');
 
   var opt = function(list, sel){
     return list.map(function(x){
@@ -13129,7 +13172,7 @@ function openEventForm(ev){
       '<div class="sb-grid">' +
         '<div class="sb-f"><label class="sb-l">유형 <span class="req">*</span></label><select class="sb-i" id="f_cat">' + opt(SB_CATS, _evCat(ev)) + '</select></div>' +
         '<div class="sb-f"><label class="sb-l">종류</label><select class="sb-i" id="f_tag">' +
-          opt(_catTagOptions(_evCat(ev)), (ev && ev.tag) || 'conf_dom') + '</select></div>' +
+          opt(_catTagOptions(_evCat(ev), ev && ev.tag), (ev && ev.tag) || 'none') + '</select></div>' +
       '</div>' +
       '<div class="sb-grid" id="f_specrow">' +
         '<div class="sb-f"><label class="sb-l">과 <span class="req" id="f_specreq">*</span></label><select class="sb-i" id="f_spec">' + opt(SB_SPECS, cur) + '</select></div>' +
@@ -13177,7 +13220,7 @@ function openEventForm(ev){
     var cat = catSel.value;
     var tagSel = document.getElementById('f_tag');
     var keep = tagSel ? tagSel.value : '';
-    var list = _catTagOptions(cat);
+    var list = _catTagOptions(cat, keep);
     if (tagSel) {
       tagSel.innerHTML = list.map(function(x){
         var v = Array.isArray(x) ? x[0] : x, t = Array.isArray(x) ? x[1] : x;
@@ -13330,7 +13373,8 @@ function _sbWriteStyles(){
     'textarea.sb-i{resize:vertical;line-height:1.6;}',
     '.sb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}',
     '.sb-f{min-width:0;}',
-    '.sb-err{margin-top:12px;font-size:12px;color:#DC2626;line-height:1.5;min-height:16px;word-break:break-all;}',
+    '.sb-err{margin-top:12px;font-size:12px;color:#DC2626;line-height:1.6;min-height:16px;',
+    '  white-space:pre-line;word-break:break-word;}',
     '.sb-actions{display:flex;align-items:center;gap:8px;margin-top:16px;}',
     '.sb-btn{height:36px;padding:0 17px;border-radius:9px;border:1px solid var(--border);',
     'background:var(--surface);color:var(--text2);font-family:var(--font);font-size:12.5px;',
