@@ -8190,7 +8190,7 @@ function openConfModal(ev){
   const n=document.createElement('div'); n.style.cssText='font-size:19px;font-weight:750;line-height:1.35;color:#fff;margin-top:4px'; n.textContent=ev.name||'Event';
   wrap.append(t,n); banner.appendChild(wrap);
   body.innerHTML='';
-  const rows=[['📅','일정', date + ((typeof _evTimeRange==='function' && _evTimeRange(ev)) ? '  ' + _evTimeRange(ev) : '')],['🗂️','유형', (typeof SB_CAT_LABEL!=='undefined' ? (SB_CAT_LABEL[(ev.category||'marketing')]||'') : '')],
+  const rows=[['📅','일정', date + ((typeof _evTimeRange==='function' && _evTimeRange(ev)) ? '  ' + _evTimeRange(ev) : '')],['🗂️','담당 팀', (typeof SB_CAT_LABEL!=='undefined' ? (SB_CAT_LABEL[(ev.category||'marketing')]||'') : '')],
     ['📍','장소',ev.loc],['🏛️','주최',ev.organizer],['🤖','System',ev.system],['👥','Duty',ev.duty],['📝','Note',ev.note]].filter(r=>r[2]);
   rows.forEach(([icon,label,value])=>{ const row=document.createElement('div'); row.className='conf-row'; const i=document.createElement('div');i.className='conf-row-icon';i.textContent=icon; const l=document.createElement('div');l.className='conf-row-label';l.textContent=label; const v=document.createElement('div');v.className='conf-row-val';v.textContent=value; row.append(i,l,v); body.appendChild(row); });
   foot.innerHTML='';
@@ -8532,6 +8532,8 @@ function calendarTypeKey(ev){
   // 1) tag / type 열에 값이 있으면 그것이 최우선 (학회명 키워드가 덮어쓰지 못하게)
   const tag=String(ev?.tag||ev?.type||'').trim();
   if(tag){
+    // 팀별 종류 목록에 있는 key 는 그대로 쓴다
+    if(typeof SB_TAG_LABEL!=='undefined' && SB_TAG_LABEL[tag]) return tag;
     const known=_typeKeyFromText(tag);
     if(known) return known;
     // 사이트가 모르는 분류 → 시트에 적힌 값을 그대로 하나의 유형으로 사용
@@ -8543,6 +8545,7 @@ function calendarTypeKey(ev){
   return _typeKeyFromText([ev?.duty,ev?.name].filter(Boolean).join(' ')) || 'other';
 }
 function calendarTypeLabel(key){
+  if(typeof SB_TAG_LABEL!=='undefined' && SB_TAG_LABEL[key]) return SB_TAG_LABEL[key];
   if(_TYPE_META_CF[key]) return _TYPE_META_CF[key].label;
   return _TYPE_LABELS_DYN[key] || String(key||'').replace(/^t:/,'') || 'Other';
 }
@@ -8859,7 +8862,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-02-v44-upload';
+window.CLINICAL_HUB_BUILD='2026-11-08-v46-teams';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -13109,40 +13112,90 @@ var SB_SPECS = [['none','해당없음'],
                 ['hn','H&N'],['hbp','HBP'],['hernia','Hernia']];
 var SB_TAGS = ['conference','workshop','symposium','p2p','itp','society','roadshow','internal','bam'];
 
-/* 유형(대분류) — Marketing 만 과 선택이 필요하다 */
+/* 유형(대분류) = 담당 팀. 순서가 드롭다운 순서다. */
 var SB_CATS = [
-  ['marketing',      'Marketing'],
+  ['marketing',      'Marketing(Clinical)'],
+  ['mkt_portfolio',  'Marketing(Portfolio)'],
+  ['mkt_macom',      'Marketing(Macom)'],
   ['clinical_sales', 'Clinical Sales'],
-  ['capital_sales',  'Capital Sales']
+  ['digital_sales',  'Digital Sales'],
+  ['capital_sales',  'Capital Sales'],
+  ['training',       'Training']
 ];
-/* 유형별 종류(소분류). 비워두면 기존 전체 목록을 쓴다. */
+/* 팀별 종류(소분류). 첫 항목은 항상 '해당없음'(기본값), 마지막은 '기타'. */
+var SB_BAM_TAGS = [
+  ['bam_single',     'BAM(단일기관)'],
+  ['bam_multi',      'BAM(복수기관)'],
+  ['p2p',            'Peer to Peer'],
+  ['internal_event', '회사내 행사']
+];
 var SB_CAT_TAGS = {
   marketing: [
-    ['none',      '해당없음'],
-    ['conf_dom',  '학회 (국내)'],
-    ['conf_intl', '학회 (해외)'],
+    ['conf_dom',  '학회(국내)'],
+    ['conf_intl', '학회(글로벌)'],
     ['roadshow',  '로드쇼'],
     ['workshop',  '워크샵']
   ],
-  /* 아직 종류가 정해지지 않은 유형 — 해당없음을 기본으로 두고
-     필요하면 기존 목록에서 고를 수 있게 한다 */
-  clinical_sales: [],
-  capital_sales:  []
+  mkt_portfolio: [
+    ['event',     '행사'],
+    ['education', '교육']
+  ],
+  mkt_macom: [
+    ['event',     '행사'],
+    ['interview', '인터뷰']
+  ],
+  clinical_sales: SB_BAM_TAGS.slice(),
+  digital_sales: [
+    ['itp',       'ITP'],
+    ['event',     '행사']
+  ],
+  capital_sales: SB_BAM_TAGS.slice(),
+  training: [
+    ['tr300',     'TR300'],
+    ['event',     '행사']
+  ]
 };
-var SB_CAT_LABEL = { marketing:'Marketing', clinical_sales:'Clinical Sales', capital_sales:'Capital Sales' };
+/* 모든 팀에 해당없음(맨 앞) / 기타(맨 뒤)를 강제로 붙인다 */
+(function(){
+  Object.keys(SB_CAT_TAGS).forEach(function(c){
+    var l = SB_CAT_TAGS[c] || [];
+    var has = function(k){ return l.some(function(x){ return x[0] === k; }); };
+    if (!has('none')) l = [['none','해당없음']].concat(l);
+    if (!has('etc'))  l = l.concat([['etc','기타']]);
+    SB_CAT_TAGS[c] = l;
+  });
+})();
+var SB_CAT_LABEL = (function(){
+  var m = {}; SB_CATS.forEach(function(c){ m[c[0]] = c[1]; }); return m;
+})();
+/* 종류 key -> 화면 라벨 (캘린더 칩·상세에서 쓴다) */
+var SB_TAG_LABEL = (function(){
+  var m = {};
+  Object.keys(SB_CAT_TAGS).forEach(function(c){
+    SB_CAT_TAGS[c].forEach(function(t){ m[t[0]] = t[1]; });
+  });
+  return m;
+})();
+/* 과(specialty)가 필수인 팀 */
+var SB_CAT_SPEC_REQ = { marketing: true, clinical_sales: true };
 function _evCat(ev){ return (ev && ev.category) || 'marketing'; }
 function _catTagOptions(cat, keep){
   var list = SB_CAT_TAGS[cat];
   if (!list || !list.length) {
-    /* 정해지지 않은 유형: 해당없음이 기본, 뒤에 기존 목록 */
-    list = [['none','해당없음']].concat(SB_TAGS);
+    /* 목록이 없는 팀: 해당없음 + 기타만 */
+    list = [['none','해당없음'], ['etc','기타']];
   }
+  list = list.slice();
   /* 지금 들어 있는 값이 목록에 없으면 살려둔다 — 수정할 때 값이 바뀌면 안 된다 */
   if (keep) {
     var has = list.some(function(x){ return (Array.isArray(x) ? x[0] : x) === keep; });
     if (!has) {
       var lab = (typeof calendarTypeLabel === 'function') ? calendarTypeLabel(keep) : keep;
-      list = list.concat([[keep, lab || keep]]);
+      var at = list.length;
+      for (var i = 0; i < list.length; i++) {
+        if ((Array.isArray(list[i]) ? list[i][0] : list[i]) === 'etc') { at = i; break; }
+      }
+      list.splice(at, 0, [keep, lab || keep]);
     }
   }
   return list;
@@ -13170,7 +13223,7 @@ function openEventForm(ev){
     '<div class="sb-box">' +
       '<div class="sb-h">' + (editing ? '일정 수정' : '일정 추가') + '</div>' +
       '<div class="sb-grid">' +
-        '<div class="sb-f"><label class="sb-l">유형 <span class="req">*</span></label><select class="sb-i" id="f_cat">' + opt(SB_CATS, _evCat(ev)) + '</select></div>' +
+        '<div class="sb-f"><label class="sb-l">담당 팀 <span class="req">*</span></label><select class="sb-i" id="f_cat">' + opt(SB_CATS, _evCat(ev)) + '</select></div>' +
         '<div class="sb-f"><label class="sb-l">종류</label><select class="sb-i" id="f_tag">' +
           opt(_catTagOptions(_evCat(ev), ev && ev.tag), (ev && ev.tag) || 'none') + '</select></div>' +
       '</div>' +
@@ -13227,11 +13280,9 @@ function openEventForm(ev){
         return '<option value="' + v + '"' + (v === keep ? ' selected' : '') + '>' + t + '</option>';
       }).join('');
     }
-    /* Marketing 만 과가 필수 — 나머지는 해당없음으로 맞춰준다 */
+    /* 과는 팀별로 필수 여부만 다르다 — 고른 값을 지우지는 않는다 */
     var req = document.getElementById('f_specreq');
-    if (req) req.style.display = (cat === 'marketing') ? '' : 'none';
-    var sp = document.getElementById('f_spec');
-    if (sp && cat !== 'marketing' && sp.value !== 'none') sp.value = 'none';
+    if (req) req.style.display = (SB_CAT_SPEC_REQ[cat] ? '' : 'none');
   };
 
   var ad = document.getElementById('f_allday');
@@ -14181,10 +14232,13 @@ window.addEventListener('DOMContentLoaded', _timeStyles);
    새 종류 라벨을 기존 표시 체계에 등록한다.
    ══════════════════════════════════════════════════════════════ */
 (function(){
+  /* 팀별 종류 라벨을 기존 표시 체계에 통째로 등록한다 (v46) */
   try {
-    if (typeof _TYPE_META_CF !== 'undefined' && _TYPE_META_CF) {
-      _TYPE_META_CF.conf_dom  = _TYPE_META_CF.conf_dom  || { label:'학회 (국내)' };
-      _TYPE_META_CF.conf_intl = _TYPE_META_CF.conf_intl || { label:'학회 (해외)' };
+    if (typeof _TYPE_META_CF !== 'undefined' && _TYPE_META_CF && typeof SB_TAG_LABEL !== 'undefined') {
+      Object.keys(SB_TAG_LABEL).forEach(function(k){
+        if (!_TYPE_META_CF[k]) _TYPE_META_CF[k] = { label: SB_TAG_LABEL[k] };
+        else _TYPE_META_CF[k].label = SB_TAG_LABEL[k];
+      });
     }
   } catch(e){}
 })();
@@ -14192,8 +14246,7 @@ window.addEventListener('DOMContentLoaded', _timeStyles);
 var _catOrigTypeLabel = (typeof calendarTypeLabel === 'function') ? calendarTypeLabel : null;
 if (_catOrigTypeLabel) {
   calendarTypeLabel = function(k){
-    if (k === 'conf_dom')  return '학회 (국내)';
-    if (k === 'conf_intl') return '학회 (해외)';
+    if (typeof SB_TAG_LABEL !== 'undefined' && SB_TAG_LABEL[k]) return SB_TAG_LABEL[k];
     return _catOrigTypeLabel(k);
   };
 }
@@ -14263,12 +14316,25 @@ function _sbPublicUrl(path){
   return SB_URL + '/storage/v1/object/public/' + SB_BUCKET + '/' + encodeURIComponent(path);
 }
 
-/* 파일명 안전하게 — 한글/공백은 두되 경로 문자만 제거하고 앞에 날짜를 붙인다 */
+/* Storage 키는 ASCII 만 받는다 (한글이 있으면 InvalidKey).
+   보여주는 이름은 title 에 그대로 남으므로, 키는 안전하게 만들고
+   짧아지면 임의 문자를 붙여 충돌을 막는다. */
 function _sbSafeName(name){
-  var base = String(name || 'file').replace(/[\/\\?%*:|"<>#]/g, '-').replace(/\s+/g, '_');
+  var raw = String(name || 'file');
+  var m = raw.match(/\.([A-Za-z0-9]{1,8})$/);
+  var ext = m ? m[1].toLowerCase() : 'bin';
+  var base = raw.replace(/\.[^.]+$/, '');
+  var ascii = base
+    .replace(/[^\x20-\x7E]+/g, '-')   /* 한글 등 비ASCII 제거 */
+    .replace(/[^\w.-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '');
+  if (ascii.length < 2) ascii = 'file';
+  if (ascii.length > 48) ascii = ascii.slice(0, 48).replace(/-+$/, '');
   var d = new Date();
-  var p = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
-  return p + '_' + base;
+  var day = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  var rnd = Math.random().toString(36).slice(2, 6);
+  return day + '_' + ascii + '_' + rnd + '.' + ext;
 }
 
 async function _sbUploadFile(path, blob, type, retried){
@@ -14385,7 +14451,7 @@ function openManualUploadForm(preFile){
         btn.textContent = '표지 만드는 중...';
         var cover = await _sbPdfCover(f);
         if (cover) {
-          try { thumbUrl = await _sbUploadFile(base.replace(/\.pdf$/i, '') + '-cover.png', cover, 'image/png'); } catch(e){}
+          try { thumbUrl = await _sbUploadFile(base.replace(/\.[^.]+$/, '') + '-cover.png', cover, 'image/png'); } catch(e){}
         }
       } else if (['png','jpg','jpeg'].indexOf(ext) >= 0) {
         thumbUrl = fileUrl;
