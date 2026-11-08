@@ -7952,6 +7952,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
           elN.className = 'month-event span-single';
           elN.style.cssText = 'background:'+clrN+'12;border-left:3px solid '+clrN+';'
             + 'margin:0 5px 2px 5px;border-radius:6px;';
+          elN.style.setProperty('--ev', clrN);
           elN.textContent = '';
           if(_showSpecBadge){
             const spN = calendarEventSpec(ev);
@@ -8007,6 +8008,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
               ? '--span-w:calc('+segDays+' * 100% + '+((segDays-1)*0.5)+'px - '+(EDGE*2)+'px);position:relative;z-index:6;'
               : '');
 
+        el.style.setProperty('--ev', clr);
         el.textContent='';
         if(_showSpecBadge){
           const spW=calendarEventSpec(ev);
@@ -8921,7 +8923,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-08-v56-bars';
+window.CLINICAL_HUB_BUILD='2026-11-08-v60-mobile';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -9291,6 +9293,8 @@ function _densityCfg() { return _DENSITY_PRESETS[_calDensity] || _DENSITY_PRESET
 
 /* 한 칸에 표시할 최대 일정 수 = (셀 높이 - 날짜숫자 - "더보기") / (막대 높이 + 간격) */
 function _monthMaxSlots(density) {
+  /* 모바일은 칸이 좁아 제목이 2줄까지 늘어난다 — 3개로 묶고 나머지는 +N */
+  try { if (window.innerWidth <= 760) return 3; } catch (e) {}
   var c = (density && _DENSITY_PRESETS[density]) || _densityCfg();
   return Math.max(2, Math.floor((c.cell - c.num - 13) / (c.bar + 2)));
 }
@@ -12666,24 +12670,28 @@ function _cwRenderMiniMonth(host, items, yr, mo){
       var n = document.createElement('span'); n.className = 'n'; n.textContent = dnum;
       cell.appendChild(n);
 
-      /* 점 — 과 색상, 최대 3개 */
-      var dots = document.createElement('span'); dots.className = 'dots';
-      var seen = [];
-      evs.forEach(function(ev){
-        var sp = _calendarCardSpec(ev, 'gyn');
-        if (seen.indexOf(sp) < 0) seen.push(sp);
-      });
-      seen.slice(0, 3).forEach(function(sp){
-        var dt = document.createElement('i');
-        dt.style.background = specColor(sp);
-        dots.appendChild(dt);
-      });
-      if (seen.length > 3) {
-        var more = document.createElement('i');
-        more.className = 'more';
-        dots.appendChild(more);
+      /* 일정 제목 — 최대 2개, 나머지는 +N (예전에는 점만 찍었다) */
+      if (evs.length) {
+        var evb = document.createElement('span');
+        evb.className = 'evs';
+        evs.slice(0, 2).forEach(function(ev){
+          var sp = _calendarCardSpec(ev, 'gyn');
+          var bar = document.createElement('i');
+          bar.className = 'mb';
+          try { bar.style.setProperty('--ev', specColor(sp)); } catch(e){}
+          var tl = (typeof _evTimeLabel === 'function') ? _evTimeLabel(ev) : '';
+          bar.textContent = (tl ? tl + ' ' : '') + (ev.name || '');
+          bar.title = ev.name || '';
+          evb.appendChild(bar);
+        });
+        if (evs.length > 2) {
+          var mr = document.createElement('i');
+          mr.className = 'mb is-more';
+          mr.textContent = '+' + (evs.length - 2);
+          evb.appendChild(mr);
+        }
+        cell.appendChild(evb);
       }
-      cell.appendChild(dots);
 
       cell.setAttribute('aria-label', (mo+1) + '월 ' + dnum + '일 일정 ' + evs.length + '건');
       cell.onclick = function(){
@@ -12782,14 +12790,16 @@ function _cwV27Styles(){
     '.cw-mini-dow .sun{color:#A66;}.cw-mini-dow .sat{color:#5C7FA8;}',
     'body.dark .cw-mini-dow .sun{color:#C99;}',
 
-    '.cw-mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}',
-    '.cw-mini-cell{position:relative;display:flex;flex-direction:column;align-items:center;',
-    'justify-content:flex-start;gap:3px;min-height:46px;padding:6px 0 5px;border:0;',
+    /* 가로 스와이프를 브라우저(뒤로 가기)가 먼저 가져가지 않게 한다 */
+    '.cw-mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;',
+    'touch-action:pan-y pinch-zoom;overscroll-behavior-x:contain;}',
+    '.cw-mini-cell{position:relative;display:flex;flex-direction:column;align-items:stretch;',
+    'justify-content:flex-start;gap:2px;min-height:62px;padding:4px 1px 4px;border:0;',
     'background:transparent;border-radius:9px;cursor:pointer;font-family:var(--font);',
-    'transition:background .13s;}',
-    '.cw-mini-cell .n{font-size:14px;font-weight:600;color:var(--text);line-height:1;',
-    'width:26px;height:26px;display:flex;align-items:center;justify-content:center;',
-    'border-radius:50%;}',
+    'transition:background .13s;overflow:hidden;}',
+    '.cw-mini-cell .n{font-size:12.5px;font-weight:600;color:var(--text);line-height:1;',
+    'width:22px;height:22px;display:flex;align-items:center;justify-content:center;',
+    'border-radius:50%;align-self:center;flex:0 0 auto;}',
     '.cw-mini-cell.sun .n{color:#A66;}.cw-mini-cell.sat .n{color:#5C7FA8;}',
     'body.dark .cw-mini-cell.sun .n{color:#C99;}',
     '.cw-mini-cell.out{opacity:.3;cursor:default;}',
@@ -12800,10 +12810,23 @@ function _cwV27Styles(){
     /* 선택 = 테두리 원 */
     '.cw-mini-cell.is-sel .n{box-shadow:inset 0 0 0 2px var(--primary);}',
     '.cw-mini-cell.is-today.is-sel .n{box-shadow:inset 0 0 0 2px var(--primary),0 0 0 2px var(--primary-mid);}',
-    /* 점 */
+    /* 점 (지금은 안 쓰지만 다른 화면에서 쓸 수 있어 남겨둔다) */
     '.cw-mini-cell .dots{display:flex;gap:2.5px;align-items:center;height:6px;}',
     '.cw-mini-cell .dots i{width:5px;height:5px;border-radius:50%;display:block;}',
     '.cw-mini-cell .dots i.more{width:3px;height:3px;background:var(--text3);}',
+    /* 제목 막대 — 칸이 좁아 글씨는 작게, 2줄까지 */
+    '.cw-mini-cell .evs{display:flex;flex-direction:column;gap:1.5px;width:100%;min-width:0;}',
+    '.cw-mini-cell .evs .mb{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;',
+    'overflow:hidden;font-style:normal;font-size:7.5px;font-weight:600;line-height:1.2;',
+    'text-align:left;padding:1px 2px 1px 3px;border-left:2px solid var(--ev,#888);',
+    'border-radius:0 3px 3px 0;color:var(--text2);overflow-wrap:anywhere;word-break:normal;',
+    'background:color-mix(in srgb, var(--ev,#888) 11%, transparent);}',
+    '.cw-mini-cell .evs .mb.is-more{border-left:0;background:transparent;color:var(--text3);',
+    'font-weight:700;padding-left:3px;}',
+    '.cw-mini-cell.out .evs{display:none;}',
+    /* 아주 좁은 기기에서는 한 줄만 */
+    '@media (max-width:360px){.cw-mini-cell .evs .mb{-webkit-line-clamp:1;font-size:7px;}',
+    '  .cw-mini-cell{min-height:54px;}}',
 
     /* 선택한 날짜 패널 */
     '.cw-mini-day{margin-top:14px;padding-top:13px;border-top:1px solid var(--border);}',
@@ -14442,6 +14465,93 @@ if (_noneOrigTypeLabel) {
     return _noneOrigTypeLabel(k);
   };
 }
+/* ══════════════════════════════════════════════════════════════
+   v57 — 모바일 달력
+   (1) 점 대신 일정 제목을 보여준다 (글씨는 작게)
+   (2) 좌우로 밀면 월이 넘어간다
+   ══════════════════════════════════════════════════════════════ */
+function _mobileMonthStyles(){
+  if (document.getElementById('mobileMonthStyles')) return;
+  var st = document.createElement('style');
+  st.id = 'mobileMonthStyles';
+  st.textContent = [
+    /* 달력 위 가로 스와이프는 월 이동용 — 브라우저 뒤로가기로 새지 않게 */
+    '.month-grid,.cw-mini-grid{touch-action:pan-y pinch-zoom;overscroll-behavior-x:contain;}',
+    '@media (max-width:760px){',
+    /* 칸을 키워 제목이 들어갈 자리를 만든다 */
+    '  .calendar-first-main .month-grid{grid-auto-rows:94px!important;}',
+    '  .calendar-first-main .month-day{min-height:94px!important;padding:2px 2px!important;',
+    '    overflow:hidden!important;}',
+    '  .calendar-first-main .month-day-num{width:auto!important;height:15px!important;',
+    '    min-width:15px;font-size:9px!important;margin-bottom:1px!important;}',
+    /* 점 → 가로 막대 */
+    '  .calendar-first-main .month-events-wrap{flex-direction:column!important;',
+    '    flex-wrap:nowrap!important;gap:1px!important;padding-left:0!important;}',
+    '  .calendar-first-main .month-event.month-event{',
+    '    width:auto!important;height:auto!important;min-height:0!important;',
+    '    font-size:7.5px!important;line-height:1.22!important;padding:1px 2px 1px 3px!important;',
+    '    border:0!important;border-left:2px solid var(--ev,#888)!important;',
+    '    border-radius:0 3px 3px 0!important;flex:0 0 auto!important;',
+    '    margin:0!important;box-shadow:none!important;transform:none!important;',
+    '    -webkit-line-clamp:2!important;word-break:break-all!important;}',
+    /* 좁은 칸에서 과 배지·기간은 자리만 먹는다 — 상세에서 보면 된다 */
+    '  .calendar-first-main .month-event .ev-spec,',
+    '  .calendar-first-main .month-event .ev-range{display:none!important;}',
+    '  .calendar-first-main .month-event .ev-time{font-size:7px!important;',
+    '    margin-right:2px!important;opacity:.75;}',
+    '  .calendar-first-main .month-event.is-timed::before{width:0!important;height:0!important;',
+    '    margin:0!important;}',
+    /* 칸마다 따로 그리므로 레인 정렬용 빈칸이 필요 없다 */
+    '  .calendar-first-main .month-spacer{display:none!important;}',
+    '  .calendar-first-main .month-more{font-size:7px!important;padding:0 2px!important;}',
+    '}'
+  ].join('');
+  document.head.appendChild(st);
+}
+_mobileMonthStyles();
+window.addEventListener('DOMContentLoaded', _mobileMonthStyles);
+
+/* 좌우 스와이프 → 이전/다음 달.
+   달력마다 월 이동 함수가 달라서, 그 달력의 ‹ › 버튼을 찾아 그대로 누른다. */
+(function(){
+  function _navBtns(grid){
+    var p = grid;
+    for (var i = 0; i < 6 && p; i++, p = p.parentElement) {
+      var nav = p.querySelector && p.querySelector('.month-nav');
+      if (nav) {
+        var bs = nav.querySelectorAll('.month-nav-btn');
+        if (bs.length >= 2) return { prev: bs[0], next: bs[1] };
+      }
+    }
+    return null;
+  }
+  var sx = 0, sy = 0, stamp = 0, grid = null;
+  document.addEventListener('touchstart', function(e){
+    grid = null;
+    if (!e.touches || e.touches.length !== 1) return;
+    var t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest('.sb-back')) return;          /* 폼이 열려 있으면 무시 */
+    var g = t.closest('.month-grid, .cw-mini-grid');
+    if (!g) return;
+    grid = g; sx = e.touches[0].clientX; sy = e.touches[0].clientY; stamp = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e){
+    var g = grid; grid = null;
+    if (!g) return;
+    var t = e.changedTouches && e.changedTouches[0];
+    if (!t) return;
+    if (Date.now() - stamp > 800) return;
+    var dx = t.clientX - sx, dy = t.clientY - sy;
+    /* 가로로 충분히, 그리고 세로보다 확실히 많이 움직였을 때만 */
+    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    var b = _navBtns(g);
+    if (!b) return;
+    (dx < 0 ? b.next : b.prev).click();
+  }, { passive: true });
+})();
+
 /* ══════════════════════════════════════════════════════════════
    v49 — 일정을 한 번 누르면 바로 수정 폼으로 들어간다.
    호버 미리보기는 그대로 두고, 클릭만 가로챈다.
