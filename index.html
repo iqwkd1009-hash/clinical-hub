@@ -8862,7 +8862,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-08-v46-teams';
+window.CLINICAL_HUB_BUILD='2026-11-08-v50-time24';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12865,8 +12865,23 @@ async function _sbSelect(src){
     Accept: 'application/json'
   }});
   if (!r.ok) throw new Error('Supabase HTTP ' + r.status);
-  return await r.json();
+  var rows = await r.json();
+  /* events 테이블이 실제로 가진 컬럼을 기억한다 — 누락 진단에 쓴다 */
+  try {
+    if (src.table === 'events' && rows && rows.length) {
+      _sbSeenCols = Object.keys(rows[0]);
+    }
+  } catch(e){}
+  return rows;
 }
+var _sbSeenCols = null;
+/* events 에 있어야 하는 컬럼과 타입 */
+var _SB_EVENT_COLS = {
+  spec:'text', category:'text', name:'text', start_date:'date', end_date:'date',
+  loc:'text', tag:'text', organizer:'text', system:'text', url:'text',
+  duty:'text', note:'text',
+  all_day:'boolean default true', start_time:'time', end_time:'time'
+};
 
 /* 행 배열 → 기존 파서가 읽을 수 있는 CSV 문자열 */
 function _sbToCSV(src, rows){
@@ -12984,10 +12999,21 @@ function _sbFriendlyError(status, body){
 
   var m = msg.match(/Could not find the '(\w+)' column/);
   if (m) {
-    return 'DB에 \'' + m[1] + '\' 컬럼이 없습니다.\n' +
-           'Supabase SQL Editor 에서 아래를 실행한 뒤 다시 시도하세요.\n' +
-           'alter table events add column if not exists ' + m[1] +
-           (m[1] === 'all_day' ? ' boolean default true;' : ' text;');
+    /* 하나씩 고치다 또 막히지 않게, 빠진 컬럼을 전부 모아서 알려준다 */
+    var missing = [m[1]];
+    try {
+      if (_sbSeenCols) {
+        Object.keys(_SB_EVENT_COLS).forEach(function(c){
+          if (_sbSeenCols.indexOf(c) < 0 && missing.indexOf(c) < 0) missing.push(c);
+        });
+      }
+    } catch(e){}
+    var sql = missing.map(function(c){
+      return 'alter table events add column if not exists ' + c + ' ' +
+             (_SB_EVENT_COLS[c] || 'text') + ';';
+    }).join('\n');
+    return 'DB에 ' + missing.map(function(c){ return "'" + c + "'"; }).join(', ') +
+           ' 컬럼이 없습니다.\nSupabase SQL Editor 에서 아래를 실행한 뒤 다시 시도하세요.\n\n' + sql;
   }
   if (status === 401 || status === 403 || code === '42501') {
     return '쓰기 권한이 없습니다. Supabase 에서 events 테이블의 쓰기 정책(open write)을 확인하세요.';
@@ -13242,8 +13268,8 @@ function openEventForm(ev){
         '<span class="sb-sw"><input type="checkbox" id="f_allday"' + (_evAllDay(ev||{}) ? ' checked' : '') + '><i></i></span>' +
       '</div>' +
       '<div class="sb-times' + (_evAllDay(ev||{}) ? ' hide' : '') + '" id="f_timerow">' +
-        '<div class="sb-f"><label class="sb-l">시작 시간</label><input class="sb-i" id="f_stime" type="time" value="' + _safeText((ev && ev.start_time) || '09:00') + '"></div>' +
-        '<div class="sb-f"><label class="sb-l">종료 시간</label><input class="sb-i" id="f_etime" type="time" value="' + _safeText((ev && ev.end_time) || '10:00') + '"></div>' +
+        '<div class="sb-f"><label class="sb-l">시작 시간</label>' + _timeSelectHTML('f_stime', ev && ev.start_time, '09:00') + '</div>' +
+        '<div class="sb-f"><label class="sb-l">종료 시간</label>' + _timeSelectHTML('f_etime', ev && ev.end_time, '10:00') + '</div>' +
       '</div>' +
       '<label class="sb-l">장소</label><input class="sb-i" id="f_loc" value="' + val('loc') + '">' +
       '<div class="sb-grid">' +
@@ -13304,8 +13330,8 @@ function openEventForm(ev){
       organizer: g('f_org'), system: g('f_sys'), url: g('f_url'),
       duty: g('f_duty'), note: g('f_note'),
       all_day: allDay,
-      start_time: allDay ? null : (g('f_stime') || null),
-      end_time:   allDay ? null : (g('f_etime') || null)
+      start_time: allDay ? null : (_readTimeSelect('f_stime') || null),
+      end_time:   allDay ? null : (_readTimeSelect('f_etime') || null)
     };
     save.disabled = true; save.textContent = '저장 중...';
     try {
@@ -13317,6 +13343,7 @@ function openEventForm(ev){
       await _sbReload(row.spec);
     } catch(e) {
       err.textContent = '저장 실패 — ' + e.message;
+      try { err.scrollIntoView({ block:'center', behavior:'smooth' }); } catch(_){}
       save.disabled = false; save.textContent = '저장';
     }
   };
@@ -13336,7 +13363,7 @@ function openEventForm(ev){
       del.disabled = false; del.textContent = '삭제';
     }
   };
-  setTimeout(function(){ document.getElementById('f_name').focus(); }, 30);
+  setTimeout(function(){ var n = document.getElementById('f_name'); if (n) n.focus(); }, 30);
 }
 
 /* ── 기존 UI 에 연결 ─────────────────────────────────────── */
@@ -13483,7 +13510,7 @@ function _cwISO(d){
 function _sbQuickAdd(dateStr){
   if (!dateStr) return;
   var spec = (typeof currentSpec !== 'undefined' && currentSpec && currentSpec !== 'all')
-    ? currentSpec : 'gyn';
+    ? currentSpec : 'none';
   openEventForm({ start: dateStr, end: dateStr, _spec: spec });
 }
 
@@ -14163,15 +14190,46 @@ function _evAllDay(ev){
 }
 
 /* 'HH:MM' → '오후 7:30' (정각이면 '오후 7') */
+/* 시/분 드롭다운 — <input type=time> 은 브라우저 로캘을 따라가서
+   한국어 환경에서 오전/오후가 뜬다. 직접 만들어 24시간으로 고정한다. */
+function _timeParts(v, def){
+  var m = String(v || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) m = String(def || '09:00').match(/^(\d{1,2}):(\d{2})/);
+  var h = Math.min(23, Math.max(0, parseInt(m[1], 10) || 0));
+  return { h: (h < 10 ? '0' + h : String(h)), m: m[2] };
+}
+function _timeSelectHTML(id, v, def){
+  var p = _timeParts(v, def), out = [];
+  out.push('<div class="sb-time2">');
+  out.push('<select class="sb-i" id="' + id + 'H">');
+  for (var h = 0; h < 24; h++) {
+    var hh = (h < 10 ? '0' + h : String(h));
+    out.push('<option value="' + hh + '"' + (hh === p.h ? ' selected' : '') + '>' + hh + '</option>');
+  }
+  out.push('</select><span class="sb-time2-sep">:</span>');
+  var mins = [];
+  for (var i = 0; i < 60; i += 5) mins.push(i < 10 ? '0' + i : String(i));
+  if (mins.indexOf(p.m) < 0) { mins.push(p.m); mins.sort(); }
+  out.push('<select class="sb-i" id="' + id + 'M">');
+  mins.forEach(function(mm){
+    out.push('<option value="' + mm + '"' + (mm === p.m ? ' selected' : '') + '>' + mm + '</option>');
+  });
+  out.push('</select></div>');
+  return out.join('');
+}
+function _readTimeSelect(id){
+  var h = document.getElementById(id + 'H'), m = document.getElementById(id + 'M');
+  if (!h || !m) return '';
+  return h.value + ':' + m.value;
+}
+
 function _fmtTime(hhmm, compact){
   if (!hhmm) return '';
   var m = String(hhmm).match(/^(\d{1,2}):(\d{2})/);
   if (!m) return '';
   var h = parseInt(m[1], 10), mi = m[2];
-  var ap = h < 12 ? '오전' : '오후';
-  var h12 = h % 12; if (h12 === 0) h12 = 12;
-  if (compact && mi === '00') return ap + ' ' + h12;
-  return ap + ' ' + h12 + ':' + mi;
+  if (isNaN(h) || h < 0 || h > 23) return '';
+  return (h < 10 ? '0' + h : String(h)) + ':' + mi;
 }
 
 /* 막대에 붙일 짧은 시간 */
@@ -14203,6 +14261,11 @@ function _timeStyles(){
     '.month-event.is-timed:hover{background:var(--surface2)!important;}',
     '.month-event .ev-time{font-weight:700;color:var(--text2);opacity:.9;}',
     '.month-event.is-timed .ev-time{color:var(--ev,var(--text2));}',
+
+    /* 시/분 드롭다운 */
+    '.sb-time2{display:flex;align-items:center;gap:6px;}',
+    '.sb-time2 select.sb-i{flex:1 1 0;min-width:0;text-align:center;}',
+    '.sb-time2-sep{font-weight:700;color:var(--text3);flex:0 0 auto;}',
 
     /* 목록형 뷰의 시간 뱃지 */
     '.cw-ag-ev .m .tm,.cup-meta .tm{font-weight:700;color:var(--text2);}',
@@ -14296,6 +14359,27 @@ if (_noneOrigTypeLabel) {
     return _noneOrigTypeLabel(k);
   };
 }
+/* ══════════════════════════════════════════════════════════════
+   v49 — 일정을 한 번 누르면 바로 수정 폼으로 들어간다.
+   호버 미리보기는 그대로 두고, 클릭만 가로챈다.
+   수정할 수 없는 일정(구글 시트에서 온 것 등)은 기존 상세로 간다.
+   ══════════════════════════════════════════════════════════════ */
+var _editOrigOpenConf = (typeof openConfModal === 'function') ? openConfModal : null;
+if (_editOrigOpenConf) {
+  openConfModal = function(ev){
+    try {
+      if (ev && ev._id && typeof _sbAuthed === 'function' && _sbAuthed()
+          && typeof openEventForm === 'function') {
+        if (typeof hideCalendarPreview === 'function') { try { hideCalendarPreview(); } catch(_){} }
+        if (typeof closeCalendarMobileSheet === 'function') { try { closeCalendarMobileSheet(); } catch(_){} }
+        openEventForm(ev);
+        return;
+      }
+    } catch(e){}
+    return _editOrigOpenConf(ev);
+  };
+}
+
 var _noneOrigSpecLabel = (typeof specLabel === 'function') ? specLabel : null;
 if (_noneOrigSpecLabel) {
   specLabel = function(sp){
