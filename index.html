@@ -7765,7 +7765,48 @@ function _equalizeMonthLanes(grid){
   }
 }
 
+/* 막대에 붙일 짧은 과 이름 */
+var _SPEC_SHORT = { gyn:'GYN', cardiac:'CARD', uro:'URO', cr:'CR', thoracic:'THOR',
+                    stomach:'STOM', breast:'BRST', hn:'H&N', hbp:'HBP', hernia:'HERN', none:'-' };
+function _specShort(sp){
+  if (!sp) return '';
+  return _SPEC_SHORT[sp] || String(sp).slice(0,4).toUpperCase();
+}
+/* 배경색 밝기에 맞춰 글자색을 고른다 — 다크 테마에서 흰 글자는 대비가 모자란다 */
+function _onColor(bg){
+  try {
+    var c = String(bg || '').trim(), r, g, b, m;
+    if (c.charAt(0) === '#') {
+      if (c.length === 4) c = '#' + c[1]+c[1] + c[2]+c[2] + c[3]+c[3];
+      r = parseInt(c.substr(1,2),16); g = parseInt(c.substr(3,2),16); b = parseInt(c.substr(5,2),16);
+    } else if ((m = c.match(/(\d+)[,\s]+(\d+)[,\s]+(\d+)/))) {
+      r = +m[1]; g = +m[2]; b = +m[3];
+    } else return '#fff';
+    var f = function(v){ v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
+    var L = 0.2126*f(r) + 0.7152*f(g) + 0.0722*f(b);
+    /* 흰 글자와 검은 글자의 대비가 같아지는 지점 (L = 0.179) 기준 */
+    return L > 0.179 ? '#15191F' : '#fff';
+  } catch(e){ return '#fff'; }
+}
+/* 여러 날 일정의 기간 — 막대 오른쪽 끝에 붙여 빈 띠로 보이지 않게 한다 */
+function _evSpanLabel(ev){
+  try {
+    var se = _calStartEnd(ev);
+    if (!se || !se.s || !se.e) return '';
+    if (se.s.getTime() === se.e.getTime()) return '';
+    var f = function(d){ return (d.getMonth()+1) + '/' + d.getDate(); };
+    return f(se.s) + '\u2013' + f(se.e);
+  } catch(e){ return ''; }
+}
+
 function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClickFn, titleClickFn) {
+  /* 여러 과가 섞여 있을 때만 과 배지를 붙인다 */
+  var _showSpecBadge = false;
+  try {
+    var _seen = {};
+    (items||[]).forEach(function(e){ var k = calendarEventSpec(e); if (k) _seen[k] = 1; });
+    _showSpecBadge = (typeof specColor === 'function') && Object.keys(_seen).length > 1;
+  } catch(e){ _showSpecBadge = false; }
   const MONTHS_KO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const today=new Date(); today.setHours(0,0,0,0);
 
@@ -7912,22 +7953,26 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
           elN.style.cssText = 'background:'+clrN+'12;border-left:3px solid '+clrN+';'
             + 'margin:0 5px 2px 5px;border-radius:6px;';
           elN.textContent = '';
+          if(_showSpecBadge){
+            const spN = calendarEventSpec(ev);
+            const bgN = document.createElement('span');
+            bgN.className = 'ev-spec';
+            bgN.style.background = clrN;
+            bgN.style.color = _onColor(clrN);
+            bgN.textContent = _specShort(spN);
+            elN.appendChild(bgN);
+          }
           if(typeof _evAllDay==='function' && !_evAllDay(ev)){
             elN.classList.add('is-timed');
             elN.style.setProperty('--ev', clrN);
             const tmN = document.createElement('span');
-            tmN.className = 'ev-time'; tmN.textContent = _evTimeLabel(ev) + ' ';
+            tmN.className = 'ev-time'; tmN.textContent = _evTimeLabel(ev);
             elN.appendChild(tmN);
           }
           const nmN = document.createElement('span');
+          nmN.className = 'ev-name';
           nmN.textContent = ev.name || '';
           elN.appendChild(nmN);
-          if(ev.loc){
-            const lcN = document.createElement('span');
-            lcN.className = 'ev-loc';
-            lcN.textContent = ' · ' + ev.loc;
-            elN.appendChild(lcN);
-          }
           elN.title = (ev.name||'') + (ev.loc ? '\n\u2316 ' + ev.loc : '');
           try { elN.dataset.evkey = _cwEvKey(ev); } catch(e){}
           elN.tabIndex = 0;
@@ -7963,21 +8008,35 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
               : '');
 
         el.textContent='';
+        if(_showSpecBadge){
+          const spW=calendarEventSpec(ev);
+          const bgW=document.createElement('span');
+          bgW.className='ev-spec';
+          bgW.style.background=clr;
+          bgW.style.color=_onColor(clr);
+          bgW.textContent=_specShort(spW);
+          el.appendChild(bgW);
+        }
         if(typeof _evAllDay==='function' && !_evAllDay(ev)){
           el.classList.add('is-timed');
           el.style.setProperty('--ev', clr);
           const tmEl=document.createElement('span');
-          tmEl.className='ev-time'; tmEl.textContent=_evTimeLabel(ev)+' ';
+          tmEl.className='ev-time'; tmEl.textContent=_evTimeLabel(ev);
           el.appendChild(tmEl);
         }
         const nameEl=document.createElement('span');
+        nameEl.className='ev-name';
         nameEl.textContent=ev.name||'';
         el.appendChild(nameEl);
-        if(ev.loc){
-          const locEl=document.createElement('span');
-          locEl.className='ev-loc';
-          locEl.textContent=' · '+ev.loc;
-          el.appendChild(locEl);
+        /* 3칸 이상 뻗는 막대는 오른쪽 끝이 비어 보인다 — 기간을 붙인다 */
+        if(segDays>=3){
+          const rg=_evSpanLabel(ev);
+          if(rg){
+            const rgEl=document.createElement('span');
+            rgEl.className='ev-range';
+            rgEl.textContent=rg;
+            el.appendChild(rgEl);
+          }
         }
         el.title=ev.name+(ev.loc?'\n\u2316 '+ev.loc:'');
         try { el.dataset.evkey=_cwEvKey(ev); } catch(e){}
@@ -8862,7 +8921,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-08-v51-esc';
+window.CLINICAL_HUB_BUILD='2026-11-08-v56-bars';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -11397,7 +11456,9 @@ renderDdaySummary = function(){
       specs = [_allCalSpecFilter];
       if (specCount[_allCalSpecFilter] === undefined) specCount[_allCalSpecFilter] = 0;
     }
-    if (specs.length > 1 || _allCalSpecFilter !== 'all') {
+    /* v52 — 과 필터는 상단 탭과 중복이라 분포 칩은 빼고,
+       필터가 걸려 있을 때만 해제용 칩 하나를 남긴다 */
+    if (_allCalSpecFilter !== 'all') {
       var sep2 = document.createElement('span'); sep2.className='cw-stat-sep is-spec'; wrap.appendChild(sep2);
       specs.forEach(function(sp){
         var c = document.createElement('button');
@@ -14272,6 +14333,17 @@ function _timeStyles(){
     '.month-event.is-timed:hover{background:var(--surface2)!important;}',
     '.month-event .ev-time{font-weight:700;color:var(--text2);opacity:.9;}',
     '.month-event.is-timed .ev-time{color:var(--ev,var(--text2));}',
+
+    /* 막대의 과 배지 · 이름 · 기간 */
+    /* 막대는 -webkit-box(2줄 클램프)라 flex 가 안 먹는다 — 인라인으로 흘린다 */
+    '.month-event .ev-spec{display:inline-block;vertical-align:baseline;',
+    '  font-size:8px;font-weight:800;letter-spacing:.02em;padding:0 4px;',
+    '  border-radius:4px;color:#fff;line-height:1.5;white-space:nowrap;',
+    '  margin-right:4px;}',
+    '.month-event .ev-time{margin-right:4px;}',
+    '.month-event .ev-range{margin-left:6px;font-size:8px;font-weight:600;',
+    '  opacity:.5;white-space:nowrap;}',
+    '@media (max-width:760px){.month-event .ev-spec{font-size:7px;padding:0 3px;margin-right:3px;}}',
 
     /* 시/분 드롭다운 */
     '.sb-time2{display:flex;align-items:center;gap:6px;}',
