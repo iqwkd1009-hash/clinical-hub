@@ -7430,7 +7430,7 @@ var TEAM_COLORS = {
   clinical_sales: { light:'#A63D57', dark:'#D9909F' },  /* 크림슨 */
   digital_sales:  { light:'#4A5E9B', dark:'#9BA9D5' },  /* 인디고 */
   capital_sales:  { light:'#AD5B3C', dark:'#DFA288' },  /* 러스트 */
-  training:       { light:'#5C8A4A', dark:'#AECB9B' }   /* 그린  */
+  training:       { light:'#3E6B33', dark:'#AECB9B' }   /* 딥그린 */
 };
 function _calColorFor(ev, fallbackSpec){
   if (CAL_COLOR_BY === 'team') {
@@ -7827,8 +7827,8 @@ function _specShort(sp){
 }
 /* 배지 규칙 — Marketing(Clinical)만 과로, 나머지 팀은 팀 이름으로 */
 var _TEAM_SHORT = {
-  mkt_portfolio:'Portfolio', mkt_macom:'MACOM', training:'Training',
-  clinical_sales:'Clinical Sales', digital_sales:'Digital Sales', capital_sales:'CAPITAL'
+  mkt_portfolio:'Portfolio', mkt_macom:'Macom', training:'Training',
+  clinical_sales:'Clinical Sales', digital_sales:'Digital Sales', capital_sales:'Capital'
 };
 function _evBadgeColor(ev, sp){
   try {
@@ -8999,7 +8999,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v79-fix';
+window.CLINICAL_HUB_BUILD='2026-11-09-v82-labels';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -10242,7 +10242,7 @@ var SPECIALTY_COLORS = {
   cr:       { light:'#4A5E9B', dark:'#9BA9D5', label:'CR'       },
   cardiac:  { light:'#1F7A85', dark:'#8AC6CE', label:'Cardiac'  },
   hbp:      { light:'#2E7F6E', dark:'#90C8BA', label:'HBP'      },
-  hernia:   { light:'#5C8A4A', dark:'#AECB9B', label:'Hernia'   },
+  hernia:   { light:'#4E7A3C', dark:'#AECB9B', label:'Hernia'   },
   stomach:  { light:'#8A6520', dark:'#D6BC89', label:'Stomach'  },
   thoracic: { light:'#AD5B3C', dark:'#DFA288', label:'Thoracic' }
 };
@@ -14287,6 +14287,13 @@ function _slimStyles(){
     '@media (min-width:901px){',
     /* 사이드바는 미니 달력 전용 — 폭을 줄인다 */
     '  body #page-all-cal > .sidebar.sidebar{width:178px!important;min-width:178px!important;}',
+    /* 접기 — 위 규칙보다 우선순위가 높아야 실제로 접힌다 (v80) */
+    '  body #page-all-cal > .sidebar.sidebar.cal-collapsed{width:44px!important;',
+    '    min-width:44px!important;padding:16px 0!important;overflow:hidden!important;}',
+    '  body #page-all-cal > .sidebar.sidebar.cal-collapsed > *:not(.cal-sb-head){display:none!important;}',
+    '  body #page-all-cal > .sidebar.sidebar.cal-collapsed .cal-sb-head{padding:0!important;',
+    '    justify-content:center!important;margin:0!important;}',
+    '  body #page-all-cal > .sidebar.sidebar.cal-collapsed .cal-sb-head .t{display:none!important;}',
     /* 좌측의 중복 필터 제거 (모바일의 "필터" 버튼 쪽은 그대로 둔다) */
     '  body #sidebar-all-cal .calendar-filter-strip{display:none!important;}',
     '  #sidebar-all-cal .sidebar-title,#sidebar-all-cal > .sidebar-inner > .filter-section{display:none!important;}',
