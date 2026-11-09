@@ -2417,10 +2417,14 @@ body.dark .nav-top, body.dark .nav-sub {
 <!-- NAV TOP: Brand + Specialty -->
 <div class="nav-top">
   <div class="nav-top-left">
-    <div class="logo-mark">
+    <div class="logo-mark" id="logoHome" role="button" tabindex="0"
+         title="홈으로" aria-label="홈으로"
+         onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}">
       <svg viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="11" height="11" rx="3" fill="white" fill-opacity="0.9"/><rect x="15" y="2" width="11" height="11" rx="3" fill="white" fill-opacity="0.6"/><rect x="2" y="15" width="11" height="11" rx="3" fill="white" fill-opacity="0.6"/><rect x="15" y="15" width="11" height="11" rx="3" fill="white" fill-opacity="0.3"/></svg>
     </div>
-    <div class="brand-name">Clinical<span style="font-weight:300;margin-left:2px">Hub</span></div>
+    <div class="brand-name" id="brandHome" role="button" tabindex="0"
+         title="홈으로" aria-label="홈으로"
+         onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}">Clinical<span style="font-weight:300;margin-left:2px">Hub</span></div>
     <button id="phoneSpecPill" onclick="openPhoneSpecSheet()" style="display:none;align-items:center;gap:5px;padding:4px 10px;background:var(--primary-soft);border:1px solid var(--primary-mid);border-radius:20px;font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;font-family:var(--font)">
       <span id="phoneSpecDot" style="width:6px;height:6px;border-radius:50%;background:#0071E3;flex-shrink:0;display:inline-block"></span>
       <span id="phoneSpecLabel">GYN</span>
@@ -4853,6 +4857,24 @@ const KOLS = [
 let currentLang = 'ko';
 let currentSpec = 'gyn';
 
+
+/* 로고/이름을 누르면 첫 화면으로: ALL 캘린더 · 이번 달 · 필터 해제 */
+function goHome(){
+  try { if (typeof _sbCloseOverlay === 'function') _sbCloseOverlay(); } catch(e){}
+  try { if (typeof closeConfModal === 'function') closeConfModal(); } catch(e){}
+  try { if (typeof closeDrawer === 'function') closeDrawer(); } catch(e){}
+  /* 이번 달로 되돌린다 */
+  try {
+    var t = new Date();
+    _allCalYear = t.getFullYear();
+    _allCalMonth = t.getMonth();
+    if (typeof _cwMiniSel !== 'undefined') _cwMiniSel = {};
+  } catch(e){}
+  var allBtn = document.getElementById('spec-all');
+  if (allBtn) { switchSpecAll(allBtn); }
+  else if (typeof renderAllCal === 'function') { renderAllCal(); }
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e){ window.scrollTo(0,0); }
+}
 
 function switchSpecAll(el) {
   closeDrawer();
@@ -7775,6 +7797,19 @@ function _specShort(sp){
   if (!sp) return '';
   return _SPEC_SHORT[sp] || String(sp).slice(0,4).toUpperCase();
 }
+/* 배지 규칙 — Marketing(Clinical)만 과로, 나머지 팀은 팀 이름으로 */
+var _TEAM_SHORT = {
+  mkt_portfolio:'Portfolio', mkt_macom:'마컴', training:'Training',
+  clinical_sales:'Clinical Sales', digital_sales:'Digital Sales', capital_sales:'Capital Sales'
+};
+function _evBadgeText(ev, sp){
+  try {
+    var c = (typeof _evCat === 'function') ? _evCat(ev) : null;
+    if (c && _TEAM_SHORT[c]) return _TEAM_SHORT[c];   /* Marketing(Clinical) 외 */
+  } catch(e){}
+  if (sp && sp !== 'none') return _specShort(sp);
+  return 'Clinical';                                   /* 과가 없는 Clinical 일정 */
+}
 /* 배경색 밝기에 맞춰 글자색을 고른다 — 다크 테마에서 흰 글자는 대비가 모자란다 */
 function _onColor(bg){
   try {
@@ -7963,7 +7998,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
             bgN.className = 'ev-spec';
             bgN.style.background = clrN;
             bgN.style.color = _onColor(clrN);
-            bgN.textContent = _specShort(spN);
+            bgN.textContent = _evBadgeText(ev, spN);
             elN.appendChild(bgN);
           }
           if(typeof _evAllDay==='function' && !_evAllDay(ev)){
@@ -8019,7 +8054,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
           bgW.className='ev-spec';
           bgW.style.background=clr;
           bgW.style.color=_onColor(clr);
-          bgW.textContent=_specShort(spW);
+          bgW.textContent=_evBadgeText(ev, spW);
           el.appendChild(bgW);
         }
         if(typeof _evAllDay==='function' && !_evAllDay(ev)){
@@ -8926,7 +8961,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v69-monthonly';
+window.CLINICAL_HUB_BUILD='2026-11-09-v72-teambadge';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -14423,6 +14458,15 @@ function _timeStyles(){
     '.month-event.is-timed:hover{background:var(--surface2)!important;}',
     '.month-event .ev-time{font-weight:700;color:var(--text2);opacity:.9;}',
     '.month-event.is-timed .ev-time{color:var(--ev,var(--text2));}',
+
+    /* 로고·이름 = 홈 버튼 */
+    '#logoHome,#brandHome{cursor:pointer;}',
+    '#logoHome{transition:transform .12s,opacity .12s;}',
+    '#logoHome:hover{transform:scale(1.05);}',
+    '#logoHome:active{transform:scale(.96);}',
+    '#brandHome:hover{opacity:.72;}',
+    '#logoHome:focus-visible,#brandHome:focus-visible{outline:2px solid var(--primary);',
+    '  outline-offset:3px;border-radius:8px;}',
 
     /* 막대의 과 배지 · 이름 · 기간 */
     /* 막대는 -webkit-box(2줄 클램프)라 flex 가 안 먹는다 — 인라인으로 흘린다 */
