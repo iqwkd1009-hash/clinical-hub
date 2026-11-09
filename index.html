@@ -7819,8 +7819,8 @@ function _equalizeMonthLanes(grid){
 }
 
 /* 막대에 붙일 짧은 과 이름 */
-var _SPEC_SHORT = { gyn:'GYN', cardiac:'CARD', uro:'URO', cr:'CR', thoracic:'TS',
-                    stomach:'STM', breast:'BRST', hn:'H&N', hbp:'HBP', hernia:'HERN', none:'-' };
+var _SPEC_SHORT = { gyn:'GYN', cardiac:'Cardiac', uro:'URO', cr:'CR', thoracic:'TS',
+                    stomach:'STM', breast:'BRE', hn:'H&N', hbp:'HBP', hernia:'Hernia', none:'-' };
 function _specShort(sp){
   if (!sp) return '';
   return _SPEC_SHORT[sp] || String(sp).slice(0,4).toUpperCase();
@@ -7971,8 +7971,15 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
 
   cells.forEach(({dayNum,isCurrent,dow,cellIdx})=>{
     const isToday=isCurrent&&dayNum===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
+    /* 오늘보다 이전인 날 — 지났다는 표시를 한다 (v93) */
+    let _isPast=false;
+    if(isCurrent){
+      const _cd=new Date(yr, mo, dayNum); _cd.setHours(0,0,0,0);
+      _isPast = _cd < today;
+    }
     const cell=document.createElement('div');
-    cell.className='month-day'+(!isCurrent?' other-month':'')+(isToday?' today':'')+(dow===0?' sunday':dow===6?' saturday':'');
+    cell.className='month-day'+(!isCurrent?' other-month':'')+(isToday?' today':'')
+      +(_isPast?' is-past':'')+(dow===0?' sunday':dow===6?' saturday':'');
     const num=document.createElement('div');
     num.className='month-day-num';
     // 달이 바뀌는 칸(격자 첫 칸, 매월 1일)에는 "10월 1" 처럼 월을 함께 쓴다
@@ -8999,7 +9006,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v90-select';
+window.CLINICAL_HUB_BUILD='2026-11-09-v95-strike';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12798,6 +12805,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
           try { cell.setAttribute('data-iso', _cwISO(day)); } catch(e){}
 
           var nEvs = items.filter(function(ev){ return _cwCovers(ev, day); }).length;
+          if (day < today) cell.classList.add('is-past');
           if (_cwSameDay(day, today)) cell.classList.add('is-today');
           if (inMonth && day.getDate() === selDay) cell.classList.add('is-sel');
           if (nEvs) cell.classList.add('has-ev');
@@ -14605,6 +14613,21 @@ function _timeStyles(){
     /* 팀 칩의 색 점 — 달력 막대 색과 같은 색이라 범례 역할을 한다 */
     '.cw-stat-chip.is-team .dot{display:inline-block;width:7px;height:7px;border-radius:50%;',
     '  margin-right:5px;vertical-align:middle;flex:0 0 auto;}',
+
+    /* 지난 날짜 — 숫자에 취소선 (v95) */
+    '.month-day.is-past .month-day-num,',
+    '.cw-mini-cell.is-past .n{color:var(--past-x)!important;text-decoration:line-through;',
+    '  text-decoration-thickness:1.5px;text-decoration-color:var(--past-line);}',
+    /* 오늘·고른 날은 그대로 둔다 */
+    '.month-day.today .month-day-num,.cw-mini-cell.is-sel .n,.cw-mini-cell.is-today .n{',
+    '  text-decoration:none!important;}',
+    ':root{--past-x:#9AA1AB;--past-line:#C3C8D0;}',
+    '@media (prefers-color-scheme:dark){:root:not([data-theme="light"])',
+    '  {--past-x:#6B7482;--past-line:#4A515C;}}',
+    ':root[data-theme="dark"]{--past-x:#6B7482;--past-line:#4A515C;}',
+
+    /* 월 라벨이 붙은 날(11월 1 등)도 다른 날과 같은 자리에서 시작하게 */
+    '.month-day-num.has-mo{justify-content:flex-start!important;padding:0 5px 0 0!important;}',
 
     /* 로고·이름 = 홈 버튼 */
     '#logoHome,#brandHome{cursor:pointer;}',
