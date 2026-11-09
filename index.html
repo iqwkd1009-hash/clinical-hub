@@ -2395,10 +2395,13 @@ body.dark .nav-top, body.dark .nav-sub {
   background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
   border-top: 1px solid var(--border) !important;
 }
-.mobile-tab-item { color: var(--text3); font-weight: 500; }
-.mobile-tab-item.active { color: var(--primary); font-weight: 600; }
-.mobile-tab-item:disabled { opacity: .3 !important; }
-.mobile-tab-label { font-size: 10px; letter-spacing: -0.01em; }
+.mobile-tab-item { color: var(--text2) !important; font-weight: 600 !important; }
+.mobile-tab-item.active { color: var(--primary) !important; font-weight: 700 !important; }
+/* 비활성 탭도 읽을 수는 있어야 한다 — 투명도 대신 색으로 구분 */
+.mobile-tab-item:disabled { opacity: .85 !important; color: var(--text2) !important;
+  font-weight: 500 !important; }
+.mobile-tab-item:disabled .mobile-tab-icon { opacity: .45; }
+.mobile-tab-label { font-size: 10.5px !important; letter-spacing: -0.01em; }
 
 /* ── 9. 여백 정리 ──────────────────────────────────────────── */
 .calendar-first-toolbar { gap: 12px; margin-bottom: 16px; }
@@ -8923,7 +8926,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v64-span';
+window.CLINICAL_HUB_BUILD='2026-11-09-v69-monthonly';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -10166,7 +10169,7 @@ var SPECIALTY_COLORS = {
   cardiac:  { light:'#1F7A85', dark:'#8AC6CE', label:'Cardiac'  },
   hbp:      { light:'#2E7F6E', dark:'#90C8BA', label:'HBP'      },
   hernia:   { light:'#5C8A4A', dark:'#AECB9B', label:'Hernia'   },
-  stomach:  { light:'#9C7A38', dark:'#D6BC89', label:'Stomach'  },
+  stomach:  { light:'#8A6520', dark:'#D6BC89', label:'Stomach'  },
   thoracic: { light:'#AD5B3C', dark:'#DFA288', label:'Thoracic' }
 };
 var _SPEC_FALLBACK = { light:'#667085', dark:'#98A2B3', label:'기타' };
@@ -12485,7 +12488,7 @@ function _cwEnsureUpcomingBtn(){
   if (!toggle || document.getElementById('allCalView_upcoming')) return;
   var b = document.createElement('button');
   b.type = 'button';
-  b.className = 'cal-view-btn cw-only-mobile';
+  b.className = 'cal-view-btn cw-upcoming-btn';
   b.id = 'allCalView_upcoming';
   b.textContent = '다가오는';
   b.onclick = function(){ setAllCalView('upcoming', true); };
@@ -12505,13 +12508,11 @@ function _cwApplyDeviceDefault(){
   if (!pg || !pg.classList.contains('active')) return;
   _cwEnsureUpcomingBtn();
   if (_cwViewTouched) {
-    /* 모바일에서 PC 전용 뷰에 갇히지 않도록만 보정 */
-    if (_cwIsMobile() && (_allCalView === 'day' || _allCalView === 'week' || _allCalView === 'card')) {
-      setAllCalView('upcoming', false);
-    }
+    /* 폰에서는 Month 만 쓴다 — 다른 뷰에 갇히지 않게 되돌린다 */
+    if (_cwIsMobile() && _allCalView !== 'month') setAllCalView('month', false);
     return;
   }
-  if (_cwIsMobile()) { if (_allCalView !== 'upcoming') setAllCalView('upcoming', false); }
+  if (_cwIsMobile()) { if (_allCalView !== 'month') setAllCalView('month', false); }
   else if (_allCalView === 'upcoming') { setAllCalView('month', false); }
 }
 
@@ -12529,6 +12530,9 @@ function _cwV26Styles(){
   st.id = 'calV26Styles';
   st.textContent = [
     '.cw-only-mobile{display:none;}',
+    /* v69 — 폰은 Month 한 가지만 쓴다: 뷰 전환기와 "다가오는" 버튼을 감춘다 */
+    '#allCalView_upcoming{display:none!important;}',
+    '@media (max-width:760px){#page-all-cal .cal-view-toggle{display:none!important;}}',
 
     /* 다가오는 일정 — 상단 고정 요약 */
     '.cw-up-sticky{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:9px;',
