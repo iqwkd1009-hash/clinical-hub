@@ -7828,7 +7828,7 @@ function _specShort(sp){
 /* 배지 규칙 — Marketing(Clinical)만 과로, 나머지 팀은 팀 이름으로 */
 var _TEAM_SHORT = {
   mkt_portfolio:'Portfolio', mkt_macom:'Macom', training:'Training',
-  clinical_sales:'Clinical Sales', digital_sales:'Digital Sales', capital_sales:'Capital'
+  clinical_sales:'Sales', digital_sales:'Digital', capital_sales:'Capital'
 };
 function _evBadgeColor(ev, sp){
   try {
@@ -8999,7 +8999,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v83-morefields';
+window.CLINICAL_HUB_BUILD='2026-11-09-v87-layout';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -13512,9 +13512,17 @@ function openEventForm(ev){
   var _moreOpen = ['organizer','system','url','duty','note'].some(function(k){
     return ev && ev[k] != null && String(ev[k]).trim() !== '';
   });
-  /* 과 기본값 — 과별 탭에서 추가하면 그 과, ALL 탭이면 해당없음 */
+  /* 마지막에 쓴 담당 팀·과를 기억한다 — 팀마다 자기 일정만 넣으므로 (v85) */
+  var _lastCat = '', _lastSpec = '';
+  try { _lastCat  = storageGet('chubLastCat')  || ''; } catch(e){}
+  try { _lastSpec = storageGet('chubLastSpec') || ''; } catch(e){}
+
+  /* 과 기본값 — 과별 탭이면 그 과, ALL 탭이면 마지막에 쓴 과, 없으면 해당없음 */
   var cur = (ev && (ev._spec || ev.spec)) ||
-            (typeof currentSpec !== 'undefined' && currentSpec !== 'all' ? currentSpec : 'none');
+            (typeof currentSpec !== 'undefined' && currentSpec !== 'all' ? currentSpec : '') ||
+            (!editing ? _lastSpec : '') || 'none';
+  /* 담당 팀 기본값 */
+  var curCat = editing ? _evCat(ev) : (_lastCat || _evCat(ev));
 
   var opt = function(list, sel){
     return list.map(function(x){
@@ -13529,15 +13537,15 @@ function openEventForm(ev){
     '<div class="sb-box">' +
       '<div class="sb-h">' + (editing ? '일정 수정' : '일정 추가') + '</div>' +
       '<div class="sb-grid">' +
-        '<div class="sb-f"><label class="sb-l">담당 팀 <span class="req">*</span></label><select class="sb-i" id="f_cat">' + opt(SB_CATS, _evCat(ev)) + '</select></div>' +
+        '<div class="sb-f"><label class="sb-l">담당 팀 <span class="req">*</span></label><select class="sb-i" id="f_cat">' + opt(SB_CATS, curCat) + '</select></div>' +
         '<div class="sb-f"><label class="sb-l">종류</label><select class="sb-i" id="f_tag">' +
-          opt(_catTagOptions(_evCat(ev), ev && ev.tag), (ev && ev.tag) || 'none') + '</select></div>' +
+          opt(_catTagOptions(curCat, ev && ev.tag), (ev && ev.tag) || 'none') + '</select></div>' +
       '</div>' +
       '<div class="sb-grid" id="f_specrow">' +
         '<div class="sb-f"><label class="sb-l">과 <span class="req" id="f_specreq">*</span></label><select class="sb-i" id="f_spec">' + opt(SB_SPECS, cur) + '</select></div>' +
-        '<div class="sb-f"></div>' +
+        '<div class="sb-f"><label class="sb-l">장소</label><input class="sb-i" id="f_loc" value="' + val('loc') + '"></div>' +
       '</div>' +
-      '<label class="sb-l">학회명 / 행사명 <span class="req">*</span></label>' +
+      '<label class="sb-l">행사명 <span class="req">*</span></label>' +
       '<input class="sb-i" id="f_name" value="' + val('name') + '">' +
       '<div class="sb-grid">' +
         '<div class="sb-f"><label class="sb-l">시작일 <span class="req">*</span></label><input class="sb-i" id="f_start" type="date" value="' + val('start') + '"></div>' +
@@ -13551,7 +13559,6 @@ function openEventForm(ev){
         '<div class="sb-f"><label class="sb-l">시작 시간</label>' + _timeSelectHTML('f_stime', ev && ev.start_time, '09:00') + '</div>' +
         '<div class="sb-f"><label class="sb-l">종료 시간</label>' + _timeSelectHTML('f_etime', ev && ev.end_time, '10:00') + '</div>' +
       '</div>' +
-      '<label class="sb-l">장소</label><input class="sb-i" id="f_loc" value="' + val('loc') + '">' +
       /* 자주 안 쓰는 칸은 접어둔다. 이미 값이 있으면 펼친 채로 연다 (v83) */
       '<button type="button" class="sb-more" id="sbMore" aria-expanded="' + (_moreOpen ? 'true' : 'false') + '">' +
         '<span class="cv">' + (_moreOpen ? '접기' : '추가 입력') + '</span>' +
@@ -13616,12 +13623,27 @@ function openEventForm(ev){
     if (r) r.classList.toggle('hide', ad.checked);
   };
 
+  /* Enter 로 저장 — 여러 줄 입력(메모)과 드롭다운은 제외 (v85) */
+  back.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+    var t = e.target;
+    if (!t || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return;
+    if (t.tagName === 'BUTTON') return;
+    e.preventDefault();
+    var sv = document.getElementById('sbSave');
+    if (sv && !sv.disabled) sv.click();
+  });
+
   var save = document.getElementById('sbSave');
   save.onclick = async function(){
     var g = function(id){ return (document.getElementById(id).value || '').trim(); };
     var err = document.getElementById('sbErr');
     var name = g('f_name'), start = g('f_start');
-    if (!name || !start) { err.textContent = '학회명과 시작일은 필수입니다.'; return; }
+    if (!name || !start) { err.textContent = '행사명과 시작일은 필수입니다.'; return; }
+    try {
+      storageSet('chubLastCat',  g('f_cat'));
+      storageSet('chubLastSpec', g('f_spec'));
+    } catch(e){}
     var allDay = !document.getElementById('f_allday') || document.getElementById('f_allday').checked;
     var row = {
       spec: g('f_spec'), category: g('f_cat') || 'marketing', name: name, start_date: start,
@@ -14610,9 +14632,9 @@ function _timeStyles(){
     '.cw-ag-ev .m .tm,.cup-meta .tm{font-weight:700;color:var(--text2);}',
 
     /* 폼 — 하루 종일 토글 */
-    '.sb-allday{display:flex;align-items:center;gap:9px;margin-top:14px;',
-    '  padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);}',
-    '.sb-allday label{flex:1;font-size:12.5px;font-weight:650;color:var(--text2);cursor:pointer;}',
+    '.sb-allday{display:flex;align-items:center;gap:8px;margin:9px 0 2px;',
+    '  padding:0;border:0;background:transparent;}',
+    '.sb-allday label{flex:0 0 auto;font-size:12px;font-weight:650;color:var(--text2);cursor:pointer;}',
     '.sb-sw{position:relative;width:40px;height:22px;flex:0 0 auto;}',
     '.sb-sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2;}',
     '.sb-sw i{position:absolute;inset:0;border-radius:99px;background:var(--border-strong,#c8ced4);transition:.16s;}',
@@ -14658,10 +14680,9 @@ function _catStyles(){
   var st = document.createElement('style');
   st.id = 'catStyles';
   st.textContent = [
+    /* v86 — 둘째 칸이 비어 있던 시절의 숨김 규칙 제거 (지금은 장소가 들어간다) */
     '#f_specrow{margin-top:0;}',
-    '#f_specrow .sb-f:last-child{display:none;}',
-    '@media (min-width:561px){#f_specrow{grid-template-columns:1fr 1fr;}',
-    '  #f_specrow .sb-f:last-child{display:block;visibility:hidden;}}'
+    '@media (min-width:561px){#f_specrow{grid-template-columns:1fr 1fr;}}'
   ].join('');
   document.head.appendChild(st);
 }
