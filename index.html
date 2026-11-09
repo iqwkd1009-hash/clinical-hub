@@ -8999,7 +8999,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v87-layout';
+window.CLINICAL_HUB_BUILD='2026-11-09-v90-select';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -9282,7 +9282,9 @@ function syncDeepLink() {
   if (_allCalTagFilter !== 'all') p.set('type', _allCalTagFilter);
   var el = document.getElementById('allCalSearch');
   if (el && el.value) p.set('q', el.value);
-  p.set('month', _allCalYear + '-' + String(_allCalMonth + 1).padStart(2, '0'));
+  /* v89 — 보고 있는 달을 주소에 쓰지 않는다.
+     쓰면 북마크·공유 주소에 그 달이 박혀서 다시 열 때 오늘 달이 안 나온다.
+     (주소에 ?month=... 을 직접 넣어 공유하는 건 그대로 동작한다) */
   if (_allCalView !== 'month') p.set('view', _allCalView);
   var url = location.pathname + '?' + p.toString();
   if (url !== location.pathname + location.search) history.replaceState(null, '', url);
@@ -12984,8 +12986,13 @@ function _cwV27Styles(){
     /* 오늘 = 채운 원 */
     '.cw-mini-cell.is-today .n{background:var(--primary);color:#fff!important;font-weight:750;}',
     /* 선택 = 테두리 원 */
-    '.cw-mini-cell.is-sel .n{box-shadow:inset 0 0 0 2px var(--primary);}',
-    '.cw-mini-cell.is-today.is-sel .n{box-shadow:inset 0 0 0 2px var(--primary),0 0 0 2px var(--primary-mid);}',
+    /* 고른 날은 칸 전체에 색을 깔아 바로 보이게 한다 (v90) */
+    '.cw-mini-cell.is-sel{background:var(--primary-soft);}',
+    '.cw-mini-cell.is-sel .n{background:var(--primary);color:#fff!important;font-weight:750;}',
+    '.cw-mini-cell.is-today:not(.is-sel) .n{background:transparent;color:var(--primary)!important;',
+    '  box-shadow:inset 0 0 0 2px var(--primary);}',
+    '.cw-mini-cell.is-today.is-sel{background:var(--primary-soft);}',
+    '.cw-mini-cell.is-today.is-sel .n{background:var(--primary);color:#fff!important;box-shadow:none;}',
     /* 점 (지금은 안 쓰지만 다른 화면에서 쓸 수 있어 남겨둔다) */
     '.cw-mini-cell .dots{display:flex;gap:2.5px;align-items:center;height:6px;}',
     '.cw-mini-cell .dots i{width:5px;height:5px;border-radius:50%;display:block;}',
@@ -13536,7 +13543,7 @@ function openEventForm(ev){
   back.innerHTML =
     '<div class="sb-box">' +
       '<div class="sb-h">' + (editing ? '일정 수정' : '일정 추가') + '</div>' +
-      '<div class="sb-grid">' +
+      '<div class="sb-grid" id="f_catrow">' +
         '<div class="sb-f"><label class="sb-l">담당 팀 <span class="req">*</span></label><select class="sb-i" id="f_cat">' + opt(SB_CATS, curCat) + '</select></div>' +
         '<div class="sb-f"><label class="sb-l">종류</label><select class="sb-i" id="f_tag">' +
           opt(_catTagOptions(curCat, ev && ev.tag), (ev && ev.tag) || 'none') + '</select></div>' +
@@ -13547,7 +13554,7 @@ function openEventForm(ev){
       '</div>' +
       '<label class="sb-l">행사명 <span class="req">*</span></label>' +
       '<input class="sb-i" id="f_name" value="' + val('name') + '">' +
-      '<div class="sb-grid">' +
+      '<div class="sb-grid" id="f_daterow">' +
         '<div class="sb-f"><label class="sb-l">시작일 <span class="req">*</span></label><input class="sb-i" id="f_start" type="date" value="' + val('start') + '"></div>' +
         '<div class="sb-f"><label class="sb-l">종료일</label><input class="sb-i" id="f_end" type="date" value="' + val('end') + '"></div>' +
       '</div>' +
@@ -13796,9 +13803,14 @@ function _sbWriteStyles(){
     'body.sb-editing a[href*="docs.google.com/spreadsheets"]{border-style:solid!important;}',
 
     '@media (max-width:560px){',
-    '  .sb-back{padding:0;}',
-    '  .sb-box{border-radius:0;min-height:100vh;padding:22px 18px 40px;}',
+    /* 내용만큼만 — 예전엔 min-height:100vh 라 아래가 휑하게 비었다 (v88) */
+    '  .sb-back{padding:16px 10px 28px;align-items:flex-start;}',
+    '  .sb-box{border-radius:14px;min-height:0;padding:18px 15px 16px;width:100%;}',
     '  .sb-grid{grid-template-columns:1fr;gap:0;}',
+    /* 값이 짧은 줄은 폰에서도 2단으로 — 세로 길이를 140px 줄인다 */
+    '  #f_specrow,#f_daterow,.sb-times{grid-template-columns:1fr 1fr!important;gap:9px!important;}',
+    '  .sb-l{margin-top:9px;}',
+    '  .sb-h{font-size:16px;}',
     '  .sb-btn{height:40px;}',
     '}'
   ].join('');
