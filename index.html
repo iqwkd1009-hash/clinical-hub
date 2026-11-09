@@ -7416,6 +7416,30 @@ function _calendarSectionedItems(items,today){
   groups.past.sort((a,b)=>b.st.sort-a.st.sort);
   return groups;
 }
+/* ══ v74 — 캘린더 색 기준 ══
+   과는 막대에 글자로 나오므로, 색은 담당 팀을 나타낸다.
+   'spec' 으로 바꾸면 예전처럼 과별 색으로 돌아간다. */
+var CAL_COLOR_BY = 'team';
+var TEAM_COLORS = {
+  marketing:      { light:'#A63D57', dark:'#D9909F' },  /* Marketing(Clinical) */
+  mkt_portfolio:  { light:'#1F7A85', dark:'#8AC6CE' },  /* Marketing(Portfolio) */
+  mkt_macom:      { light:'#85489B', dark:'#C398D2' },  /* Marketing(Macom) */
+  clinical_sales: { light:'#4A5E9B', dark:'#9BA9D5' },
+  digital_sales:  { light:'#2E7F6E', dark:'#90C8BA' },
+  capital_sales:  { light:'#AD5B3C', dark:'#DFA288' },
+  training:       { light:'#8A6520', dark:'#D6BC89' }
+};
+function _calColorFor(ev, fallbackSpec){
+  if (CAL_COLOR_BY === 'team') {
+    try {
+      var c = (typeof _evCat === 'function') ? _evCat(ev) : null;
+      var d = c && TEAM_COLORS[c];
+      if (d) return (typeof _isDarkTheme === 'function' && _isDarkTheme()) ? d.dark : d.light;
+    } catch (e) {}
+  }
+  return specColor(_calendarCardSpec(ev, fallbackSpec || 'gyn'));
+}
+
 function _calendarCardSpec(ev,fallbackSpec){
   return ev?._spec || fallbackSpec || 'gyn';
 }
@@ -7424,7 +7448,7 @@ function _calendarSoftColor(hex){
 }
 function _calendarCompactCard(ev,today,showSpec,fallbackSpec){
   const spec=_calendarCardSpec(ev,fallbackSpec);
-  const clr=_allSpecColor(spec);
+  const clr=_calColorFor(ev, fallbackSpec);
   const date=_calCompactDate(ev);
   const st=_calStatus(ev,today);
   const typeMeta=calendarTypeMeta(ev);
@@ -8131,7 +8155,7 @@ function renderAllCalMonth(items, today) {
   const yr=_allCalYear, mo=_allCalMonth;
 
   _buildMonthGrid(grid, header, titleEl, items, yr, mo,
-    ev => _allSpecColor(ev._spec),
+    ev => _calColorFor(ev),
     ev => openConfModal(ev),
     (el, y, m, MONTHS_KO) => {
       el.innerHTML='';
@@ -8961,7 +8985,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v72-teambadge';
+window.CLINICAL_HUB_BUILD='2026-11-09-v74-teamcolor';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -10798,7 +10822,7 @@ function renderCalUpcoming(items){
 
 function _cwUpcomingCard(ev, today){
   var spec = _calendarCardSpec(ev, 'gyn');
-  var clr  = specColor(spec);
+  var clr  = _calColorFor(ev);
   var st   = _calStatus(ev, today);
   var meta = calendarTypeMeta(ev);
 
@@ -10916,7 +10940,7 @@ function renderAllCalWeek(items){
           var spec = _calendarCardSpec(ev, 'gyn');
           var b = document.createElement('button');
           b.type = 'button'; b.className = 'cw-wev';
-          b.style.setProperty('--ev', specColor(spec));
+          b.style.setProperty('--ev', _calColorFor(ev));
           b.style.setProperty('--ev-soft', specSoft(spec));
           b.title = (ev.name || '') + '\n' + _cwFmtRange(ev) + (ev.loc ? '\n📍 ' + ev.loc : '');
           var nm = document.createElement('div'); nm.className='n'; nm.textContent = ev.name || 'Event';
@@ -10990,7 +11014,7 @@ function renderAllCalDay(items){
       var nth = _calDayDiff(d, se.s) + 1;
       var b = document.createElement('button');
       b.type='button'; b.className='cw-dev';
-      b.style.setProperty('--ev', specColor(spec));
+      b.style.setProperty('--ev', _calColorFor(ev));
       b.onclick = function(){ openConfModal(ev); };
       var bar = document.createElement('div'); bar.className='bar';
       bar.innerHTML = '<span class="s">' + _safeText(specLabel(spec)) + '</span>' +
@@ -11386,7 +11410,7 @@ function renderAllCalAgenda(items){
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'cw-ag-ev';
       b.dataset.evkey = _cwEvKey(ev);
-      b.style.setProperty('--ev', specColor(spec));
+      b.style.setProperty('--ev', _calColorFor(ev));
       b.onclick = function(){ openConfModal(ev); };
       var n = document.createElement('div'); n.className = 'n'; n.textContent = ev.name || 'Event';
       b.appendChild(n);
@@ -11506,7 +11530,7 @@ renderDdaySummary = function(){
         var c = document.createElement('button');
         c.type='button';
         c.className='cw-stat-chip is-spec' + (_allCalSpecFilter === sp ? ' on' : '');
-        c.innerHTML = '<span class="sd" style="background:' + specColor(sp) + '"></span>' +
+        c.innerHTML = '<span class="sd" style="background:' + _calColorFor(e) + '"></span>' +
           _safeText(specLabel(sp)) + ' <span class="c">' + specCount[sp] + '</span>';
         c.title = _allCalSpecFilter === sp ? '이 과 필터 해제' : specLabel(sp) + '만 보기';
         c.onclick = function(){
@@ -11681,7 +11705,7 @@ function _cwRenderWeekInto(host, items, onMove){
           var b = document.createElement('button');
           b.type='button'; b.className='cw-wev';
           b.dataset.evkey = _cwEvKey(ev);
-          b.style.setProperty('--ev', specColor(sp));
+          b.style.setProperty('--ev', _calColorFor(ev));
           b.style.setProperty('--ev-soft', specSoft(sp));
           b.title = (ev.name||'')+'\n'+_cwFmtRange(ev)+(ev.loc ? '\n📍 '+ev.loc : '');
           var nm = document.createElement('div'); nm.className='n'; nm.textContent = ev.name||'Event';
@@ -11758,7 +11782,7 @@ function _cwRenderDayInto(host, items, fallbackSpec, onMove){
       var b = document.createElement('button');
       b.type='button'; b.className='cw-dev';
       b.dataset.evkey = _cwEvKey(ev);
-      b.style.setProperty('--ev', specColor(sp));
+      b.style.setProperty('--ev', _calColorFor(ev, fallbackSpec || 'gyn'));
       b.onclick = function(){ openConfModal(ev); };
       var bar = document.createElement('div'); bar.className='bar';
       bar.innerHTML = '<span class="s">'+_safeText(specLabel(sp))+'</span>' +
@@ -11820,7 +11844,7 @@ function _cwRenderAgendaInto(host, items, yr, mo){
         var b = document.createElement('button');
         b.type='button'; b.className='cw-ag-ev';
         b.dataset.evkey = _cwEvKey(ev);
-        b.style.setProperty('--ev', specColor(sp));
+        b.style.setProperty('--ev', _calColorFor(ev));
         b.onclick = function(){ openConfModal(ev); };
         var n = document.createElement('div'); n.className='n'; n.textContent = ev.name||'Event';
         b.appendChild(n);
@@ -12232,7 +12256,7 @@ _cwRenderAgendaInto = function(host, items, yr, mo){
       var btn = document.createElement('button');
       btn.type='button'; btn.className='cw-ag-ev';
       btn.dataset.evkey = _cwEvKey(ev);
-      btn.style.setProperty('--ev', specColor(sp));
+      btn.style.setProperty('--ev', _calColorFor(ev));
       btn.onclick = function(){ openConfModal(ev); };
       var n = document.createElement('div'); n.className='n'; n.textContent = ev.name||'Event';
       btn.appendChild(n);
@@ -12470,7 +12494,7 @@ function renderAllCalUpcomingView(items){
       var btn = document.createElement('button');
       btn.type='button'; btn.className='cw-ag-ev';
       btn.dataset.evkey = _cwEvKey(ev);
-      btn.style.setProperty('--ev', specColor(sp));
+      btn.style.setProperty('--ev', _calColorFor(ev));
       btn.onclick = function(){ openConfModal(ev); };
       var n = document.createElement('div'); n.className='n'; n.textContent = ev.name||'Event';
       btn.appendChild(n);
@@ -12770,7 +12794,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
         bar.className = 'mb' + (sg.cut ? ' is-cut' : '');
         bar.style.gridColumn = (sg.c0 + 1) + ' / span ' + sg.len;
         bar.style.gridRow = String(sg.lane + 2);
-        try { bar.style.setProperty('--ev', specColor(_calendarCardSpec(sg.ev, 'gyn'))); } catch(e){}
+        try { bar.style.setProperty('--ev', _calColorFor(sg.ev)); } catch(e){}
         var tl = (typeof _evTimeLabel === 'function') ? _evTimeLabel(sg.ev) : '';
         bar.textContent = (tl ? tl + ' ' : '') + (sg.ev.name || '');
         bar.title = sg.ev.name || '';
@@ -12848,7 +12872,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
       var btn = document.createElement('button');
       btn.type='button'; btn.className='cw-ag-ev';
       btn.dataset.evkey = _cwEvKey(ev);
-      btn.style.setProperty('--ev', specColor(sp));
+      btn.style.setProperty('--ev', _calColorFor(ev));
       btn.onclick = function(){ openConfModal(ev); };
       var nm = document.createElement('div'); nm.className='n'; nm.textContent = ev.name||'Event';
       btn.appendChild(nm);
@@ -13372,7 +13396,11 @@ var SB_CAT_TAGS = {
     ['itp',       'ITP'],
     ['event',     '행사']
   ],
-  capital_sales: SB_BAM_TAGS.slice(),
+  capital_sales: SB_BAM_TAGS.concat([
+    ['mobile_event', '모바일 이벤트'],
+    ['leap',         'LEAP Meeting'],
+    ['all_surgeon',  'All Surgeon Meeting']
+  ]),
   training: [
     ['tr300',     'TR300'],
     ['event',     '행사']
