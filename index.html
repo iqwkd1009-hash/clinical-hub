@@ -8999,7 +8999,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v78-pill';
+window.CLINICAL_HUB_BUILD='2026-11-09-v79-fix';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -10724,9 +10724,17 @@ function renderCalActiveBar(){
     });
   }
   if (_allCalCatFilter !== 'all') {
-    out.push({
+    var _tc = '#667085';
+    try {
+      var _td = (typeof TEAM_COLORS !== 'undefined') && TEAM_COLORS[_allCalCatFilter];
+      if (_td) _tc = (typeof _isDarkTheme === 'function' && _isDarkTheme()) ? _td.dark : _td.light;
+    } catch(e){}
+    chips.push({
       label: (typeof SB_CAT_LABEL !== 'undefined' && SB_CAT_LABEL[_allCalCatFilter])
                ? SB_CAT_LABEL[_allCalCatFilter] : _allCalCatFilter,
+      c: _tc,
+      soft: _tc + (typeof _isDarkTheme === 'function' && _isDarkTheme() ? '26' : '14'),
+      edge: _tc + (typeof _isDarkTheme === 'function' && _isDarkTheme() ? '55' : '38'),
       clear: function(){ _allCalCatFilter = 'all'; _cwResetFilterHosts(); renderAllCal(); }
     });
   }
