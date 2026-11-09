@@ -8999,7 +8999,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v82-labels';
+window.CLINICAL_HUB_BUILD='2026-11-09-v83-morefields';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -13508,6 +13508,10 @@ function openEventForm(ev){
   /* 상세 모달이 열려 있으면 닫는다 — 겹치면 폼 버튼이 안 눌린다 */
   try { if (typeof closeConfModal === 'function') closeConfModal(); } catch(e){}
   var editing = !!(ev && ev._id);
+  /* 숨은 칸에 값이 있는데 접혀 있으면 안 보이니, 그럴 땐 펼친 채로 연다 */
+  var _moreOpen = ['organizer','system','url','duty','note'].some(function(k){
+    return ev && ev[k] != null && String(ev[k]).trim() !== '';
+  });
   /* 과 기본값 — 과별 탭에서 추가하면 그 과, ALL 탭이면 해당없음 */
   var cur = (ev && (ev._spec || ev.spec)) ||
             (typeof currentSpec !== 'undefined' && currentSpec !== 'all' ? currentSpec : 'none');
@@ -13548,15 +13552,22 @@ function openEventForm(ev){
         '<div class="sb-f"><label class="sb-l">종료 시간</label>' + _timeSelectHTML('f_etime', ev && ev.end_time, '10:00') + '</div>' +
       '</div>' +
       '<label class="sb-l">장소</label><input class="sb-i" id="f_loc" value="' + val('loc') + '">' +
-      '<div class="sb-grid">' +
-        '<div class="sb-f"><label class="sb-l">주최</label><input class="sb-i" id="f_org" value="' + val('organizer') + '"></div>' +
-        '<div class="sb-f"><label class="sb-l">System</label><input class="sb-i" id="f_sys" value="' + val('system') + '"></div>' +
+      /* 자주 안 쓰는 칸은 접어둔다. 이미 값이 있으면 펼친 채로 연다 (v83) */
+      '<button type="button" class="sb-more" id="sbMore" aria-expanded="' + (_moreOpen ? 'true' : 'false') + '">' +
+        '<span class="cv">' + (_moreOpen ? '접기' : '추가 입력') + '</span>' +
+        '<span class="ar">' + (_moreOpen ? '\u2303' : '\u2304') + '</span>' +
+      '</button>' +
+      '<div class="sb-morebox' + (_moreOpen ? '' : ' hide') + '" id="f_more">' +
+        '<div class="sb-grid">' +
+          '<div class="sb-f"><label class="sb-l">주최</label><input class="sb-i" id="f_org" value="' + val('organizer') + '"></div>' +
+          '<div class="sb-f"><label class="sb-l">System</label><input class="sb-i" id="f_sys" value="' + val('system') + '"></div>' +
+        '</div>' +
+        '<div class="sb-grid">' +
+          '<div class="sb-f"><label class="sb-l">URL</label><input class="sb-i" id="f_url" value="' + val('url') + '"></div>' +
+          '<div class="sb-f"><label class="sb-l">Duty</label><input class="sb-i" id="f_duty" value="' + val('duty') + '"></div>' +
+        '</div>' +
+        '<label class="sb-l">메모</label><textarea class="sb-i" id="f_note" rows="2">' + val('note') + '</textarea>' +
       '</div>' +
-      '<div class="sb-grid">' +
-        '<div class="sb-f"><label class="sb-l">URL</label><input class="sb-i" id="f_url" value="' + val('url') + '"></div>' +
-        '<div class="sb-f"><label class="sb-l">Duty</label><input class="sb-i" id="f_duty" value="' + val('duty') + '"></div>' +
-      '</div>' +
-      '<label class="sb-l">메모</label><textarea class="sb-i" id="f_note" rows="2">' + val('note') + '</textarea>' +
       '<div class="sb-err" id="sbErr"></div>' +
       '<div class="sb-actions">' +
         (editing ? '<button type="button" class="sb-btn danger" id="sbDel">삭제</button>' : '') +
@@ -13569,6 +13580,18 @@ function openEventForm(ev){
   document.body.style.overflow = 'hidden';
   back.onclick = function(e){ if (e.target === back) _sbCloseOverlay(); };
   document.getElementById('sbCancel').onclick = _sbCloseOverlay;
+
+  var moreBtn = document.getElementById('sbMore');
+  if (moreBtn) {
+    moreBtn.onclick = function(){
+      var box = document.getElementById('f_more');
+      if (!box) return;
+      var open = box.classList.toggle('hide') === false;
+      moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      moreBtn.querySelector('.cv').textContent = open ? '접기' : '추가 입력';
+      moreBtn.querySelector('.ar').textContent = open ? '\u2303' : '\u2304';
+    };
+  }
 
   var catSel = document.getElementById('f_cat');
   if (catSel) catSel.onchange = function(){
@@ -14568,6 +14591,15 @@ function _timeStyles(){
     '.month-event .ev-range{margin-left:6px;font-size:8px;font-weight:600;',
     '  opacity:.5;white-space:nowrap;}',
     '@media (max-width:760px){.month-event .ev-spec{font-size:7px;padding:0 3px;margin-right:3px;}}',
+
+    /* 일정 폼 — 추가 입력 접기 */
+    '.sb-more{display:flex;align-items:center;justify-content:space-between;width:100%;',
+    '  margin:14px 0 2px;padding:9px 12px;border:1px dashed var(--border);border-radius:9px;',
+    '  background:transparent;color:var(--text2);font-family:var(--font);font-size:12px;',
+    '  font-weight:600;cursor:pointer;transition:background .13s,border-color .13s;}',
+    '.sb-more:hover{background:var(--surface2,rgba(127,127,127,.06));border-color:var(--text3);}',
+    '.sb-more .ar{font-size:14px;line-height:1;opacity:.65;}',
+    '.sb-morebox.hide{display:none;}',
 
     /* 시/분 드롭다운 */
     '.sb-time2{display:flex;align-items:center;gap:6px;}',
