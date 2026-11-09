@@ -7830,6 +7830,14 @@ var _TEAM_SHORT = {
   mkt_portfolio:'Portfolio', mkt_macom:'MACOM', training:'Training',
   clinical_sales:'Clinical Sales', digital_sales:'Digital Sales', capital_sales:'CAPITAL'
 };
+function _evBadgeColor(ev, sp){
+  try {
+    var c = (typeof _evCat === 'function') ? _evCat(ev) : null;
+    if (c && _TEAM_SHORT[c]) return _calColorFor(ev);      /* 팀 이름 배지 → 팀 색 */
+  } catch(e){}
+  if (sp && sp !== 'none') return specColor(sp);           /* 과 배지 → 과 색 */
+  return _calColorFor(ev);
+}
 function _evBadgeText(ev, sp){
   try {
     var c = (typeof _evCat === 'function') ? _evCat(ev) : null;
@@ -8024,8 +8032,9 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
             const spN = calendarEventSpec(ev);
             const bgN = document.createElement('span');
             bgN.className = 'ev-spec';
-            bgN.style.background = clrN;
-            bgN.style.color = _onColor(clrN);
+            var bcN = _evBadgeColor(ev, spN);
+            bgN.style.background = bcN;
+            bgN.style.color = _onColor(bcN);
             bgN.textContent = _evBadgeText(ev, spN);
             elN.appendChild(bgN);
           }
@@ -8080,8 +8089,9 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
           const spW=calendarEventSpec(ev);
           const bgW=document.createElement('span');
           bgW.className='ev-spec';
-          bgW.style.background=clr;
-          bgW.style.color=_onColor(clr);
+          var bcW=_evBadgeColor(ev, spW);
+          bgW.style.background=bcW;
+          bgW.style.color=_onColor(bcW);
           bgW.textContent=_evBadgeText(ev, spW);
           el.appendChild(bgW);
         }
@@ -8989,7 +8999,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v77-palette';
+window.CLINICAL_HUB_BUILD='2026-11-09-v78-pill';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
