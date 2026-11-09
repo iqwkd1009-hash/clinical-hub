@@ -7645,6 +7645,7 @@ function setAllCalView(view) {
 }
 
 function moveAllCalMonth(dir) {
+  try { window._calSlideDir = dir; setTimeout(function(){ window._calSlideDir = 0; }, 0); } catch(e){}
   _allCalMonth += dir;
   if(_allCalMonth > 11) { _allCalMonth=0; _allCalYear++; }
   if(_allCalMonth < 0)  { _allCalMonth=11; _allCalYear--; }
@@ -8031,6 +8032,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
           const clrN = typeof specColor==='function'?specColor(ev):specColor;
           const elN = document.createElement('div');
           elN.className = 'month-event span-single';
+          elN._calendarEvent = ev;                      /* v101 */
           elN.style.cssText = 'background:'+clrN+'12;border-left:3px solid '+clrN+';'
             + 'margin:0 5px 2px 5px;border-radius:6px;';
           elN.style.setProperty('--ev', clrN);
@@ -8081,6 +8083,7 @@ function _buildMonthGrid(grid, header, titleEl, items, yr, mo, specColor, onClic
         const clr=typeof specColor==='function'?specColor(ev):specColor;
         const el=document.createElement('div');
         el.className='month-event '+(segDays>1?'span-wide':'span-single');
+        el._calendarEvent = ev;                         /* v101 */
 
         const EDGE=5;
         el.style.cssText='background:'+clr+'12;'
@@ -8748,18 +8751,27 @@ function calendarDetailHTML(ev,actions=true){
   const host=ev.host||ev.organizer||ev['주최']; if(host) rows.push('<div class="cal-preview-row"><span class="k">◎</span><span>'+safe(host)+'</span></div>');
   if(ev.system) rows.push('<div class="cal-preview-row"><span class="k">◈</span><span>'+safe(ev.system)+'</span></div>');
   if(ev.duty) rows.push('<div class="cal-preview-row"><span class="k">✓</span><span>'+safe(ev.duty)+'</span></div>');
-  return '<div class="cal-preview-head"><span class="cal-preview-dot" style="background:'+clr+'"></span><span class="cal-preview-spec" style="color:'+clr+'">'+safe(_SPEC_LABELS_CF[spec]||spec.toUpperCase())+'</span><span class="cal-preview-type">'+meta.icon+' '+meta.label+'</span></div>'+
+  return '<div class="cal-preview-head"><span class="cal-preview-dot" style="background:'+clr+'"></span><span class="cal-preview-spec" style="color:'+clr+'">'+safe(_SPEC_LABELS_CF[spec]||spec.toUpperCase())+'</span><span class="cal-preview-type">'+((meta.icon?meta.icon+' ':'')+(meta.label||''))+'</span></div>'+
     '<div class="cal-preview-title">'+safe(ev.name||'Event')+'</div>'+rows.join('')+
     (actions?'<div class="cal-preview-actions"><button type="button" class="cal-preview-btn primary" data-detail>상세 보기</button>'+(ev.url?'<button type="button" class="cal-preview-btn secondary" data-link>사이트</button>':'')+'</div>':'');
 }
 function positionCalendarPreview(anchor,card){
-  const r=anchor.getBoundingClientRect(); const w=card.offsetWidth||292; const h=card.offsetHeight||220; const pad=10;
-  let left=r.right+10, top=r.top;
-  if(left+w>window.innerWidth-pad) left=r.left-w-10;
-  if(left<pad) left=Math.min(Math.max(pad,r.left),window.innerWidth-w-pad);
-  if(top+h>window.innerHeight-pad) top=window.innerHeight-h-pad;
-  if(top<pad) top=pad;
+  /* v100 — 일정 바로 아래에 붙인다. 아래가 좁으면 위로 뒤집는다. */
+  const r=anchor.getBoundingClientRect();
+  const w=card.offsetWidth||292, h=card.offsetHeight||220, pad=10, gap=7;
+  let left=r.left;
+  if(left+w>window.innerWidth-pad) left=window.innerWidth-w-pad;
+  if(left<pad) left=pad;
+  let top=r.bottom+gap, below=true;
+  if(top+h>window.innerHeight-pad){
+    const above=r.top-h-gap;
+    if(above>=pad){ top=above; below=false; }
+    else { top=Math.max(pad, window.innerHeight-h-pad); }
+  }
   card.style.left=left+'px'; card.style.top=top+'px';
+  card.classList.toggle('from-below', !below);
+  /* 일정 바 왼쪽 끝에 맞춰 꼬리를 둔다 */
+  card.style.setProperty('--tip-x', Math.max(12, Math.min(w-22, r.left-left+14))+'px');
 }
 function showCalendarPreview(ev,anchor){
   if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
@@ -9006,7 +9018,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v96-pastshade';
+window.CLINICAL_HUB_BUILD='2026-11-09-v101-motion2';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12859,6 +12871,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
         var tl = (typeof _evTimeLabel === 'function') ? _evTimeLabel(sg.ev) : '';
         bar.textContent = (tl ? tl + ' ' : '') + (sg.ev.name || '');
         bar.title = sg.ev.name || '';
+        bar._calendarEvent = sg.ev;       /* 저장 후 찾아내기용 (v101) */
         bar.onclick = function(e){
           e.stopPropagation();
           _select(dayDates[sg.c0]);
@@ -13403,7 +13416,18 @@ function openLoginModal(){
 
 function _sbCloseOverlay(){
   var o = document.getElementById('sbOverlay');
-  if (o) o.remove();
+  if (o) {
+    /* 닫히는 모습을 0.13초만 보여주고 지운다 (v101) */
+    var reduce = false;
+    try { reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch(e){}
+    if (reduce || o.dataset.closing === '1') { o.remove(); }
+    else {
+      o.dataset.closing = '1';
+      var back = o.querySelector('.sb-back') || o;
+      back.classList.add('is-closing');
+      setTimeout(function(){ if (o.parentNode) o.remove(); }, 130);
+    }
+  }
   if (!document.querySelector('.conf-modal.open, #confModal.open')) document.body.style.overflow = '';
 }
 
@@ -13566,13 +13590,17 @@ function openEventForm(ev){
         '<div class="sb-f"><label class="sb-l">시작일 <span class="req">*</span></label><input class="sb-i" id="f_start" type="date" value="' + val('start') + '"></div>' +
         '<div class="sb-f"><label class="sb-l">종료일</label><input class="sb-i" id="f_end" type="date" value="' + val('end') + '"></div>' +
       '</div>' +
-      '<div class="sb-allday">' +
-        '<label for="f_allday">하루 종일</label>' +
-        '<span class="sb-sw"><input type="checkbox" id="f_allday"' + (_evAllDay(ev||{}) ? ' checked' : '') + '><i></i></span>' +
-      '</div>' +
-      '<div class="sb-times' + (_evAllDay(ev||{}) ? ' hide' : '') + '" id="f_timerow">' +
-        '<div class="sb-f"><label class="sb-l">시작 시간</label>' + _timeSelectHTML('f_stime', ev && ev.start_time, '09:00') + '</div>' +
-        '<div class="sb-f"><label class="sb-l">종료 시간</label>' + _timeSelectHTML('f_etime', ev && ev.end_time, '10:00') + '</div>' +
+      /* 하루 종일 토글과 시간을 한 줄에 둔다 — 시간 칸은 넓을 이유가 없다 (v99) */
+      '<div class="sb-whenrow">' +
+        '<div class="sb-allday">' +
+          '<label for="f_allday">하루 종일</label>' +
+          '<span class="sb-sw"><input type="checkbox" id="f_allday"' + (_evAllDay(ev||{}) ? ' checked' : '') + '><i></i></span>' +
+        '</div>' +
+        '<div class="sb-times' + (_evAllDay(ev||{}) ? ' hide' : '') + '" id="f_timerow">' +
+          _timeSelectHTML('f_stime', ev && ev.start_time, '09:00') +
+          '<span class="sb-times-sep">~</span>' +
+          _timeSelectHTML('f_etime', ev && ev.end_time, '10:00') +
+        '</div>' +
       '</div>' +
       /* 자주 안 쓰는 칸은 접어둔다. 이미 값이 있으면 펼친 채로 연다 (v83) */
       '<button type="button" class="sb-more" id="sbMore" aria-expanded="' + (_moreOpen ? 'true' : 'false') + '">' +
@@ -13632,10 +13660,42 @@ function openEventForm(ev){
     if (req) req.style.display = (SB_CAT_SPEC_REQ[cat] ? '' : 'none');
   };
 
+  /* 종료 시간이 시작 시간을 따라온다 (v98)
+     — 기본은 +1시간. 사용자가 종료를 직접 바꿔 두었으면 그 길이를 유지한다. */
+  var _durMin = 60;
+  function _readDur(){
+    var a = _tMin(_readTimeSelect('f_stime')), b = _tMin(_readTimeSelect('f_etime'));
+    return (a != null && b != null && b > a) ? (b - a) : 60;
+  }
+  function _syncEnd(){
+    var a = _tMin(_readTimeSelect('f_stime'));
+    if (a == null) return;
+    _setTimeSelect('f_etime', _minT(a + _durMin));
+  }
+  _durMin = _readDur();
+  /* 열었을 때 종료가 시작보다 빠르면(잘못 저장된 값) 바로 바로잡는다 */
+  (function(){
+    var a = _tMin(_readTimeSelect('f_stime')), b = _tMin(_readTimeSelect('f_etime'));
+    if (a != null && b != null && b <= a) { _durMin = 60; _syncEnd(); }
+  })();
+  ['f_stimeH','f_stimeM'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', _syncEnd);
+  });
+  ['f_etimeH','f_etimeM'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', function(){ _durMin = _readDur(); });
+  });
+
   var ad = document.getElementById('f_allday');
   if (ad) ad.onchange = function(){
     var r = document.getElementById('f_timerow');
     if (r) r.classList.toggle('hide', ad.checked);
+    /* 하루 종일을 끄고 시간을 처음 쓸 때도 종료가 비어 보이지 않게 */
+    if (!ad.checked) {
+      var a = _tMin(_readTimeSelect('f_stime')), b = _tMin(_readTimeSelect('f_etime'));
+      if (a != null && (b == null || b <= a)) { _durMin = 60; _syncEnd(); }
+    }
   };
 
   /* Enter 로 저장 — 여러 줄 입력(메모)과 드롭다운은 제외 (v85) */
@@ -13673,6 +13733,17 @@ function openEventForm(ev){
     try {
       if (editing) await _sbWrite('PATCH', 'events?id=eq.' + encodeURIComponent(ev._id), row);
       else         await _sbWrite('POST', 'events', row);
+      /* 저장한 일정을 눈으로 바로 찾을 수 있게 — 그 달로 옮기고 반짝이게 한다 (v101) */
+      try {
+        var _fd = String(row.start_date || '').slice(0, 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(_fd)) {
+          window._calFlash = { name: row.name, start: _fd, until: Date.now() + 8000 };
+          if (typeof _allCalYear !== 'undefined') {
+            _allCalYear  = +_fd.slice(0, 4);
+            _allCalMonth = +_fd.slice(5, 7) - 1;
+          }
+        }
+      } catch(e){}
       _sbCloseOverlay();
       if (typeof closeConfModal === 'function') closeConfModal();
       _sbToast(editing ? '수정했습니다' : '추가했습니다');
@@ -14571,6 +14642,33 @@ function _readTimeSelect(id){
   return h.value + ':' + m.value;
 }
 
+/* 'HH:MM' ↔ 분 (v98) */
+function _tMin(hhmm){
+  var m = String(hhmm || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+function _minT(mins){
+  var v = Math.max(0, Math.min(23 * 60 + 55, mins | 0));
+  var h = Math.floor(v / 60), mi = v % 60;
+  return (h < 10 ? '0' + h : String(h)) + ':' + (mi < 10 ? '0' + mi : String(mi));
+}
+/* 드롭다운에 시각을 써넣는다. 목록에 없는 분이면 그 값을 추가한다. */
+function _setTimeSelect(id, hhmm){
+  var h = document.getElementById(id + 'H'), m = document.getElementById(id + 'M');
+  if (!h || !m) return;
+  var p = String(hhmm).split(':');
+  h.value = p[0];
+  var has = false;
+  for (var i = 0; i < m.options.length; i++) if (m.options[i].value === p[1]) { has = true; break; }
+  if (!has) {
+    var o = document.createElement('option');
+    o.value = p[1]; o.textContent = p[1];
+    m.appendChild(o);
+  }
+  m.value = p[1];
+}
+
 function _fmtTime(hhmm, compact){
   if (!hhmm) return '';
   var m = String(hhmm).match(/^(\d{1,2}):(\d{2})/);
@@ -14678,9 +14776,24 @@ function _timeStyles(){
     '  border-radius:50%;background:#fff;transition:.16s;box-shadow:0 1px 3px rgba(0,0,0,.25);}',
     '.sb-sw input:checked + i{background:var(--primary);}',
     '.sb-sw input:checked + i::after{transform:translateX(18px);}',
-    '.sb-times{display:grid;grid-template-columns:1fr 1fr;gap:12px;}',
+    /* 하루 종일 + 시간 = 한 줄 (v99) */
+    '.sb-whenrow{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin:11px 0 2px;}',
+    '.sb-whenrow .sb-allday{margin:0;flex:0 0 auto;}',
+    '.sb-times{display:flex;align-items:center;gap:7px;flex:0 1 auto;}',
     '.sb-times.hide{display:none;}',
-    '@media (max-width:560px){.sb-times{grid-template-columns:1fr;gap:0;}}'
+    '.sb-times .sb-time2{gap:4px;flex:0 0 auto;}',
+    '.sb-times .sb-time2 select.sb-i{flex:0 0 auto;width:auto;min-width:0;',
+    '  padding:9px 24px 9px 10px;text-align:left;}',
+    '.sb-times-sep{flex:0 0 auto;color:var(--text3);font-weight:600;font-size:12.5px;}',
+    /* 폰에서는 화살표를 빼고 바짝 붙여 한 줄에 들어가게 한다 */
+    '@media (max-width:430px){',
+    '  .sb-whenrow{gap:8px 10px;flex-wrap:nowrap;}',
+    '  .sb-whenrow .sb-allday{gap:6px;}',
+    '  .sb-times{gap:4px;margin-left:auto;}',
+    '  .sb-times .sb-time2{gap:2px;}',
+    '  .sb-times .sb-time2 select.sb-i{appearance:none;-webkit-appearance:none;',
+    '    background-image:none;padding:9px 7px;font-size:12.5px;text-align:center;}',
+    '  .sb-times-sep{font-size:12px;}}'
   ].join('');
   document.head.appendChild(st);
 }
@@ -14815,9 +14928,47 @@ window.addEventListener('DOMContentLoaded', _mobileMonthStyles);
     }
     return null;
   }
-  var sx = 0, sy = 0, stamp = 0, grid = null;
+  var sx = 0, sy = 0, stamp = 0, grid = null, dragging = false, moved = null;
+
+  /* 끄는 동안 같이 움직일 것들 — 격자만 움직이면 요일 줄이 따로 놀아 어색하다 */
+  function _movers(g){
+    var out = [g];
+    var prev = g.previousElementSibling;
+    if (prev && /cw-mini-dow|month-grid-header/.test(prev.className || '')) out.push(prev);
+    if (g.id === 'allCalMonthGrid') {
+      var h = document.getElementById('allCalMonthHeader');
+      if (h) out.push(h);
+    }
+    return out;
+  }
+  function _drag(els, dx){
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      el.style.transition = 'none';
+      el.style.transform  = 'translate3d(' + dx + 'px,0,0)';
+      el.style.opacity    = String(1 - Math.min(0.3, Math.abs(dx) / 620));
+      el.style.willChange = 'transform';
+    }
+  }
+  function _release(els, snapBack){
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (snapBack) {
+        el.style.transition = 'transform .2s cubic-bezier(.22,.61,.36,1),opacity .2s ease';
+        el.style.transform  = 'translate3d(0,0,0)';
+        el.style.opacity    = '1';
+        (function(x){ setTimeout(function(){
+          x.style.transition = ''; x.style.transform = ''; x.style.opacity = ''; x.style.willChange = '';
+        }, 220); })(el);
+      } else {
+        /* 달이 바뀌면 새로 그려지며 슬라이드 인 되므로 즉시 지운다 */
+        el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; el.style.willChange = '';
+      }
+    }
+  }
+
   document.addEventListener('touchstart', function(e){
-    grid = null;
+    grid = null; dragging = false; moved = null;
     if (!e.touches || e.touches.length !== 1) return;
     var t = e.target;
     if (!t || !t.closest) return;
@@ -14827,18 +14978,49 @@ window.addEventListener('DOMContentLoaded', _mobileMonthStyles);
     grid = g; sx = e.touches[0].clientX; sy = e.touches[0].clientY; stamp = Date.now();
   }, { passive: true });
 
-  document.addEventListener('touchend', function(e){
+  document.addEventListener('touchmove', function(e){
+    if (!grid || !e.touches || e.touches.length !== 1) return;
+    var dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+    /* 세로로 긁는 중이면 손 뗄 때까지 손대지 않는다 */
+    if (!dragging) {
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { grid = null; return; }
+      if (Math.abs(dx) < 10) return;
+      dragging = true;
+      moved = _movers(grid);
+    }
+    _drag(moved, dx * 0.45);                    /* 0.45 = 손가락보다 덜 따라와 고무줄 느낌 */
+  }, { passive: true });
+
+  function _end(e){
     var g = grid; grid = null;
-    if (!g) return;
+    var els = moved; moved = null;
+    var wasDragging = dragging; dragging = false;
+    if (!g) { if (els) _release(els, true); return; }
     var t = e.changedTouches && e.changedTouches[0];
-    if (!t) return;
-    if (Date.now() - stamp > 800) return;
+    if (!t) { if (els) _release(els, true); return; }
     var dx = t.clientX - sx, dy = t.clientY - sy;
-    /* 가로로 충분히, 그리고 세로보다 확실히 많이 움직였을 때만 */
-    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
-    var b = _navBtns(g);
-    if (!b) return;
-    (dx < 0 ? b.next : b.prev).click();
+    var go = (Date.now() - stamp <= 800) &&
+             Math.abs(dx) >= 55 && Math.abs(dx) >= Math.abs(dy) * 1.6;
+    var b = go ? _navBtns(g) : null;
+    if (els) _release(els, !b);
+    if (b) (dx < 0 ? b.next : b.prev).click();
+    /* 끌고 난 직후 따라오는 탭은 한 번만 삼킨다 (passive 라 preventDefault 불가) */
+    if (wasDragging) {
+      _eatClick = true;
+      setTimeout(function(){ _eatClick = false; }, 320);
+    }
+  }
+  var _eatClick = false;
+  document.addEventListener('click', function(e){
+    if (!_eatClick) return;
+    _eatClick = false;
+    e.stopPropagation();
+    if (e.cancelable) e.preventDefault();
+  }, true);
+  document.addEventListener('touchend', _end, { passive: true });
+  document.addEventListener('touchcancel', function(){
+    grid = null; dragging = false;
+    if (moved) { _release(moved, true); moved = null; }
   }, { passive: true });
 })();
 
@@ -15091,6 +15273,364 @@ function _uplStyles(){
 }
 _uplStyles();
 window.addEventListener('DOMContentLoaded', _uplStyles);
+
+/* ── v101 · 저장한 일정 반짝 + 폼 등장/퇴장 ───────────────── */
+(function(){
+
+  function _key(ev){
+    if (!ev) return '';
+    return String(ev.name || '') + '|' +
+           String(ev.start || ev.start_date || '').slice(0, 10);
+  }
+
+  function _applyFlash(){
+    var f = window._calFlash;
+    if (!f) return;
+    if (Date.now() > f.until) { window._calFlash = null; return; }
+    var want = String(f.name || '') + '|' + f.start;
+    var els = document.querySelectorAll('.month-event, .cw-mini-wk > .mb, .cw-ag-ev, .cal-day-ev');
+    var hit = 0;
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.offsetParent === null) continue;
+      if (_key(el._calendarEvent) !== want) continue;
+      hit++;
+      el.classList.remove('cal-flash');
+      void el.offsetWidth;
+      el.classList.add('cal-flash');
+      (function(x){
+        var off = function(){ x.classList.remove('cal-flash'); x.removeEventListener('animationend', off); };
+        x.addEventListener('animationend', off);
+      })(el);
+    }
+    if (hit) window._calFlash = null;
+  }
+
+  if (typeof renderAllCal === 'function') {
+    var _oR = renderAllCal;
+    renderAllCal = function(){
+      _oR.apply(this, arguments);
+      try { _applyFlash(); } catch(e){ console.error('[cal-flash]', e); }
+    };
+  }
+  /* 저장 → 다시 불러오기가 비동기라, 렌더가 몇 번 더 돌 수 있다 */
+  setInterval(function(){ if (window._calFlash) { try { _applyFlash(); } catch(e){} } }, 400);
+
+  function _styles(){
+    if (document.getElementById('calMotion2Styles')) return;
+    var st = document.createElement('style');
+    st.id = 'calMotion2Styles';
+    st.textContent = [
+      /* ① 방금 저장한 일정 */
+      '@keyframes calFlash{',
+      '  0%{box-shadow:0 0 0 0 var(--flash-c);}',
+      '  18%{box-shadow:0 0 0 3px var(--flash-c);}',
+      '  100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}}',
+      '.cal-flash{animation:calFlash 1.15s ease-out 2;position:relative;z-index:3;}',
+      ':root{--flash-c:rgba(11,95,165,.42);}',
+      '@media (prefers-color-scheme:dark){:root:not([data-theme="light"])',
+      '  {--flash-c:rgba(120,180,255,.5);}}',
+      ':root[data-theme="dark"]{--flash-c:rgba(120,180,255,.5);}',
+
+      /* ③ 폼 등장 / 퇴장 */
+      '@keyframes sbBackIn{from{opacity:0;}to{opacity:1;}}',
+      '@keyframes sbBoxIn{from{opacity:0;transform:translateY(8px) scale(.975);}',
+      '  to{opacity:1;transform:none;}}',
+      '@keyframes sbBackOut{from{opacity:1;}to{opacity:0;}}',
+      '@keyframes sbBoxOut{from{opacity:1;transform:none;}',
+      '  to{opacity:0;transform:translateY(5px) scale(.985);}}',
+      '.sb-back{animation:sbBackIn .13s ease-out;}',
+      '.sb-back > .sb-box{animation:sbBoxIn .17s cubic-bezier(.2,.7,.3,1);}',
+      '.sb-back.is-closing{animation:sbBackOut .13s ease-in forwards;pointer-events:none;}',
+      '.sb-back.is-closing > .sb-box{animation:sbBoxOut .13s ease-in forwards;}',
+      '@media (prefers-reduced-motion:reduce){',
+      '  .cal-flash,.sb-back,.sb-back > .sb-box{animation:none!important;}}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+  _styles();
+  window.addEventListener('DOMContentLoaded', _styles);
+
+})();
+
+/* ── v100 · 달 넘길 때 슬라이드 ────────────────────────────────
+   스와이프든 ‹ › 버튼이든 moveAllCalMonth 를 거치므로,
+   거기서 방향만 기억해 두고 새로 그려진 격자에 애니메이션을 입힌다. */
+(function(){
+
+  function _animGrid(el){
+    var d = window._calSlideDir || 0;
+    if (!d || !el) return;
+    el.classList.remove('cal-in-right', 'cal-in-left');
+    void el.offsetWidth;                       /* 같은 애니메이션 재생용 리셋 */
+    el.classList.add(d > 0 ? 'cal-in-right' : 'cal-in-left');
+    var off = function(){
+      el.classList.remove('cal-in-right', 'cal-in-left');
+      el.removeEventListener('animationend', off);
+    };
+    el.addEventListener('animationend', off);
+  }
+
+  function _animAll(){
+    if (!window._calSlideDir) return;
+    var sel = '.month-grid, .cw-mini-grid, #allCalMonthHeader, .cw-mini-dow';
+    var els = document.querySelectorAll(sel);
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].offsetParent !== null) _animGrid(els[i]);
+    }
+  }
+
+  if (typeof renderAllCal === 'function') {
+    var _oR = renderAllCal;
+    renderAllCal = function(){
+      _oR.apply(this, arguments);
+      try { _animAll(); } catch(e){ console.error('[cal-anim]', e); }
+    };
+  }
+
+  /* 폰 미니 달력에서 이번 달 바깥 날짜를 눌러 달이 바뀌는 경로도 같이 */
+  if (typeof _cwRenderMiniMonth === 'function') {
+    var _oMini = _cwRenderMiniMonth;
+    var _lastKey = null;
+    _cwRenderMiniMonth = function(host, items, yr, mo){
+      var k = yr + '-' + mo;
+      var prev = _lastKey;
+      _oMini.apply(this, arguments);
+      if (prev && prev !== k && !window._calSlideDir) {
+        var p = prev.split('-'), was = (+p[0]) * 12 + (+p[1]), now = yr * 12 + mo;
+        window._calSlideDir = (now > was) ? 1 : -1;
+        try { _animAll(); } catch(e){}
+        window._calSlideDir = 0;
+      }
+      _lastKey = k;
+    };
+  }
+
+  function _animStyles(){
+    if (document.getElementById('calAnimStyles')) return;
+    var st = document.createElement('style');
+    st.id = 'calAnimStyles';
+    st.textContent = [
+      '@keyframes calInRight{from{opacity:0;transform:translate3d(22px,0,0);}',
+      '  to{opacity:1;transform:none;}}',
+      '@keyframes calInLeft{from{opacity:0;transform:translate3d(-22px,0,0);}',
+      '  to{opacity:1;transform:none;}}',
+      '.cal-in-right{animation:calInRight .23s cubic-bezier(.22,.61,.36,1) both;}',
+      '.cal-in-left{animation:calInLeft .23s cubic-bezier(.22,.61,.36,1) both;}',
+      /* 움직이는 동안 가로로 삐져나가지 않게 */
+      '#allCalMonthView,.cw-agenda{overflow-x:clip;}',
+      /* 달 제목은 살짝 떠오르게 */
+      '@keyframes calTitleIn{from{opacity:.25;}to{opacity:1;}}',
+      '.month-nav-title{animation:calTitleIn .2s ease;}',
+      /* 호버 카드도 아래에서 부드럽게 */
+      '@keyframes calCardIn{from{opacity:0;transform:translateY(-5px);}',
+      '  to{opacity:1;transform:none;}}',
+      '@keyframes calCardInUp{from{opacity:0;transform:translateY(5px);}',
+      '  to{opacity:1;transform:none;}}',
+      '#calendarHoverCard.show{animation:calCardIn .14s ease-out;}',
+      '#calendarHoverCard.show.from-below{animation:calCardInUp .14s ease-out;}',
+      '@media (prefers-reduced-motion:reduce){',
+      '  .cal-in-right,.cal-in-left,.month-nav-title,#calendarHoverCard.show{animation:none!important;}}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+  _animStyles();
+  window.addEventListener('DOMContentLoaded', _animStyles);
+
+})();
+
+/* ── v97 · 검색 결과를 달 밖에서도 보여준다 ─────────────────────────
+   원래는 검색어가 걸러낸 결과를 "지금 보고 있는 달"에만 그려서,
+   12월 행사를 11월 화면에서 찾으면 "없습니다"가 떴다.
+   이제 달력 위에 전체 기간 결과를 띄우고, 누르면 그 달로 넘어간다. */
+(function(){
+
+  function _shQuery(){
+    var el = document.getElementById('allCalSearch');
+    return ((el && el.value) || '').trim();
+  }
+
+  function _shDateOf(ev){
+    /* 달력 데이터는 start 를 쓴다. DB 행(start_date)도 들어올 수 있어 둘 다 본다. */
+    var v = String(ev.start || ev.start_date || ev.date || '').trim().slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+    var d = new Date(v + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function _shClearAll(){
+    var old = document.querySelectorAll('.cw-sh');
+    for (var i = 0; i < old.length; i++) old[i].remove();
+  }
+
+  /* 패널을 놓을 자리를 정한다.
+     폰(미니 달력)에서는 미니 달력 바로 위, PC 에서는 달 이동 줄 위.
+     두 경로가 모두 돌기 때문에 자리를 한 곳으로 모아야 중복이 안 생긴다. */
+  function _shTarget(){
+    var mini = document.querySelector('.cw-mini-grid');
+    if (mini && mini.offsetParent !== null) {
+      var box = mini.closest('.cw-agenda') || mini.parentElement;
+      if (box) return { host: box, before: box.firstChild };
+    }
+    var mv = document.getElementById('allCalMonthView');
+    if (mv && mv.offsetParent !== null) return { host: mv, before: mv.querySelector('.month-nav') };
+    return null;
+  }
+
+  function _shRender(items){
+    _shClearAll();
+
+    var q = _shQuery();
+    if (!q) return;
+
+    var rows = (items || []).slice().filter(_shDateOf);
+    rows.sort(function(a,b){ return _shDateOf(a) - _shDateOf(b); });
+    if (!rows.length) return;
+
+    var curY = (typeof _allCalYear  !== 'undefined') ? _allCalYear  : new Date().getFullYear();
+    var curM = (typeof _allCalMonth !== 'undefined') ? _allCalMonth : new Date().getMonth();
+    var outside = rows.filter(function(e){
+      var d = _shDateOf(e);
+      return !(d.getFullYear() === curY && d.getMonth() === curM);
+    });
+    /* 전부 이 달 안에 있으면 달력만으로 충분하다 */
+    if (!outside.length) return;
+
+    var box = document.createElement('div');
+    box.className = 'cw-sh';
+
+    var hd = document.createElement('div');
+    hd.className = 'cw-sh-hd';
+    hd.innerHTML = '<b>"' + _safeText(q) + '"</b> 전체 결과 ' +
+                   '<span class="n">' + rows.length + '건</span>' +
+                   '<span class="sub">· 다른 달 ' + outside.length + '건</span>';
+    box.appendChild(hd);
+
+    var list = document.createElement('div');
+    list.className = 'cw-sh-list';
+
+    var LIMIT = 40;
+    rows.slice(0, LIMIT).forEach(function(ev){
+      var d = _shDateOf(ev);
+      var here = (d.getFullYear() === curY && d.getMonth() === curM);
+
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cw-sh-it' + (here ? ' is-here' : '');
+
+      var col = '#999';
+      try { col = _calColorFor(ev); } catch(e){}
+
+      var dt = document.createElement('span');
+      dt.className = 'dt';
+      dt.textContent = (d.getMonth() + 1) + '/' + d.getDate();
+      b.appendChild(dt);
+
+      var dot = document.createElement('i');
+      dot.className = 'dot'; dot.style.background = col;
+      b.appendChild(dot);
+
+      var nm = document.createElement('span');
+      nm.className = 'nm'; nm.textContent = ev.name || '(이름 없음)';
+      b.appendChild(nm);
+
+      if (ev.loc) {
+        var lc = document.createElement('span');
+        lc.className = 'lc'; lc.textContent = ev.loc;
+        b.appendChild(lc);
+      }
+
+      var yl = document.createElement('span');
+      yl.className = 'yr';
+      yl.textContent = here ? '이 달' : (d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월');
+      b.appendChild(yl);
+
+      b.onclick = function(){
+        try {
+          if (typeof _allCalYear !== 'undefined') {
+            _allCalYear  = d.getFullYear();
+            _allCalMonth = d.getMonth();
+          }
+          if (typeof renderAllCal === 'function') renderAllCal();
+        } catch(e){}
+        try { if (typeof openConfModal === 'function') openConfModal(ev); } catch(e){}
+      };
+      list.appendChild(b);
+    });
+
+    if (rows.length > LIMIT) {
+      var more = document.createElement('div');
+      more.className = 'cw-sh-more';
+      more.textContent = '그 외 ' + (rows.length - LIMIT) + '건 — 검색어를 더 좁혀 보세요.';
+      list.appendChild(more);
+    }
+
+    box.appendChild(list);
+    var t = _shTarget();
+    if (!t) return;
+    if (t.before && t.before.parentNode === t.host) t.host.insertBefore(box, t.before);
+    else t.host.insertBefore(box, t.host.firstChild);
+
+    /* 아래 "일정이 없습니다" 안내가 위 결과와 어긋나 보이지 않게 문구를 맞춰 준다 */
+    try {
+      var sub = document.querySelector('.cw-month-empty .cw-me-sub');
+      if (sub) sub.textContent = '이 달에는 없고 다른 달에 ' + outside.length +
+                                 '건 있습니다 — 위 결과에서 골라 주세요.';
+    } catch(e){}
+  }
+
+  /* 전체 달력 한 번 그릴 때마다 패널도 한 번 다시 만든다.
+     PC 격자와 폰 미니 달력이 모두 이 경로를 거친다. */
+  if (typeof renderAllCalMonth === 'function') {
+    var _oM = renderAllCalMonth;
+    renderAllCalMonth = function(items, today){
+      _oM(items, today);
+      try { _shRender(items); } catch(e){ console.error('[search-hits]', e); }
+    };
+  }
+
+  /* ── 스타일 ── */
+  function _shStyles(){
+    if (document.getElementById('cwShStyles')) return;
+    var st = document.createElement('style');
+    st.id = 'cwShStyles';
+    st.textContent = [
+      '.cw-sh{margin:0 0 14px;border:1px solid var(--border);border-radius:11px;',
+      '  background:var(--surface);overflow:hidden;}',
+      '.cw-sh-hd{padding:9px 13px;font-size:12px;color:var(--text2);',
+      '  border-bottom:1px solid var(--border);background:var(--bg);}',
+      '.cw-sh-hd b{color:var(--text);font-weight:700;}',
+      '.cw-sh-hd .n{margin-left:5px;font-weight:700;color:var(--primary);}',
+      '.cw-sh-hd .sub{margin-left:6px;color:var(--text3);}',
+      '.cw-sh-list{max-height:234px;overflow-y:auto;}',
+      '.cw-sh-it{display:flex;align-items:center;gap:8px;width:100%;padding:8px 13px;',
+      '  border:0;border-bottom:1px solid color-mix(in srgb,var(--border) 55%,transparent);',
+      '  background:transparent;font-family:var(--font);font-size:12.5px;color:var(--text);',
+      '  text-align:left;cursor:pointer;}',
+      '.cw-sh-it:last-child{border-bottom:0;}',
+      '.cw-sh-it:hover{background:var(--surface2,rgba(127,127,127,.07));}',
+      '.cw-sh-it .dt{flex:0 0 42px;font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums;}',
+      '.cw-sh-it .dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;}',
+      '.cw-sh-it .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;',
+      '  white-space:nowrap;font-weight:600;}',
+      '.cw-sh-it .lc{flex:0 0 auto;max-width:132px;overflow:hidden;text-overflow:ellipsis;',
+      '  white-space:nowrap;font-size:11.5px;color:var(--text3);}',
+      '.cw-sh-it .yr{flex:0 0 auto;font-size:11px;color:var(--text3);}',
+      '.cw-sh-it.is-here .yr{color:var(--primary);font-weight:650;}',
+      '.cw-sh-more{padding:8px 13px;font-size:11.5px;color:var(--text3);}',
+      '@media (max-width:760px){',
+      '  .cw-sh{margin-bottom:10px;}',
+      '  .cw-sh-list{max-height:200px;}',
+      '  .cw-sh-it{padding:9px 11px;font-size:12px;}',
+      '  .cw-sh-it .lc{display:none;}',
+      '  .cw-sh-it .dt{flex-basis:38px;}}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+  _shStyles();
+  window.addEventListener('DOMContentLoaded', _shStyles);
+
+})();
 
 </script>
 
