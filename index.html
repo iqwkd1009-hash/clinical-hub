@@ -9018,7 +9018,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-09-v101-motion2';
+window.CLINICAL_HUB_BUILD='2026-11-09-v104-daytap';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -12791,6 +12791,8 @@ function _cwRenderMiniMonth(host, items, yr, mo){
       _cwMiniSel[k2] = d.getDate();
       _cwRenderMiniMonth(host, items, d.getFullYear(), d.getMonth());
     }
+    /* 고른 날의 목록이 화면 밖이면 거기까지 따라 내려간다 (v104) */
+    try { _cwRevealDayPanel(host); } catch(e){}
   };
 
   for (var w = 0; w * 7 < cells; w++) {
@@ -12874,6 +12876,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
         bar._calendarEvent = sg.ev;       /* 저장 후 찾아내기용 (v101) */
         bar.onclick = function(e){
           e.stopPropagation();
+          /* 막대가 이번 주 어디서 시작하든, 누른 칸이 아니라 일정 시작일을 고른다 */
           _select(dayDates[sg.c0]);
         };
         wk.appendChild(bar);
@@ -12889,6 +12892,7 @@ function _cwRenderMiniMonth(host, items, yr, mo){
           mr.style.gridColumn = (c2 + 1);
           mr.style.gridRow = String(MINI_LANES + 2);
           mr.textContent = '+' + hid;
+          mr.title = hid + '건 더 — 눌러서 보기';
           (function(d){ mr.onclick = function(e){ e.stopPropagation(); _select(d); }; })(dayDates[c2]);
           wk.appendChild(mr);
         }
@@ -12967,6 +12971,30 @@ function _cwRenderMiniMonth(host, items, yr, mo){
   try { _krPaintMini(host); } catch(e){}
 }
 
+/* 고른 날짜의 일정 목록이 화면에 들어오게 살짝 스크롤한다 (v104).
+   이미 잘 보이면 아무것도 하지 않는다 — 괜히 움직이면 더 불편하다. */
+function _cwRevealDayPanel(host){
+  if (!host) return;
+  var go = function(){
+    var panel = host.querySelector('.cw-mini-day');
+    if (!panel) return;
+    var r = panel.getBoundingClientRect();
+    var tabH = 0;
+    var tb = document.querySelector('.mobile-tab-bar');
+    if (tb && tb.offsetParent !== null) tabH = tb.getBoundingClientRect().height || 0;
+    var bottomLimit = window.innerHeight - tabH - 8;
+    /* 목록의 머리가 화면 안에 있으면 그걸로 충분하다.
+       (높이로 판정하면 목록이 짧은 날에 쓸데없이 또 움직인다) */
+    if (r.top >= 0 && r.top <= bottomLimit - 120) return;
+    var want = r.top + window.scrollY - (window.innerHeight - tabH) * 0.42;
+    var reduce = false;
+    try { reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch(e){}
+    window.scrollTo({ top: Math.max(0, want), behavior: reduce ? 'auto' : 'smooth' });
+  };
+  if (window.requestAnimationFrame) requestAnimationFrame(function(){ requestAnimationFrame(go); });
+  else setTimeout(go, 32);
+}
+
 /* 모바일 Month 는 미니 격자, PC 는 기존 격자를 쓴다.
    (컨테이너는 기존 아젠다 자리를 그대로 재사용한다) */
 _cwRenderAgendaInto = function(host, items, yr, mo){
@@ -13019,18 +13047,23 @@ function _cwV27Styles(){
     '.cw-mini-cell .dots i{width:5px;height:5px;border-radius:50%;display:block;}',
     '.cw-mini-cell .dots i.more{width:3px;height:3px;background:var(--text3);}',
     /* 제목 막대 — 여러 날 일정은 칸을 가로질러 하나로 이어진다 */
-    '.cw-mini-wk .mb{position:relative;z-index:2;display:-webkit-box;-webkit-line-clamp:2;',
-    '-webkit-box-orient:vertical;overflow:hidden;font-style:normal;font-size:7.5px;',
-    'font-weight:600;line-height:1.2;text-align:left;padding:1px 3px 1px 3px;',
+    /* 한 줄 + 말줄임 — 두 줄로 흘러 아랫줄 일정을 침범하고 글자가 잘리던 문제 (v103) */
+    '.cw-mini-wk .mb{position:relative;z-index:2;display:block;white-space:nowrap;',
+    'overflow:hidden;text-overflow:ellipsis;font-style:normal;font-size:7.5px;',
+    'font-weight:600;line-height:1.55;text-align:left;padding:1px 3px 1px 3px;',
     'border-left:2px solid var(--ev,#888);border-radius:0 3px 3px 0;color:var(--text2);',
-    'overflow-wrap:anywhere;word-break:normal;cursor:pointer;align-self:start;',
+    'cursor:pointer;align-self:start;min-width:0;',
     'background:color-mix(in srgb, var(--ev,#888) 13%, transparent);}',
     /* 지난 주에서 이어진 막대는 왼쪽 선을 떼서 계속되는 느낌을 준다 */
     '.cw-mini-wk .mb.is-cut{border-left:0;border-radius:3px;padding-left:4px;}',
-    '.cw-mini-wk .mmore{position:relative;z-index:2;font-size:7px;font-weight:700;',
-    'color:var(--text3);text-align:left;padding-left:3px;cursor:pointer;line-height:1.3;}',
+    /* +N 은 "더 있다"는 유일한 신호라 작으면 놓친다 — 칩으로 키운다 (v104) */
+    '.cw-mini-wk .mmore{position:relative;z-index:2;font-size:8.5px;font-weight:800;',
+    '  color:var(--primary);background:var(--primary-soft);text-align:center;',
+    '  padding:1px 0;margin:1px 2px 0;border-radius:4px;cursor:pointer;line-height:1.45;',
+    '  letter-spacing:-.02em;}',
+    '.cw-mini-wk .mmore:active{background:var(--primary);color:#fff;}',
     /* 아주 좁은 기기에서는 한 줄만 */
-    '@media (max-width:360px){.cw-mini-wk .mb{-webkit-line-clamp:1;font-size:7px;}',
+    '@media (max-width:360px){.cw-mini-wk .mb{font-size:7px;}',
     '  .cw-mini-cell{min-height:38px;}}',
 
     /* 선택한 날짜 패널 */
@@ -13770,7 +13803,13 @@ function openEventForm(ev){
       del.disabled = false; del.textContent = '삭제';
     }
   };
-  setTimeout(function(){ var n = document.getElementById('f_name'); if (n) n.focus(); }, 30);
+  /* 마우스가 있는 환경에서만 행사명에 커서를 둔다.
+     폰에서는 열자마자 키보드가 올라와 폼을 가려버린다 (v102) */
+  var _hasMouse = true;
+  try { _hasMouse = window.matchMedia('(hover:hover) and (pointer:fine)').matches; } catch(e){}
+  if (_hasMouse) {
+    setTimeout(function(){ var n = document.getElementById('f_name'); if (n) n.focus(); }, 30);
+  }
 }
 
 /* ── 기존 UI 에 연결 ─────────────────────────────────────── */
@@ -14715,10 +14754,11 @@ function _timeStyles(){
     /* 지난 날짜 — 칸 전체를 옅게 깔아 구분한다 (v96, 취소선 대신) */
     '.month-day.is-past{background:var(--past-bg);}',
     '.month-day.is-past:hover{background:var(--past-bg-h);}',
-    '.cw-mini-cell.is-past:not(.is-sel):not(.is-today){background:var(--past-bg);}',
     /* 숫자는 색을 바꾸지 않고 살짝만 흐리게 — 주말 색은 그대로 남는다 */
-    '.month-day.is-past .month-day-num,',
-    '.cw-mini-cell.is-past:not(.is-sel):not(.is-today) .n{opacity:.52;}',
+    '.month-day.is-past .month-day-num{opacity:.52;}',
+    /* 폰 미니 달력은 칸이 둥근 블록이라 음영을 넣으면 덩어리져 보인다 — 숫자만 흐리게 (v103) */
+    '.cw-mini-cell.is-past:not(.is-sel):not(.is-today){background:transparent;}',
+    '.cw-mini-cell.is-past:not(.is-sel):not(.is-today) .n{opacity:.45;}',
     ':root{--past-bg:rgba(16,24,40,.042);--past-bg-h:rgba(16,24,40,.075);}',
     '@media (prefers-color-scheme:dark){:root:not([data-theme="light"])',
     '  {--past-bg:rgba(255,255,255,.035);--past-bg-h:rgba(255,255,255,.065);}}',
