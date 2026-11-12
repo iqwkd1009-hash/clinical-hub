@@ -9051,7 +9051,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-12-v117-badgetext';
+window.CLINICAL_HUB_BUILD='2026-11-12-v119-toolbarfit';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -13012,7 +13012,8 @@ function _cwRevealDayPanel(host){
     /* 목록의 머리가 화면 안에 있으면 그걸로 충분하다.
        (높이로 판정하면 목록이 짧은 날에 쓸데없이 또 움직인다) */
     if (r.top >= 0 && r.top <= bottomLimit - 120) return;
-    var want = r.top + window.scrollY - (window.innerHeight - tabH) * 0.42;
+    /* 목록 첫 장이 탭바 위로 온전히 보이게 (v118) */
+    var want = r.top + window.scrollY - (window.innerHeight - tabH) * 0.28;
     var reduce = false;
     try { reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch(e){}
     window.scrollTo({ top: Math.max(0, want), behavior: reduce ? 'auto' : 'smooth' });
@@ -13062,11 +13063,13 @@ function _cwV27Styles(){
     '.cw-mini-cell.is-today .n{background:var(--primary);color:#fff!important;font-weight:700;}',
     /* 선택 = 테두리 원 */
     /* 고른 날은 칸 전체에 색을 깔아 바로 보이게 한다 (v90) */
-    '.cw-mini-cell.is-sel{background:var(--primary-soft);}',
+    '.cw-mini-cell.is-sel{background:var(--primary-soft);border-radius:8px;}',
     '.cw-mini-cell.is-sel .n{background:var(--primary);color:#fff!important;font-weight:700;}',
+    /* v118 — 오늘은 테두리 없이 글자만. 동그라미는 '고른 날' 하나뿐이어야
+       어느 날을 눌렀는지 한눈에 보인다. */
     '.cw-mini-cell.is-today:not(.is-sel) .n{background:transparent;color:var(--primary)!important;',
-    '  box-shadow:inset 0 0 0 2px var(--primary);}',
-    '.cw-mini-cell.is-today.is-sel{background:var(--primary-soft);}',
+    '  box-shadow:none;font-weight:800;}',
+    '.cw-mini-cell.is-today.is-sel{background:var(--primary-soft);border-radius:8px;}',
     '.cw-mini-cell.is-today.is-sel .n{background:var(--primary);color:#fff!important;box-shadow:none;}',
     /* 점 (지금은 안 쓰지만 다른 화면에서 쓸 수 있어 남겨둔다) */
     '.cw-mini-cell .dots{display:flex;gap:2.5px;align-items:center;height:6px;}',
@@ -15944,6 +15947,11 @@ window.addEventListener('DOMContentLoaded', _uplStyles);
     '.calendar-first-topline{flex-wrap:wrap;row-gap:8px;}',
     /* 버튼·토글은 절대 줄어들지 않는다. 자리가 모자라면 요약이 먼저 양보한다 */
     '.calendar-first-add,.calendar-today-btn,.cal-viewsw,.calendar-first-right{flex:0 0 auto!important;}',
+    /* 검색+추가 묶음은 이만큼은 확보한다. 안 그러면 버튼이 묶음 밖으로 흘러나와
+       옆 그룹에 가려진다 (겹쳐 보이던 원인) */
+    '.calendar-first-left{flex:1 1 260px!important;min-width:260px!important;}',
+    '.calendar-first-left .calendar-first-search{min-width:110px;}',
+    /* 자리가 모자라면 요약이 가장 먼저 양보한다 */
     '#calDdaySummary.in-line{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;}',
     '#calDdaySummary.in-line::-webkit-scrollbar{display:none;}',
     /* 월 이동 — 줄 맨 앞의 제목 역할 */
