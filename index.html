@@ -9051,7 +9051,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-12-v119-toolbarfit';
+window.CLINICAL_HUB_BUILD='2026-11-12-v120-noList';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -9310,7 +9310,8 @@ function _applyDeepLinkObj(o) {
     _allCalYear = +o.month.slice(0, 4);
     _allCalMonth = +o.month.slice(5, 7) - 1;
   }
-  if (o.view === 'card' || o.view === 'month') { _allCalView = o.view; setAllCalView(o.view); }
+  /* '목록' 뷰를 없앴으므로 저장된 값이 card 여도 월로 연다 (v120) */
+  if (o.view === 'card' || o.view === 'month') { _allCalView = 'month'; setAllCalView('month'); }
 }
 
 var _origSwitchSpecAll = switchSpecAll;
@@ -10709,11 +10710,11 @@ function _cwBuildLayout(){
   viewport.appendChild(monthView);
   viewport.appendChild(cardArea);
 
-  /* 4) 뷰 전환 버튼을 Day / Week / Month / 목록 으로 교체 */
+  /* 4) 뷰 전환 버튼을 Day / Week / Month 로 교체 (v120 — '목록' 제거) */
   var toggle = page.querySelector('.cal-view-toggle');
   if (toggle) {
     toggle.innerHTML = '';
-    [['day','Day'],['week','Week'],['month','Month'],['card','목록']].forEach(function(pair){
+    [['day','Day'],['week','Week'],['month','Month']].forEach(function(pair){
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'cal-view-btn' + (pair[0] === 'month' ? ' active' : '');
