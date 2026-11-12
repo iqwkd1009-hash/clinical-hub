@@ -7426,6 +7426,7 @@ var TEAM_COLORS = {
   marketing:      { light:'#667085', dark:'#98A2B3' },  /* Marketing(Clinical) */
   mkt_portfolio:  { light:'#1F7A85', dark:'#8AC6CE' },  /* 틸    */
   mkt_macom:      { light:'#85489B', dark:'#C398D2' },  /* 퍼플  */
+  mkt_ecosystem:  { light:'#8A6A1F', dark:'#D8BD79' },  /* 앰버  (v126) */
   clinical_sales: { light:'#A63D57', dark:'#D9909F' },  /* 크림슨 */
   digital_sales:  { light:'#4A5E9B', dark:'#9BA9D5' },  /* 인디고 */
   capital_sales:  { light:'#AD5B3C', dark:'#DFA288' },  /* 러스트 */
@@ -7829,7 +7830,8 @@ function _specShort(sp){
 }
 /* 배지 규칙 — Marketing(Clinical)만 과로, 나머지 팀은 팀 이름으로 */
 var _TEAM_SHORT = {
-  mkt_portfolio:'Portfolio', mkt_macom:'Macom', training:'Training',
+  mkt_portfolio:'Portfolio', mkt_macom:'Macom', mkt_ecosystem:'Ecosystem',
+  training:'Training',
   clinical_sales:'Sales', digital_sales:'Digital', capital_sales:'Capital'
 };
 function _evBadgeColor(ev, sp){
@@ -9052,7 +9054,7 @@ function calendarFirstInit(){
 }
 
 // Initialization safeguards
-window.CLINICAL_HUB_BUILD='2026-11-12-v125-week';
+window.CLINICAL_HUB_BUILD='2026-11-12-v126-ecosystem';
 window.addEventListener('DOMContentLoaded',()=>{
   console.log('%cClinical Hub build '+window.CLINICAL_HUB_BUILD,'color:#00837A;font-weight:700');
   const _safe=(label,fn)=>{ try{ fn(); }catch(e){ console.error('[init] '+label+' 실패:',e); } };
@@ -13600,6 +13602,7 @@ var SB_CATS = [
   ['marketing',      'Marketing(Clinical)'],
   ['mkt_portfolio',  'Marketing(Portfolio)'],
   ['mkt_macom',      'Marketing(Macom)'],
+  ['mkt_ecosystem',  'Marketing(Ecosystem)'],
   ['clinical_sales', 'Clinical Sales'],
   ['digital_sales',  'Digital Sales'],
   ['capital_sales',  'Capital Sales'],
@@ -13626,6 +13629,12 @@ var SB_CAT_TAGS = {
   mkt_macom: [
     ['event',     '행사'],
     ['interview', '인터뷰']
+  ],
+  mkt_ecosystem: [
+    ['education', '교육'],
+    ['proctor',   '프록터'],
+    ['webinar',   '웨비나'],
+    ['event',     '행사']
   ],
   clinical_sales: SB_BAM_TAGS.slice(),
   digital_sales: [
